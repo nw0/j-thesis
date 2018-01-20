@@ -1,0 +1,34 @@
+\documentclass[thesis.tex]{subfile}
+
+\chapter{Introduction}
+% Dylan has a long exposition of compilers; which I could emulate (but preferably in a more domain-specific way)
+
+In many engineering domains, finite-difference methods are used to solve differential equations, where an exact solution may be computationally infeasible.
+These approximations obviate the need for equations to be solved by hand, saving considerable labour.
+Optimising the computations is therefore a natural extension of this task.
+
+In modern usage, such computations may be specified as \emph{stencils}, and transformed and optimised by a compiler.
+An optimising compiler is highly desirable in such domains, as it removes the need for scientists performing the calculations to understand the structures to speed up their computations.
+This reduces the effort required to comprehend the calculations, aiding maintenance and even reproducibility.
+Such abstraction is particularly desirable, as computer architecture changes it is unreasonable to expect scientists working in seismic imaging, for instance, to investigate new optimisations, a task better left to those investigating software performance.
+New instructions may be introduced (such as vectorisation); not for nothing are compilers able to generate code tailored to the architecture for which a program is compiled.
+
+\section{Loop blocking}
+% TODO: assume reader knows what a loop nest is?
+The bulk of such computations manifest as \emph{loop nests}, on which there are well-known optimisations such as \emph{blocking}, otherwise known as \emph{tiling}. % TODO: cite
+
+...
+
+[ Some comments on the problem and why it hasn't been solved ]
+
+% TODO: Some pictures would be nice
+
+Devito is able to perform blocking on all dimensions apart from time.
+It has been previously demonstrated that extending blocking to the time dimension has the potential to reduce the run time of `some Devito stencil loops by up to 27.5\%' \textbf{[CITATION]}.
+This project focuses on the implementation of this optimisation, and evaluation of the claim.
+
+\section{(Intended) Contributions}
+\begin{itemize}
+	\item Implementation of skewing/tiling in Devito (hopefully accepted)
+	\item Evaluation of performance
+\end{itemize}

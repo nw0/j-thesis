@@ -1,11 +1,36 @@
 \documentclass[thesis.tex]{subfile}
 
 \chapter{Background}
+The following sections are based on my memory and understanding of explanations given by my supervisors, Prof.~Kelly and Dr.~Luporini, and are primarily intended to (temporarily) lend structure to this chapter. Therefore, I may have erred in my interpretations. It is a priority to clarify these through other sources as well.
+
+For the purposes of this draft, I have not written in any particular detail. The intention is to consult on which sections I should exposit or otherwise.
+
+\section{Compilers}
 
 \section{Optimisations on loop nests}
+
 \subsection{Loop interchange}
-\subsection{Strip mining and blocking}
-\subsection{Polyhedral model}
+Loop interchange is based on the observation that a change in execution order does not change the correctness of a program.
+A situation in which loop interchange would be possible is a na\"ive matrix multiplication algorithm.
+
+\textbf{[Include code snippet]}
+
+The interchange does not result in fewer operations.
+Instead, this forms a valid transformation on the loop nest.
+
+\subsection{Strip mining}
+
+\subsection{Blocking}
+As we iterate through the matrix, nearby entries (in the correct dimension) will be loaded into cache.
+By interchanging the loops, we utilise these cached values, speeding up the computation.
+We quickly observe that caches are limited in size, and that we want to utilise the values before they become evicted.
+This is the motive for interchanging the loops.
+
+\textbf{[Include picture]}
 \subsection{Skewing}
+\subsection{Polyhedral model}
 
 \section{Devito}
+What is Devito/Why would I use Devito?
+What can Devito do?
+(What am I doing?)

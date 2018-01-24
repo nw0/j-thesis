@@ -14,21 +14,21 @@ Such abstraction is particularly desirable, as computer architecture changes it 
 New instructions may be introduced (such as vectorisation); not for nothing are compilers able to generate code tailored to the architecture for which a program is compiled.
 
 \section{Loop blocking}
+% Remark: don't talk about what loop blocking is, but say why we care about it
 % TODO: assume reader knows what a loop nest is?
-The bulk of such computations manifest as \emph{loop nests}, on which there are well-known optimisations such as \emph{blocking}, otherwise known as \emph{tiling}. % TODO: cite
+\emph{Loop blocking} or \emph{tiling} is a well-established technique to exploit data locality in \emph{loop nests}, in which the bulk of such computations reside. % TODO: cite
+Blocking is a technique that may be applied regardless of the specific iteration space, as long as no data dependencies cross the boundaries between blocks.
+It is also used to enable other optimisations, such as loop-invariant code motion, which may not be appropriate on code which has not been blocked, when the extents of the iteration are too large.
 
-...
+The key objective of this project was to implement blocking over the time dimension in Devito, which necessitated an additional transformation to ensure its legality.
+Devito was able to perform blocking on all dimensions apart from time.
+% TODO: why it hasn't been solved for Devito
 
-[ Some comments on the problem and why it hasn't been solved ]
-
-% TODO: Some pictures would be nice
-
-Devito is able to perform blocking on all dimensions apart from time.
-It has been previously demonstrated that extending blocking to the time dimension has the potential to reduce the run time of `some Devito stencil loops by up to 27.5\%' \textbf{[CITATION]}.
+It has been previously demonstrated that extending blocking to the time dimension has the potential to reduce the run time of `some Devito stencil loops by up to 27.5\%' \cite{dylan}.
 This project focuses on the implementation of this optimisation, and evaluation of the claim.
 
 \section{(Intended) Contributions}
 \begin{itemize}
-	\item Implementation of skewing/tiling in Devito (hopefully accepted)
+	\item Implementation of skewing/tiling and relevant tests in Devito (hopefully accepted)
 	\item Evaluation of performance
 \end{itemize}

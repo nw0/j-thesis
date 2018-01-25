@@ -7,11 +7,25 @@ In many engineering domains, finite-difference methods are used to solve differe
 These approximations obviate the need for equations to be solved by hand, saving considerable labour.
 Optimising the computations is therefore a natural extension of this task.
 
+% TODO: really? Then explain what a stencil is
+% Maybe not necessary to mention them at this stage.
 In modern usage, such computations may be specified as \emph{stencils}, and transformed and optimised by a compiler.
 An optimising compiler is highly desirable in such domains, as it removes the need for scientists performing the calculations to understand the structures to speed up their computations.
 This reduces the effort required to comprehend the calculations, aiding maintenance and even reproducibility.
 Such abstraction is particularly desirable, as computer architecture changes it is unreasonable to expect scientists working in seismic imaging, for instance, to investigate new optimisations, a task better left to those investigating software performance.
 New instructions may be introduced (such as vectorisation); not for nothing are compilers able to generate code tailored to the architecture for which a program is compiled.
+
+% Vertical integration: to simplify this workflow, Devito starts from PDEs
+% Devito because it allows scientists to change their models easily
+% [Remark: fluid dynamics people never change PDEs, already handcoded & fast]
+% Context: other stencil DSLs do time tiling starting from stencils
+% Allows us to generate meaningful problem instances (don't write this here)
+
+\section{Motivation}
+% We have a tradeoff between computation and memory usage
+% Big IDEA: can use more memory, less computation ("this really should be true")
+% Project: optimise memory usage
+% Why exciting: one step to proving the idea
 
 \section{Loop blocking}
 % Remark: don't talk about what loop blocking is, but say why we care about it
@@ -20,6 +34,7 @@ New instructions may be introduced (such as vectorisation); not for nothing are 
 Blocking is a technique that may be applied regardless of the specific iteration space, as long as no data dependencies cross the boundaries between blocks.
 It is also used to enable other optimisations, such as loop-invariant code motion, which may not be appropriate on code which has not been blocked, when the extents of the iteration are too large.
 
+% Ok so this part is really important
 The key objective of this project was to implement blocking over the time dimension in Devito, which necessitated an additional transformation to ensure its legality.
 Devito was able to perform blocking on all dimensions apart from time.
 % TODO: why it hasn't been solved for Devito

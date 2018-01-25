@@ -7,11 +7,20 @@
 % Examiners will know about: PDEs, maybe handcoding
 
 \chapter{Background}
-The following sections are based on my memory and understanding of explanations given by my supervisors, Prof.~Kelly and Dr.~Luporini, and are primarily intended to (temporarily) lend structure to this chapter. Therefore, I may have erred in my interpretations. It is a priority to clarify these through other sources as well.
 
-For the purposes of this draft, I have not written in any particular detail. The intention is to consult on which sections I should exposit or otherwise.
+% TODO: \ref sections here
+We first provide an overview of loop nest optimisations, techniques, and analyses that we have applied, with specific reference to the polyhedral model. % TODO: cite
+This forms the basis and context for the entire report, and in particular the survey of related work, which the remainder of this chapter comprises.
 
-\section{Compilers}
+% TODO: grandiose
+This project extends a well-established idea from compiler theory, \emph{tiling}, to another dimension (time) in Devito.
+This has traditionally been a challenging problem, as evaluating data dependences efficiently is beset with difficulties.
+
+% We have a tradeoff between computation and memory usage
+% Big IDEA: can use more memory, less computation ("this really should be true")
+% Project: optimise memory usage
+% Why exciting: one step to proving the idea
+
 
 \section{Optimisations on loop nests}
 

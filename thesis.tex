@@ -1,16 +1,28 @@
-\documentclass[11pt,a4paper,twoside]{report}
+\documentclass[12pt,a4paper,twoside]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 
 \usepackage{subfiles}
 \usepackage{fullpage}
 
 \usepackage{color}
 
+% Throughout this thesis, we shall use `tiling'.
+
 \begin{document}
 	\title{Polyhedral optimisation for seismic inversion \\\large INTERIM REPORT DRAFT}
-	\author{Nicholas Sim\\ \\ Supervisors: Fabio Luporini; Paul H. J. Kelly}
+	\author{
+		Imperial College London\\
+		Department of Computing\\
+		BEng Mathematics and Computer Science Individual Project\\\\
+		Nicholas Sim\\\\
+		Supervisors: Fabio Luporini; Paul H. J. Kelly}
 	\maketitle{}
 	
 	\include{abstract}
+	\include{acknowledgements}
+	\setcounter{page}{4} % This is a nasty hack, also 4 = LEFT PAGE
 	\tableofcontents{}
 	
 	\subfile{introduction}

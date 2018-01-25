@@ -27,12 +27,6 @@ New instructions may be introduced (such as vectorisation); not for nothing are 
 % Project: optimise memory usage
 % Why exciting: one step to proving the idea
 
-\section{Loop blocking}
-% Remark: don't talk about what loop blocking is, but say why we care about it
-% TODO: assume reader knows what a loop nest is?
-\emph{Loop blocking} or \emph{tiling} is a well-established technique to exploit data locality in \emph{loop nests}, in which the bulk of such computations reside. % TODO: cite
-Blocking is a technique that may be applied regardless of the specific iteration space, as long as no data dependencies cross the boundaries between blocks.
-It is also used to enable other optimisations, such as loop-invariant code motion, which may not be appropriate on code which has not been blocked, when the extents of the iteration are too large.
 
 % Ok so this part is really important
 The key objective of this project was to implement blocking over the time dimension in Devito, which necessitated an additional transformation to ensure its legality.

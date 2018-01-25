@@ -10,7 +10,7 @@
 
 % TODO: \ref sections here
 We first provide an overview of loop nest optimisations, techniques, and analyses that we have applied, with specific reference to the polyhedral model. % TODO: cite
-This forms the basis and context for the entire report, and in particular the survey of related work, which the remainder of this chapter comprises.
+This forms the basis and context for the entire report, and in particular the survey of related work, which composes the remainder of this chapter.
 
 % TODO: grandiose
 This project extends a well-established idea from compiler theory, \emph{tiling}, to another dimension (time) in Devito.
@@ -22,34 +22,63 @@ This has traditionally been a challenging problem, as evaluating data dependence
 % Why exciting: one step to proving the idea
 
 
-\section{Optimisations on loop nests}
+\section{Loop tiling}
+% TODO: mention that iteration spaces under consideration are (nice rectangular continuous) matrices
+
+\subsubsection{Optimisations on loop nests}
+The bulk of computation for finite difference methods lies in loops. % TODO: cite
+Loop nest optimisations seek to transform a loop, possibly changing its execution order to use data locality, parallelism, or otherwise avoid unnecessary operations.
+
+% TODO
+\paragraph{Data locality}
+Something about caches: yet another thing I don't know how to explain...
+
+\subsection{Insight}
+To exploit data locality, we must use data before it gets evicted from the cache; ideally, data is not loaded into the cache more than once.
+Clearly, if the iteration space were sufficiently small, this would be a natural occurrence.
+We therefore contrive small iteration spaces by partitioning the original space into smaller \emph{tiles} (Figure~\ref{fig:tiled-space}), hence the name.
+
+\begin{figure}[h]
+	\centering
+	\textbf{[A nice picture of some tiles]}
+	\caption{Tiles over an iteration space. Note that the tile size need not be the same in each dimension, or divide the extent of the iteration cleanly.}
+	\label{fig:tiled-space}
+\end{figure}
+
+Loop tiling is also commonly known as \emph{blocking}, or perhaps less transparently \emph{strip-mine and interchange}, as tiling is typically achieved through these two transformations.\footnote{Tiling may also enable other transformations, such as loop-invariant code motion, which may not be appropriate when the extents of the iteration are too large.}
+
+\subsection{Strip-mining}
+Named after the mining practice, strip-mining involves dividing a dimension of the iteration space into strips (Figure~\ref{lst:stripmine}).\footnote{However, you cannot divide a dimension into lateral strips, only sequential ones.}
+By itself, strip-mining does not change the execution order; it is a gateway to further transformations.
+
+\begin{figure}[h]
+	\textbf{A listing showing a basic loop, strip-mined.}
+	\caption{A regular loop and a strip-mined loop. Note some clever things like the variable (dimension), which are the strips, introduction of min, etc.}
+	\label{lst:stripmine}
+\end{figure}
+
+% TODO: consider visualising the iteration space here
 
 \subsection{Loop interchange}
-Loop interchange is based on the observation that a change in execution order does not change the correctness of a program.
-A situation in which loop interchange would be possible is a na\"ive matrix multiplication algorithm.
+Loop interchange is based on the observation that a change in execution order does not change the correctness of a strip-mined program.
+We will change the order of the loops to iterate over the blocks, then within them (Figure~\ref{lst:interchange}).
 
-\textbf{[Include code snippet]}
+\begin{figure}[h]
+	\textbf{A listing of the previous stripmined loop with interchanged loop headers.}
+	\caption{The loop nest of Figure~\ref{lst:stripmine}, with the SOME LOOPS interchanged.}
+	\label{lst:interchange}
+\end{figure}
 
-The interchange does not result in fewer operations.
-Instead, this forms a valid transformation on the loop nest.
+This is valid when each point in the iteration space does not depend on the values calculated in the same iteration.
+Therefore, one must be extremely careful that no data dependencies cross boundaries between blocks; if they do, they must be permitted to cross only in one direction, and the blocks must be scheduled in that order.
 
-\subsection{Strip mining}
-
-\section{Loop blocking}
-% Remark: don't talk about what loop blocking is, but say why we care about it
-% TODO: assume reader knows what a loop nest is?
-\emph{Loop blocking} or \emph{tiling} is a well-established technique to exploit data locality in \emph{loop nests}, in which the bulk of such computations reside. % TODO: cite
-Blocking is a technique that may be applied regardless of the specific iteration space, as long as no data dependencies cross the boundaries between blocks.
-It is also used to enable other optimisations, such as loop-invariant code motion, which may not be appropriate on code which has not been blocked, when the extents of the iteration are too large.
-
-As we iterate through the matrix, nearby entries (in the correct dimension) will be loaded into cache.
-By interchanging the loops, we utilise these cached values, speeding up the computation.
-We quickly observe that caches are limited in size, and that we want to utilise the values before they become evicted.
-This is the motive for interchanging the loops.
-
-\textbf{[Include picture]}
 \subsection{Skewing}
+Data dependencies: why time-tiling is a problem
+
 \subsection{Polyhedral model}
+Maybe?
+
+% Recall that we wanted to use the cache, because I have surely forgotten...
 
 % Also Yask, Halide, Firedrake, Pochoir
 

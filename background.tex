@@ -36,7 +36,7 @@ Something about caches: yet another thing I don't know how to explain...
 \subsection{Insight}
 To exploit data locality, we must use data before it gets evicted from the cache; ideally, data is not loaded into the cache more than once.
 Clearly, if the iteration space were sufficiently small, this would be a natural occurrence.
-We therefore contrive small iteration spaces by partitioning the original space into smaller \emph{tiles} (Figure~\ref{fig:tiled-space}), hence the name.
+We therefore contrive small iteration spaces by partitioning the original space into smaller tiles (Figure~\ref{fig:tiled-space}).
 
 \begin{figure}[h]
 	\centering
@@ -48,12 +48,41 @@ We therefore contrive small iteration spaces by partitioning the original space 
 Loop tiling is also commonly known as \emph{blocking}, or perhaps less transparently \emph{strip-mine and interchange}, as tiling is typically achieved through these two transformations.\footnote{Tiling may also enable other transformations, such as loop-invariant code motion, which may not be appropriate when the extents of the iteration are too large.}
 
 \subsection{Strip-mining}
-Named after the mining practice, strip-mining involves dividing a dimension of the iteration space into strips (Figure~\ref{lst:stripmine}).\footnote{However, you cannot divide a dimension into lateral strips, only sequential ones.}
+Named after the mining practice, strip-mining involves dividing a dimension of the iteration space into strips (Figure~\ref{lst:stripmine-basic}).\footnote{However, you cannot divide a dimension into lateral strips, only sequential ones.}
 By itself, strip-mining does not change the execution order; it is a gateway to further transformations.
 
 \begin{figure}[h]
-	\textbf{A listing showing a basic loop, strip-mined.}
-	\caption{A regular loop and a strip-mined loop. Note some clever things like the variable (dimension), which are the strips, introduction of min, etc.}
+\begin{lstlisting}
+for (int x = x_start + 1; x < x_end - 1; x++) {
+  A[x] = B[x-1] + B[x+1];
+}
+
+for (int x_blk = x_start + 1; x_blk < x_end - 1; x_blk += x_blk_size) {
+  for (int x = x_blk; x < min (x_end - 1, x_blk + x_blk_size); x++) {
+    A[x] = B[x-1] + B[x+1]; // loop body unchanged
+  }
+}
+\end{lstlisting}
+	\caption{A regular loop, then strip-mined over the variable \texttt{x}. Offsets are used on \texttt{x\_start}, \texttt{x\_end} to prevent out-of-bounds accesses. The \texttt{min} function avoids the need for remainder loops, in case the tile (block) size does not evenly divide the extent of the iteration. We will abbreviate the variable names in further examples.}
+	\label{lst:stripmine-basic}
+\end{figure}
+
+We will need more loops to perform an interchange.
+Figure~\ref{lst:stripmine} illustrates a loop that has been strip-mined in two dimensions.
+
+\begin{figure}[h]
+	\begin{lstlisting}
+for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
+  for (int x = x_blk; x < min(x_e, x_blk + x_bs); x++) {
+    for (int y_blk = y_s; y_blk < y_e; y_blk += y_bs) {
+      for (int y = y_blk; y < min(y_e, y_blk + y_bs); y++) {
+        A[x][y] = B[x][y] + B[x][y+1];
+      }
+    }
+  }
+}
+	\end{lstlisting}
+	\caption{Strip-mining a loop nest iterating over variables \texttt{x} and \texttt{y}. Offsets have been omitted here.}
 	\label{lst:stripmine}
 \end{figure}
 
@@ -61,16 +90,26 @@ By itself, strip-mining does not change the execution order; it is a gateway to 
 
 \subsection{Loop interchange}
 Loop interchange is based on the observation that a change in execution order does not change the correctness of a strip-mined program.
-We will change the order of the loops to iterate over the blocks, then within them (Figure~\ref{lst:interchange}).
+We will change the order of the loops to iterate over the tiles, then within them (Figure~\ref{lst:interchange}).
 
 \begin{figure}[h]
-	\textbf{A listing of the previous stripmined loop with interchanged loop headers.}
-	\caption{The loop nest of Figure~\ref{lst:stripmine}, with the SOME LOOPS interchanged.}
+\begin{lstlisting}
+for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
+  for (int y_blk = y_s; y_blk < y_e; y_blk += y_bs) {
+    for (int x = x_blk; x < min(x_e, x_blk + x_bs); x++) {
+      for (int y = y_blk; y < min(y_e, y_blk + y_bs); y++) {
+        A[x][y] = B[x][y] + B[x][y+1];
+      }
+    }
+  }
+}
+\end{lstlisting}
+	\caption{The loop nest of Figure~\ref{lst:stripmine}, with the \texttt{x} and \texttt{y\_blk} loops interchanged.}
 	\label{lst:interchange}
 \end{figure}
 
 This is valid when each point in the iteration space does not depend on the values calculated in the same iteration.
-Therefore, one must be extremely careful that no data dependencies cross boundaries between blocks; if they do, they must be permitted to cross only in one direction, and the blocks must be scheduled in that order.
+Therefore, one must be extremely careful that no data dependencies cross boundaries between tiles; if they do, they must be permitted to cross only in one direction, and the tiles must be scheduled in that order.
 
 \subsection{Skewing}
 Data dependencies: why time-tiling is a problem

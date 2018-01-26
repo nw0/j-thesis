@@ -18,9 +18,9 @@ Such tools are less crucial to those employing fluid-dynamical models, which are
 
 It is inefficient and arguably undesirable for scientists principally concerned with modelling to need to understand the structures which speed up their computation. % "understand": think about, etc
 As a means of abstraction, compilers are used to transform differential equations into stencils, then code to evaluate the equations.
-This reduces the effort required to comprehend the calculations, aiding maintenance and even reproducibility.
+This reduces the effort required to comprehend the calculations, aiding maintenance and even reproducibility; generating and optimising code by hand is rarely feasible or efficient~\cite{olgaard10}.
 
-Decoupling the understanding of optimisations means that scientists not investigating software performance and compiler technology need not keep up with computer architecture.
+Decoupling the understanding of optimisations means that domain specialists outside of software performance and compiler technology need not keep up with computer architecture.
 New instructions may be introduced (such as vectorisation); not for nothing are compilers able to generate code tailored to the architecture for which a program is compiled.
 
 % TODO

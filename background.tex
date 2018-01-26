@@ -35,7 +35,7 @@ Something about caches: yet another thing I don't know how to explain...
 
 \subsection{Insight}
 To exploit data locality, we must use data before it gets evicted from the cache; ideally, data is not loaded into the cache more than once.
-Clearly, if the iteration space were sufficiently small, this would be a natural occurrence.
+This is a complex process \cite{lam91}; nevertheless reuse does occur within sufficiently small iteration spaces.
 We therefore contrive small iteration spaces by partitioning the original space into smaller tiles (Figure~\ref{fig:tiled-space}).
 
 \begin{figure}[h]
@@ -112,16 +112,32 @@ This is valid when each point in the iteration space does not depend on the valu
 Therefore, one must be extremely careful that no data dependencies cross boundaries between tiles; if they do, they must be permitted to cross only in one direction, and the tiles must be scheduled in that order.
 
 \subsection{Skewing}
-Data dependencies: why time-tiling is a problem
+Data dependencies: why time-tiling is a problem...
+
+Skewing solves the dependency problem~\cite{boulet98}.
 
 \subsection{Polyhedral model}
 Maybe?
+
+
+\section{Tiling in the time dimension}
+% We have already discussed why time-tiling is hard
+% Now we need to talk about why we want it
+
+Time-tiling is important to realise speedup from parallelism; it has been suggested that tiling over the inner dimensions (apart from time) only results in minimal, if any, benefit from using more cores~\cite{pluto}.
+[...]
+
+% TODO: vague
+Further, many problems involving finite difference methods are computationally bounded, rather than bounded by memory throughput.
+However, it is possible to reduce the operation count by exploiting the structure of expressions computed at the cost of increased memory pressure~\cite{fabio-memory}.
 
 % Recall that we wanted to use the cache, because I have surely forgotten...
 
 % Also Yask, Halide, Firedrake, Pochoir
 
 \section{Devito}
+Devito~\cite{devito} is ...
+
 What is Devito/Why would I use Devito?
 What can Devito do?
 (What am I doing?)

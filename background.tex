@@ -89,6 +89,7 @@ for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
 % TODO: consider visualising the iteration space here
 
 \subsection{Loop interchange}
+\label{sec:interchange}
 Loop interchange is based on the observation that a change in execution order does not change the correctness of a strip-mined program.
 We will change the order of the loops to iterate over the tiles, then within them (Figure~\ref{lst:interchange}).
 
@@ -109,15 +110,39 @@ for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
 \end{figure}
 
 This is valid when each point in the iteration space does not depend on the values calculated in the same iteration.
-Therefore, one must be extremely careful that no data dependencies cross boundaries between tiles; if they do, they must be permitted to cross only in one direction, and the tiles must be scheduled in that order.
+Therefore, one must be extremely careful that no data dependences cross boundaries between tiles; if they do, they must be permitted to cross only in one direction, and the tiles must be scheduled in that order.
 
 \subsection{Skewing}
-Data dependencies: why time-tiling is a problem...
+In the previous section (\ref{sec:interchange}) we stated that interchange is valid when data dependences do not cross boundaries between tiles.
+This is clear, as if there are no inter-tile dependences, the tiles can be executed in any order.
 
-Skewing solves the dependency problem~\cite{boulet98}.
+% TODO: "problems we discuss later": verify these are indeed discussed
+% This could probably be clearer
+\emph{Data dependences} occur when two statements reference a datum, at least one of which change it.
+To preserve the dependence, we must preserve the order in which these statements are executed.
+Figure~\ref{fig:dependence} illustrates how dependences may look in a (1-dimensional) iteration space similar to the problems we discuss later.
+
+\begin{figure}[h]
+	\centering
+	\textbf{[Diagram with dependence arrows]}
+	\caption{An iteration space with data dependences indicated by a forward arrow for a value derived from a dependence. It would not be valid to interchange loops over the \texttt{t} and \texttt{x} dimensions here.}
+	\label{fig:dependence}
+\end{figure}
+
+We employ skewing to make the interchange valid (Figure~\ref{fig:dependence-skew})
+This solves the dependency problem~\cite{boulet98}.
+
+% TODO: vague
+\begin{figure}[h]
+	\centering
+	\textbf{[Diagram (skewed) with dependence arrows]}
+	\caption{The same iteration space skewed by a factor of 2 in the \texttt{t} dimension. Note that the tiling is now valid, i.e.~we can execute the tiles in either dimension first.}
+	\label{fig:dependence-skew}
+\end{figure}
 
 \subsection{Polyhedral model}
-Maybe?
+[ How much do I want to discuss this, if at all?
+It is very relevant, but I haven't seen polyhedra (or scanning of such) in the Devito codebase, and don't have a good grasp of them. ]
 
 
 \section{Tiling in the time dimension}
@@ -127,13 +152,11 @@ Maybe?
 Time-tiling is important to realise speedup from parallelism; it has been suggested that tiling over the inner dimensions (apart from time) only results in minimal, if any, benefit from using more cores~\cite{pluto}.
 [...]
 
-% TODO: vague
+% TODO: vague; so what?
 Further, many problems involving finite difference methods are computationally bounded, rather than bounded by memory throughput.
 However, it is possible to reduce the operation count by exploiting the structure of expressions computed at the cost of increased memory pressure~\cite{fabio-memory}.
 
 % Recall that we wanted to use the cache, because I have surely forgotten...
-
-% Also Yask, Halide, Firedrake, Pochoir
 
 \section{Devito}
 Devito~\cite{devito} is ...
@@ -141,3 +164,5 @@ Devito~\cite{devito} is ...
 What is Devito/Why would I use Devito?
 What can Devito do?
 (What am I doing?)
+
+% Also Yask, Halide, Firedrake, Pochoir

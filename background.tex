@@ -10,7 +10,7 @@
 
 % TODO: \ref sections here
 We first provide an overview of loop nest optimisations, techniques, and analyses that we have applied, with specific reference to the polyhedral model. % TODO: cite
-This forms the basis and context for the entire report, and in particular the survey of related work, which composes the remainder of this chapter.
+This forms the basis and context for the entire report, and in particular the survey of related work, which composes the remainder of this chapter (from Section~\ref{sec:pochoir}).
 
 % TODO: grandiose
 This project extends a well-established idea from compiler theory, \emph{tiling}, to another dimension (time) in Devito.
@@ -112,8 +112,22 @@ for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
 This is valid when each point in the iteration space does not depend on the values calculated in the same iteration.
 Therefore, one must be extremely careful that no data dependences cross boundaries between tiles; if they do, they must be permitted to cross only in one direction, and the tiles must be scheduled in that order.
 
+\subsection{Polyhedral model}
+[ How much do I want to discuss this, if at all?
+It is very relevant, but I haven't seen polyhedra (or scanning of such) in the Devito codebase, and don't have a good grasp of them. ]
+
+
+\section{Tiling in the time dimension}
+
+\subsection{Motivation}
+% TODO: vague; so what?
+Many problems involving finite difference methods are computationally bounded, rather than bounded by memory throughput.
+However, it is possible to reduce the operation count by exploiting the structure of expressions computed at the cost of increased memory pressure~\cite{fabio-memory}.
+We are therefore interested to perform time-tiling to realise significant performance gains, possibly 27.5\% in Devito alone~\cite{dylan}.
+This improvement is significant over the optimisation from tiling in all dimensions apart from time~\cite{pluto}.
+
 \subsection{Skewing}
-In the previous section (\ref{sec:interchange}) we stated that interchange is valid when data dependences do not cross boundaries between tiles.
+In Section~\ref{sec:interchange} we stated that interchange is valid when data dependences do not cross boundaries between tiles.
 This is clear, as if there are no inter-tile dependences, the tiles can be executed in any order.
 
 % TODO: "problems we discuss later": verify these are indeed discussed
@@ -129,7 +143,7 @@ Figure~\ref{fig:dependence} illustrates how dependences may look in a (1-dimensi
 	\label{fig:dependence}
 \end{figure}
 
-We employ skewing to make the interchange valid (Figure~\ref{fig:dependence-skew})
+We employ skewing to make the interchange valid (Figure~\ref{fig:dependence-skew}).
 This solves the dependency problem~\cite{boulet98}.
 
 % TODO: vague
@@ -140,21 +154,44 @@ This solves the dependency problem~\cite{boulet98}.
 	\label{fig:dependence-skew}
 \end{figure}
 
-\subsection{Polyhedral model}
-[ How much do I want to discuss this, if at all?
-It is very relevant, but I haven't seen polyhedra (or scanning of such) in the Devito codebase, and don't have a good grasp of them. ]
+
+\section{Pochoir}
+\label{sec:pochoir}
+
+Pochoir is a compiler for stencil computations focussed on utilising parallelism and multithreading.
+Stencils are defined as C++ templates, from which the computations are generated.
+Pochoir implements a two-phase compilation strategy: the first involves compilation with the Pochoir template library, which ensures compliance with the library. At this stage, one may debug the non-optimised code.
+The second is compilation with the Pochoir compiler\footnote{The Pochoir compiler will also invoke the user's Cilk Plus compiler}, which is the optimisation phase~\cite{pochoir}.
+
+\subsection{Insight}
+\paragraph{Cache-oblivious algorithms}
+These seek to eliminate tuning of cuts based on cache properties including cache sizes or replacement policies, reasoning that the correct cache-oblivious algorithm will achieve (asymptotically) the same performance~\cite{frigo-cacheoblivious}.
+
+Pochoir uses a cache-oblivious algorithm based on parallel cuts.
+These \emph{hyperspace} and \emph{time cuts} decompose the iteration space (``zoid'') into smaller spaces recursively;
+they are chosen to improve parallelism while maintaining cache efficiency~\cite{frigo-cacheoblivious-alg}.
+
+Thanks to cut dependence analysis, the resultant trapezoids can span iterations of a time loop.
+
+\subsection{Limitations}
+The Cilk Plus framework, which Pochoir uses, is intended to produce optimal scheduling for parallel tasks, and cache-oblivious algorithms may be optimal up to a constant factor.
+Nevertheless, significant speedup can occur with \emph{cache-aware} algorithms, which employ tuning for multiple levels of cache~\cite{kowarschik-cacheaware}.
+This is especially significant to domain specialists who are experimenting and changing models, or those who are performing stencil computations over large iteration spaces.
+
+% TODO: vague
+Additionally, the Cilk Plus framework is in the process of deprecation~\cite{cilkplus-migrate-web}, and Pochoir is not presently maintained.
+While the concepts behind it may be sound and applicable in specific circumstances, it would be an unsuitable basis for this investigation.
 
 
-\section{Tiling in the time dimension}
-% We have already discussed why time-tiling is hard
-% Now we need to talk about why we want it
-
-Time-tiling is important to realise speedup from parallelism; it has been suggested that tiling over the inner dimensions (apart from time) only results in minimal, if any, benefit from using more cores~\cite{pluto}.
-
-% TODO: vague; so what?
-Further, many problems involving finite difference methods are computationally bounded, rather than bounded by memory throughput.
-However, it is possible to reduce the operation count by exploiting the structure of expressions computed at the cost of increased memory pressure~\cite{fabio-memory}.
-We are therefore interested to perform time-tiling to realise significant performance gains, possibly 27.5\% in Devito alone~\cite{dylan}.
+\section{Halide}
+\begin{itemize}
+	\item For images
+	\item We can separate the algorithm (``filters'') and the schedule \cite{halide12}
+	\item Same notes on parallelism and loop blocking
+	\item Image processing naturally memory-bound (?)
+	\item Auto-tuned scheduler \cite{halide13}
+	\item No worry about skewing (?)
+\end{itemize}
 
 
 \section{Devito}
@@ -185,17 +222,6 @@ Its main purpose is to build solvers for differential equations from high-level 
 \end{itemize}
 
 
-\section{Pochoir}
-\begin{itemize}
-	\item Looks like YASK
-	\item Periodic grids \cite{pochoir}
-	\item Finding parallelism and multithreading?
-	\item Safety check (so you can debug) then optimisation
-	\item References the polyhedral model
-	\item Is it maintained?
-\end{itemize}
-
-
 \section{Firedrake}
 \begin{itemize}
 	\item FEniCS: separate usage and implementation of FEM
@@ -205,12 +231,4 @@ Its main purpose is to build solvers for differential equations from high-level 
 \end{itemize}
 
 
-\section{Halide}
-\begin{itemize}
-	\item For images
-	\item We can separate the algorithm (``filters'') and the schedule \cite{halide12}
-	\item Same notes on parallelism and loop blocking
-	\item Image processing naturally memory-bound (?)
-	\item Auto-tuned scheduler \cite{halide13}
-	\item No worry about skewing (?)
-\end{itemize}
+\section{Summary}

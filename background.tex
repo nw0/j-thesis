@@ -211,18 +211,28 @@ While the concepts behind it may be sound and applicable in specific circumstanc
 
 
 \section{YASK}
-\emph{Yet Another Stencil Kernel} is a framework that transforms and optimises stencil kernels written in C++, specifically targeting the Xeon Phi platform~\cite{yask-web}.
+\emph{Yet Another Stencil Kernel} is a framework that transforms and optimises stencil kernels written in C++, especially targeting the Xeon Phi platform~\cite{yask-web}.
+Like Pochoir, YASK provides C++ templates for stencils.
+Similarly to Halide, it uses a genetic-algorithm based search for its auto-tuner.
 
-\begin{itemize}
-	\item Idea: stencils can be optimised using techniques not in general-purpose compilers (e.g.~`precise permutations of SIMD registers') \cite{yask-paper}
-	\item `reduce bottleneck of memory bandwidth (!) cf. CLooG, PLUTO
-	\item Allows users to choose transformations (``recipes'')
-	\item Input: working stencil source code (provided classes, not magic)
-	\item Folding, loop generation, (similar transformations)
-	\item Looks like the user might want to stare at the generated code
-	\item There is also an auto-tuning tool
-	\item Question: when would Devito invoke YASK?
-\end{itemize}
+It is intended to function both as a platform for domain specialists to experiment with (higher-level) optimisations, as well as for the compilation of high-performance kernels.
+
+\subsection{Insight}
+Stencil kernels rapidly grow complicated.
+Once optimisations have been applied (possibly through a specialised stencil compiler) to stencils, general-purpose compilers are less able to explore the trade-offs of further optimisation which they would ordinarily apply, such as parallelism.
+YASK aims to solve this by, among other things, implementing a two-stage compiler (stencils and loops) and tuning for the execution environment~\cite{yask-paper}.
+
+In contrast to polyhedral research compilers such as PLUTO~\cite{pluto}, YASK has a specific focus on combining optimisations such as vector-folding~\cite{yount-vector} with the loop optimisations which they perform.
+
+\subsection{Applicability}
+YASK was originally created to implement vector folding, a technique which simultaneously takes advantage of SIMD instructions and reduces memory bandwidth usage.
+This is especially relevant in Devito, which has the transformation of arithmetically intensive computations into memory intensive computations as a basis.
+
+Further, with its emphasis on integrating different optimisations, rather than investigating them separately, YASK is a practical tool for a workflow involving stencils.
+There would be no need to apply a stencil compiler, then a polyhedral compiler, without the guarantee that the latter would understand and be able to build open the complexities introduced by the former.
+
+Devito is in the process of integrating YASK as a compilation backend.
+We will explore the motives for this in Section~\ref{sec:devito}.
 
 
 \section{Firedrake}
@@ -235,6 +245,7 @@ While the concepts behind it may be sound and applicable in specific circumstanc
 
 
 \section{Devito}
+\label{sec:devito}
 Devito~\cite{devito} is a domain-specific language and code generation framework for finite-difference method computations~\cite{devito-web}.
 Its main purpose is to build solvers for differential equations from high-level mathematical expressions written using the symbolic library \emph{SymPy}.
 

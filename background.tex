@@ -7,10 +7,11 @@
 % Examiners will know about: PDEs, maybe handcoding
 
 \chapter{Background and related work}
+\label{ch:background}
 
 % TODO: \ref sections here
 We first provide an overview of loop nest optimisations, techniques, and analyses that we have applied, with specific reference to the polyhedral model. % TODO: cite
-This forms the basis and context for the entire report, and in particular the survey of related work, which composes the remainder of this chapter (Section~\ref{sec:survey}).
+This forms the basis and context for the entire report, and in particular informs our overview of Devito (Section~\ref{sec:devito}) and the survey of related work, which composes the remainder of this chapter (Section~\ref{sec:survey}).
 
 % TODO: grandiose
 This project extends a well-established idea from compiler theory, \emph{tiling}, to another dimension (time) in Devito.
@@ -208,14 +209,16 @@ This solves the dependency problem~\cite{boulet98}.
 
 \section{Survey of related work}
 \label{sec:survey}
-The following sections...
+
+The following sections provide an overview of tools related to Devito and of interest to our investigation.
+In particular, they identify instances of time-tiling (or equivalent transformations) which have been solved and the insights required, and analyse their applicability to time-tiling in Devito.
 
 
-\section{Halide}
+\subsection{Halide}
 Halide was conceived as a representation for image processing pipelines.
 Many image processing algorithms are similar to stencils: Halide specifically deals with overlapping stencils; this overlap can be compared to iteration in the time dimension.
 
-\subsection{Insight}
+\subsubsection{Insight}
 It is possible to separate image processing algorithms (``filters'') and their schedules~\cite{halide12}.
 Optimisation for an architecture then becomes an exercise in optimising the schedule and not the filters, which are reduced to kernels.\footnote{See {https://github.com/halide/CVPR2015/blob/master/blur.cpp} for an example}
 Halide is therefore a stencil compiler.
@@ -224,7 +227,7 @@ Modifying schedules is analogous to our loop optimisations: filters can be vecto
 Halide further provides an auto-tuner which estimates, among other things, arithmetic intensity of filters and loop transformations which Devito also employs~\cite{halide13,halide-sched}.
 Part of its analysis examines the trade-off between additional computation and memory traffic.
 
-\subsection{Applicability}
+\subsubsection{Applicability}
 The problems Halide solves are very different to the difference equations we are concerned with.
 However, the underlying natures of the solutions are very similar: use of stencil kernels, trade-off between redundant computation and memory pressure, etc.
 Analogously to time-tiling, Halide is able to compute tiles across filters.
@@ -235,13 +238,13 @@ Domain-specific frameworks bring insight to a problem which general-purpose comp
 In this case, the separation is explicit for the user and then hidden by the auto-tuner: an important note as this exposes a lower-level API, should one define an unusual filter.
 
 
-\section{Pochoir}
+\subsection{Pochoir}
 Pochoir is a compiler for stencil computations focussed on utilising parallelism and multithreading.
 Stencils are defined as C++ templates, from which the computations are generated.
 Pochoir implements a two-phase compilation strategy: the first involves compilation with the Pochoir template library, which ensures compliance with the library. At this stage, one may debug the non-optimised code.
 The second is compilation with the Pochoir compiler\footnote{The Pochoir compiler will also invoke the user's Cilk Plus compiler}, which is the optimisation phase~\cite{pochoir}.
 
-\subsection{Insight}
+\subsubsection{Insight}
 \paragraph{Cache-oblivious algorithms}
 These seek to eliminate tuning of cuts based on cache properties including cache sizes or replacement policies, reasoning that the correct cache-oblivious algorithm will achieve (asymptotically) the same performance~\cite{frigo-cacheoblivious}.
 
@@ -251,7 +254,7 @@ they are chosen to improve parallelism while maintaining cache efficiency~\cite{
 
 Thanks to cut dependence analysis, the resultant trapezoids can span iterations of a time loop.
 
-\subsection{Applicability}
+\subsubsection{Applicability}
 The Cilk Plus framework, which Pochoir uses, is intended to produce optimal scheduling for parallel tasks, and cache-oblivious algorithms may be optimal up to a constant factor.
 Nevertheless, significant speedup can occur with \emph{cache-aware} algorithms, which employ tuning for multiple levels of cache~\cite{kowarschik-cacheaware}.
 This is especially significant to domain specialists who are experimenting and changing models, or those who are performing stencil computations over large iteration spaces.
@@ -261,49 +264,48 @@ Additionally, the Cilk Plus framework is in the process of deprecation~\cite{cil
 While the concepts behind it may be sound and applicable in specific circumstances, it would be unsuitable to integrate with Devito.
 
 
-\section{YASK}
+\subsection{YASK}
 \emph{Yet Another Stencil Kernel} is a framework that transforms and optimises stencil kernels written in C++, especially targeting the Xeon Phi platform~\cite{yask-web}.
 Like Pochoir, YASK provides C++ templates for stencils.
 Similarly to Halide, it uses a genetic-algorithm based search for its auto-tuner.
 
 It is intended to function both as a platform for domain specialists to experiment with (higher-level) optimisations, as well as for the compilation of high-performance kernels.
 
-\subsection{Insight}
+\subsubsection{Insight}
 Stencil kernels rapidly grow complicated.
 Once optimisations have been applied (possibly through a specialised stencil compiler) to stencils, general-purpose compilers are less able to explore the trade-offs of further optimisation which they would ordinarily apply, such as parallelism.
 YASK aims to solve this by, among other things, implementing a two-stage compiler (stencils and loops) and tuning for the execution environment~\cite{yask-paper}.
 
 In contrast to polyhedral research compilers such as PLUTO~\cite{pluto}, YASK has a specific focus on combining optimisations such as vector-folding~\cite{yount-vector} with the loop optimisations which they perform.
 
-\subsection{Applicability}
+\subsubsection{Applicability}
 YASK was originally created to implement vector folding, a technique which simultaneously takes advantage of SIMD instructions and reduces memory bandwidth usage.
 This is especially relevant in Devito, which has the transformation of arithmetically intensive computations into memory intensive computations as a basis.
 
 Further, with its emphasis on integrating different optimisations, rather than investigating them separately, YASK is a practical tool for a workflow involving stencils.
 There would be no need to apply a stencil compiler, then a polyhedral compiler, without the guarantee that the latter would understand and be able to build open the complexities introduced by the former.
 
-Devito is in the process of integrating YASK as a compilation backend.
-We will explore the motives for this in Section~\ref{sec:devito}.
+As noted in Section~\ref{sec:devito}, Devito is in the process of integrating YASK as a compilation backend.
 
 
-\section{Firedrake}
+\subsection{Firedrake}
 Firedrake is a tool for solving partial differential equations on unstructured meshes using the \emph{finite-element method}~\cite{firedrake}.
 It is aimed at simulation and modelling of systems through PDEs, notably separating optimisations into different layers of abstraction.
 
 FEniCS~\cite{fenics}, another tool in the domain of finite-element solvers, separates the usage of finite-element methods and their implementation; Firedrake takes this a step further while retaining the domain-specific language and focus which it derives.
 
-\subsection{Insight}
+\subsubsection{Insight}
 Successfully optimising the solution of PDEs involves expertise at many levels, from numerical analysis of the equations and mesh generation, to the loop optimisations discussed here.
 Just as we separate stencil optimisations from polyhedral ones, we should also abstract these layers.
 
 Again, this makes optimised solution of partial differential equations accessible to domain specialists without particular expertise in computer architecture, transformation of expressions into efficient kernels~\cite{coffee}, or mesh generation.
 
-\subsection{Applicability}
+\subsubsection{Applicability}
 Through its many layers of abstraction, Firedrake provides a natural way to access lower-level structures such as kernels and the underlying data structures.
 Like Devito, this allows specialists to manipulate the computation not just at the highest level of the model, but also at levels which the specialist may have insight to, but would not be otherwise exposed.
 
 While many of the problems which Firedrake deals with are not directly related to Devito (such as unstructured meshes), the concept of abstraction is sound and very relevant to software engineering.
-Of particular relevance is the granularity to which abstractions are helpful at the lower levels in which we are interested, the use of kernels (albeit not stencils), and the discretisation of operators..
+Of particular relevance is the granularity to which abstractions are helpful at the lower levels in which we are interested, the use of kernels (albeit not stencils), and the discretisation of operators.
 
 Hence Firedrake comes far closer to Devito than the previously-discussed tools, as it covers the full process of computation, from the models and differential equations rather than the resultant kernels.
 Although the main optimisation that we discuss, time tiling, functions at the kernel level, Firedrake gives a broader view of the context of the problem to be solved.

@@ -23,10 +23,6 @@ This reduces the effort required to comprehend the calculations, aiding maintena
 Decoupling the understanding of optimisations means that domain specialists outside of software performance and compiler technology need not keep up with computer architecture.
 New instructions may be introduced (such as vectorisation); not for nothing are compilers able to generate code tailored to the architecture for which a program is compiled.
 
-% TODO
-In order to discuss this, we realise that loops are where most computations spend their time...
-
-
 \section{Devito}
 % Optimise how?
 
@@ -36,30 +32,27 @@ In order to discuss this, we realise that loops are where most computations spen
 % Context: other stencil DSLs do time tiling starting from stencils
 % Allows us to generate meaningful problem instances (don't write this here)
 
-% TODO: informal
 % TODO: Check definition of stencil
-In modern usage, such computations may be transformed into \emph{stencils}, which are \textbf{[I don't know how to explain this]}.
+In modern usage, such computations may be transformed into \emph{stencils}.
 There are many compilers optimising stencil kernels with \emph{time-tiling}, an optimisation which we will discuss in detail.
-Devito, however, is able to generate computations from the differential equations themselves, achieving a notion of `vertical integration' within the modelling ecosystem.
-This is extremely helpful if one is experimenting with models, or continually modelling new problems, as one can change the equations used and rapidly generate the relevant code for their computation.
 
-% TODO: consider mentioning more about the optimisation, polyhedral model etc
+Devito, a tool for efficient application of finite-difference methods, is able to generate computations from the differential equations themselves, achieving a notion of `vertical integration' within the modelling ecosystem.
+This is extremely helpful if one is experimenting with models, or continually modelling new problems, as one can change the equations used and rapidly generate and execute the relevant computation.
+
+% TODO: why it hasn't been solved for Devito
+It has been previously demonstrated that extending tiling to the time dimension has the potential to reduce the run time of `some Devito stencil loops by up to 27.5\%' \cite{dylan};
+the tool was able to perform tiling on all dimensions other than time.
 
 
 \section{Objectives and (intended) contributions}
-Devito was able to perform tiling on all dimensions other than time.
-The principal objective of this project was to implement tiling over the time dimension, which necessitates an additional transformation to ensure its legality.
-% TODO: why it hasn't been solved for Devito
-
-It has been previously demonstrated that extending tiling to the time dimension has the potential to reduce the run time of `some Devito stencil loops by up to 27.5\%' \cite{dylan}.
-This project focuses on the implementation of this optimisation, and evaluation of the claim.
+The principal objective of this project was to implement tiling over the time dimension, and to evaluate its efficacy.
+This necessitated an additional transformation to ensure its legality.
 
 In summary, our contributions are:
 
 % TODO: We want a lot more detail in this list
-% Add background & related work?
 \begin{itemize}
 	\item A survey of the background required for time-tiling, and related work. (Chapter~\ref{ch:background})
-	\item Implementation of skewing/tiling and relevant tests in Devito (hopefully accepted; Chapter~\ref{ch:implementation})
-	\item Evaluation of performance (Chapter~\ref{ch:evaluation})
+	\item An implementation of skewing and time-tiling in Devito. A discussion of relevant checks to ensure legality, and a set of relevant test cases. (Chapter~\ref{ch:implementation})
+	\item Evaluation of performance against the claim and other orderings. (Chapter~\ref{ch:evaluation})
 \end{itemize}

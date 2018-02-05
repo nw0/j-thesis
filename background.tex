@@ -23,24 +23,31 @@ This has traditionally been a challenging problem, as evaluating data dependence
 
 
 \section{Loop tiling}
+\label{sec:bg-loop-tiling}
 % TODO: mention that iteration spaces under consideration are (nice rectangular continuous) matrices
 
 \subsubsection{Optimisations on loop nests}
 The bulk of computation for finite difference methods lies in loops. % TODO: cite
 Loop nest optimisations seek to transform a loop, possibly changing its execution order to use data locality, parallelism, or otherwise avoid unnecessary operations.
 
-% TODO
-\paragraph{Data locality}
-Something about caches: yet another thing I don't know how to explain...
-
 \subsection{Insight}
 To exploit data locality, we must use data before it gets evicted from the cache; ideally, data is not loaded into the cache more than once.
 This is a complex process \cite{lam91}; nevertheless reuse does occur within sufficiently small iteration spaces.
 We therefore contrive small iteration spaces by partitioning the original space into smaller tiles (Figure~\ref{fig:tiled-space}).
 
-\begin{figure}[h]
+\begin{figure}[ht]
 	\centering
-	\textbf{[A nice picture of some tiles]}
+	\begin{tikzpicture}
+	\fill[gray!30!white] (0,0) rectangle (14,5.6);
+	\draw[step=1.6cm,white,very thin] (0,0) grid (14,5.6);
+
+	\draw[thick,->] (0,0) -- (14.4,0) node[right]{$x$};
+	\draw[thick,->] (0,0) -- (0,6.2) node[above]{$y$};
+	\foreach \x in {0,10,20,30,40,50,60,70}
+		\draw (\x*0.2 cm,1pt) -- (\x*0.2 cm,-1pt) node[anchor=north] {$\x$};
+	\foreach \y in {0,10,20,30}
+		\draw (1pt,\y*0.2 cm) -- (-1pt,\y*0.2 cm) node[anchor=east] {$\y$};
+	\end{tikzpicture}
 	\caption{Tiles over an iteration space. Note that the tile size need not be the same in each dimension, or divide the extent of the iteration cleanly.}
 	\label{fig:tiled-space}
 \end{figure}
@@ -48,10 +55,7 @@ We therefore contrive small iteration spaces by partitioning the original space 
 Loop tiling is also commonly known as \emph{blocking}, or perhaps less transparently \emph{strip-mine and interchange}, as tiling is typically achieved through these two transformations.\footnote{Tiling may also enable other transformations, such as loop-invariant code motion, which may not be appropriate when the extents of the iteration are too large.}
 
 \subsection{Strip-mining}
-Named after the mining practice, strip-mining involves dividing a dimension of the iteration space into strips (Figure~\ref{lst:stripmine-basic}).\footnote{However, you cannot divide a dimension into lateral strips, only sequential ones.}
-By itself, strip-mining does not change the execution order; it is a gateway to further transformations.
-
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{lstlisting}
 for (int x = x_start + 1; x < x_end - 1; x++) {
   A[x] = B[x-1] + B[x+1];
@@ -67,10 +71,13 @@ for (int x_blk = x_start + 1; x_blk < x_end - 1; x_blk += x_blk_size) {
 	\label{lst:stripmine-basic}
 \end{figure}
 
+Named after the mining practice, strip-mining involves dividing a dimension of the iteration space into strips (Figure~\ref{lst:stripmine-basic}).\footnote{However, you cannot divide a dimension into lateral strips, only sequential ones.}
+By itself, strip-mining does not change the execution order; it is a gateway to further transformations.
+
 We will need more loops to perform an interchange.
 Figure~\ref{lst:stripmine} illustrates a loop that has been strip-mined in two dimensions.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 	\begin{lstlisting}
 for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
   for (int x = x_blk; x < min(x_e, x_blk + x_bs); x++) {
@@ -93,7 +100,7 @@ for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
 Loop interchange is based on the observation that a change in execution order does not change the correctness of a strip-mined program.
 We will change the order of the loops to iterate over the tiles, then within them (Figure~\ref{lst:interchange}).
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{lstlisting}
 for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
   for (int y_blk = y_s; y_blk < y_e; y_blk += y_bs) {
@@ -111,10 +118,6 @@ for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
 
 This is valid when each point in the iteration space does not depend on the values calculated in the same iteration.
 Therefore, one must be extremely careful that no data dependences cross boundaries between tiles; if they do, they must be permitted to cross only in one direction, and the tiles must be scheduled in that order.
-
-\subsection{Polyhedral model}
-[ How much do I want to discuss this, if at all?
-It is very relevant, but I haven't seen polyhedra (or scanning of such) in the Devito codebase, and don't have a good grasp of them. ]
 
 
 \section{Tiling in the time dimension}
@@ -136,9 +139,33 @@ This is clear, as if there are no inter-tile dependences, the tiles can be execu
 To preserve the dependence, we must preserve the order in which these statements are executed.
 Figure~\ref{fig:dependence} illustrates how dependences may look in a (1-dimensional) iteration space similar to the problems we discuss later.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 	\centering
-	\textbf{[Diagram with dependence arrows]}
+	\begin{tikzpicture}
+	\draw[thick,->] (-1,-.5) -- (13,-.5) node[right]{$t$};
+	\draw[thick,->] (-1,-.5) -- (-1,5.5) node[above]{$x$};
+
+	\foreach \t in {0,1,2,3,4,5,6}
+	\foreach \x in {0,1,2,3,4,5}
+		\fill[gray] (\t*2,\x) circle (0.1);
+
+	\foreach \t in {0,1,2,3,4,5}
+	\foreach \x in {1,2,3,4,5}
+		\draw[thick,->,gray!60] (\t*2+.2,\x-.1) -- (\t*2+1.8,\x-.9);
+
+	\foreach \t in {0,1,2,3,4,5}
+	\foreach \x in {0,1,2,3,4}
+		\draw[thick,->,gray!60] (\t*2+.2,\x+.1) -- (\t*2+1.8,\x+.9);
+
+	\foreach \t in {0,1,2,3,4,5,6}
+	\foreach \x in {0,3}
+		\fill[green,opacity=0.3] (\t*2-.6,\x-.3) rectangle (\t*2+.6,\x+2.3);
+
+	\foreach \t in {0,1,2,3,4,5,6}
+		\draw (\t*2,1pt-.5cm) -- (\t*2,-1pt-.5cm) node[anchor=north] {$\t$};
+	\foreach \x in {0,1,2,3,4,5}
+		\draw (1pt-1cm,\x) -- (-1pt-1cm,\x) node[anchor=east] {$\x$};
+	\end{tikzpicture}
 	\caption{An iteration space with data dependences indicated by a forward arrow for a value derived from a dependence. It would not be valid to interchange loops over the \texttt{t} and \texttt{x} dimensions here.}
 	\label{fig:dependence}
 \end{figure}
@@ -147,10 +174,34 @@ We employ skewing to make the interchange valid (Figure~\ref{fig:dependence-skew
 This solves the dependency problem~\cite{boulet98}.
 
 % TODO: vague
-\begin{figure}[h]
+\begin{figure}[!ht]
 	\centering
-	\textbf{[Diagram (skewed) with dependence arrows]}
-	\caption{The same iteration space skewed by a factor of 2 in the \texttt{t} dimension. Note that the tiling is now valid, i.e.~we can execute the tiles in either dimension first.}
+	\begin{tikzpicture}
+	\draw[thick,->] (-1,-.5) -- (13,-.5) node[right]{$t$};
+	\draw[thick,->] (-1,-.5) -- (-1,5.8) node[above]{$x$};
+
+	\foreach \t in {0,1,2,3,4,5,6}
+	\foreach \x in {0,1,2,3,4,5}
+		\fill[gray] (\t*2,\x/2+\t/2) circle (0.1);
+
+	\foreach \t in {0,1,2,3,4,5}
+	\foreach \x in {1,2,3,4,5}
+		\draw[thick,->,gray!60] (\t*2+.2,\x/2+\t/2) -- (\t*2+1.8,\x/2+\t/2);
+
+	\foreach \t in {0,1,2,3,4,5}
+	\foreach \x in {0,1,2,3,4}
+		\draw[thick,->,gray!60] (\t*2+.2,\x/2+\t/2+.05) -- (\t*2+1.8,\x/2+\t/2+.9);
+
+	\foreach \t in {0,1,2,3,4,5,6}
+	\foreach \x in {0,3,6,9}
+		\fill[green,opacity=0.3] (\t*2-.6,\x/2-.15) rectangle (\t*2+.6,\x/2+1.15);
+
+	\foreach \t in {0,1,2,3,4,5,6}
+		\draw (\t*2,1pt-.5cm) -- (\t*2,-1pt-.5cm) node[anchor=north] {$\t$};
+	\foreach \x in {0,1,2,3,4,5,6,7,8,9,10,11}
+		\draw (1pt-1cm,\x/2) -- (-1pt-1cm,\x/2) node[anchor=east] {$\x$};
+	\end{tikzpicture}
+	\caption{The same iteration space skewed by a factor of \texttt{t} in the \texttt{x} dimension. Note that the tiling is now valid and we can execute the tiles in either dimension first, and that we can merge tiles in the \texttt{t} dimension.}
 	\label{fig:dependence-skew}
 \end{figure}
 

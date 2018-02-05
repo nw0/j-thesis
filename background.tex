@@ -10,7 +10,7 @@
 
 % TODO: \ref sections here
 We first provide an overview of loop nest optimisations, techniques, and analyses that we have applied, with specific reference to the polyhedral model. % TODO: cite
-This forms the basis and context for the entire report, and in particular the survey of related work, which composes the remainder of this chapter (from Section~\ref{sec:pochoir}).
+This forms the basis and context for the entire report, and in particular the survey of related work, which composes the remainder of this chapter (Section~\ref{sec:survey}).
 
 % TODO: grandiose
 This project extends a well-established idea from compiler theory, \emph{tiling}, to another dimension (time) in Devito.
@@ -155,9 +155,36 @@ This solves the dependency problem~\cite{boulet98}.
 \end{figure}
 
 
-\section{Pochoir}
-\label{sec:pochoir}
+\section{Survey of related work}
+\label{sec:survey}
+The following sections...
 
+
+\section{Halide}
+Halide was conceived as a representation for image processing pipelines.
+Many image processing algorithms are similar to stencils: Halide specifically deals with overlapping stencils; this overlap can be compared to iteration in the time dimension.
+
+\subsection{Insight}
+It is possible to separate image processing algorithms (``filters'') and their schedules~\cite{halide12}.
+Optimisation for an architecture then becomes an exercise in optimising the schedule and not the filters, which are reduced to kernels.\footnote{See {https://github.com/halide/CVPR2015/blob/master/blur.cpp} for an example}
+Halide is therefore a stencil compiler.
+
+Modifying schedules is analogous to our loop optimisations: filters can be vectorised, tiled, interchanges are possible, etc.
+Halide further provides an auto-tuner which estimates, among other things, arithmetic intensity of filters and loop transformations which Devito also employs~\cite{halide13,halide-sched}.
+Part of its analysis examines the trade-off between additional computation and memory traffic.
+
+\subsection{Applicability}
+The problems Halide solves are very different to the difference equations we are concerned with.
+However, the underlying natures of the solutions are very similar: use of stencil kernels, trade-off between redundant computation and memory pressure, etc.
+Analogously to time-tiling, Halide is able to compute tiles across filters.
+This is more general, different filters (hence kernels) may be applied at each step.
+
+It may not be as crucial to use as sophisticated an auto-tuner in Devito, as kernels are applied repeatedly.
+Domain-specific frameworks bring insight to a problem which general-purpose compilers may not possess; the separation of algorithm and schedule, while touted as novel, is essentially what every compiler applies.
+In this case, the separation is explicit for the user and then hidden by the auto-tuner: an important note as this exposes a lower-level API, should one define an unusual filter.
+
+
+\section{Pochoir}
 Pochoir is a compiler for stencil computations focussed on utilising parallelism and multithreading.
 Stencils are defined as C++ templates, from which the computations are generated.
 Pochoir implements a two-phase compilation strategy: the first involves compilation with the Pochoir template library, which ensures compliance with the library. At this stage, one may debug the non-optimised code.
@@ -173,38 +200,14 @@ they are chosen to improve parallelism while maintaining cache efficiency~\cite{
 
 Thanks to cut dependence analysis, the resultant trapezoids can span iterations of a time loop.
 
-\subsection{Limitations}
+\subsection{Applicability}
 The Cilk Plus framework, which Pochoir uses, is intended to produce optimal scheduling for parallel tasks, and cache-oblivious algorithms may be optimal up to a constant factor.
 Nevertheless, significant speedup can occur with \emph{cache-aware} algorithms, which employ tuning for multiple levels of cache~\cite{kowarschik-cacheaware}.
 This is especially significant to domain specialists who are experimenting and changing models, or those who are performing stencil computations over large iteration spaces.
 
 % TODO: vague
 Additionally, the Cilk Plus framework is in the process of deprecation~\cite{cilkplus-migrate-web}, and Pochoir is not presently maintained.
-While the concepts behind it may be sound and applicable in specific circumstances, it would be an unsuitable basis for this investigation.
-
-
-\section{Halide}
-\begin{itemize}
-	\item For images
-	\item We can separate the algorithm (``filters'') and the schedule \cite{halide12}
-	\item Same notes on parallelism and loop blocking
-	\item Image processing naturally memory-bound (?)
-	\item Auto-tuned scheduler \cite{halide13}
-	\item No worry about skewing (?)
-\end{itemize}
-
-
-\section{Devito}
-Devito~\cite{devito} is a domain-specific language and code generation framework for finite-difference method computations~\cite{devito-web}.
-Its main purpose is to build solvers for differential equations from high-level mathematical expressions written using the symbolic library \emph{SymPy}.
-
-\begin{itemize}
-	\item Transform expression into stencils
-	\item Construct stencil equations
-	\item Generate code (either natively or YASK, etc.)
-	\item For stencil applications (not every finite-difference problem)
-	\item Lower level API (recall: sparse point interpolation)
-\end{itemize}
+While the concepts behind it may be sound and applicable in specific circumstances, it would be unsuitable to integrate with Devito.
 
 
 \section{YASK}
@@ -228,6 +231,19 @@ Its main purpose is to build solvers for differential equations from high-level 
 	\item Firedrake: separate discretisation of operators and parallel execution (kernels vs calculations?) \cite{firedrake}
 	\item Also lower level access: custom kernels, direct access to data structures
 	\item More general than Devito?
+\end{itemize}
+
+
+\section{Devito}
+Devito~\cite{devito} is a domain-specific language and code generation framework for finite-difference method computations~\cite{devito-web}.
+Its main purpose is to build solvers for differential equations from high-level mathematical expressions written using the symbolic library \emph{SymPy}.
+
+\begin{itemize}
+\item Transform expression into stencils
+\item Construct stencil equations
+\item Generate code (either natively or YASK, etc.)
+\item For stencil applications (not every finite-difference problem)
+\item Lower level API (recall: sparse point interpolation)
 \end{itemize}
 
 

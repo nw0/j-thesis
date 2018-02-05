@@ -236,12 +236,26 @@ We will explore the motives for this in Section~\ref{sec:devito}.
 
 
 \section{Firedrake}
-\begin{itemize}
-	\item FEniCS: separate usage and implementation of FEM
-	\item Firedrake: separate discretisation of operators and parallel execution (kernels vs calculations?) \cite{firedrake}
-	\item Also lower level access: custom kernels, direct access to data structures
-	\item More general than Devito?
-\end{itemize}
+Firedrake is a tool for solving partial differential equations on unstructured meshes using the \emph{finite-element method}~\cite{firedrake}.
+It is aimed at simulation and modelling of systems through PDEs, notably separating optimisations into different layers of abstraction.
+
+FEniCS~\cite{fenics}, another tool in the domain of finite-element solvers, separates the usage of finite-element methods and their implementation; Firedrake takes this a step further while retaining the domain-specific language and focus which it derives.
+
+\subsection{Insight}
+Successfully optimising the solution of PDEs involves expertise at many levels, from numerical analysis of the equations and mesh generation, to the loop optimisations discussed here.
+Just as we separate stencil optimisations from polyhedral ones, we should also abstract these layers.
+
+Again, this makes optimised solution of partial differential equations accessible to domain specialists without particular expertise in computer architecture, transformation of expressions into efficient kernels~\cite{coffee}, or mesh generation.
+
+\subsection{Applicability}
+Through its many layers of abstraction, Firedrake provides a natural way to access lower-level structures such as kernels and the underlying data structures.
+Like Devito, this allows specialists to manipulate the computation not just at the highest level of the model, but also at levels which the specialist may have insight to, but would not be otherwise exposed.
+
+While many of the problems which Firedrake deals with are not directly related to Devito (such as unstructured meshes), the concept of abstraction is sound and very relevant to software engineering.
+Of particular relevance is the granularity to which abstractions are helpful at the lower levels in which we are interested, the use of kernels (albeit not stencils), and the discretisation of operators..
+
+Hence Firedrake comes far closer to Devito than the previously-discussed tools, as it covers the full process of computation, from the models and differential equations rather than the resultant kernels.
+Although the main optimisation that we discuss, time tiling, functions at the kernel level, Firedrake gives a broader view of the context of the problem to be solved.
 
 
 \section{Devito}

@@ -3,17 +3,10 @@
 \chapter{Implementation}
 \label{ch:implementation}
 
-\begin{itemize}
-	\item New DSE mode, \emph{skewing}
-	\item Changed DLE blocking to min/max
-
-	To-do:
-	\item Made blocking work with skewing
-
-	Extension:
-	\item Detect when a loop should be skewed (e.g. vs vectorised)
-	\item Automatically calculating the skew factor
-\end{itemize}
+We give an overview of the existing spatial tiling transformation in Devito (Section~\ref{sec:spatial-tiling}), then discuss our implementation of time-tiling in detail (Section~\ref{sec:time-tiling}).
+The latter extends the former, while depending crucially on an initial skewing transformation.
+We examine the safeguards necessary to prevent errors caused by improper skewing.
+Finally, we consider the implications on sparse loops, one of Devito's raisons d'\^etre.
 
 \section{Spatial tiling in Devito}
 \label{sec:spatial-tiling}
@@ -25,7 +18,7 @@ In the generated stencils, skewing is not required, as dependencies do not cross
 When discussing loop tiling in Section~\ref{sec:bg-loop-tiling}, we constrained our tiles with \texttt{min} constraints.
 To deal with the case when the tile size does not divide the extent of the iteration space, Devito instead implements \emph{remainder loops}, which Figures~\ref{fig:tiled-remainder-space} and~\ref{lst:remainder} illustrate.
 
-\begin{figure}[ht]
+\begin{figure}[!ht]
 	\centering
 	\begin{tikzpicture}
 	\fill[gray!30!white] (0,0) rectangle (14,5.6);
@@ -72,3 +65,64 @@ for (int x = x_e - (x_e-x_s)%x_bs; x < x_e; x++)
 	\caption{Replacement of \texttt{min} constraints with remainder loops from Figure~\ref{lst:interchange}. First the main tiles, then the remainder in \texttt{x} then \texttt{y} dimensions, and finally the remainders in both dimensions. Braces removed for concision.}
 	\label{lst:remainder}
 \end{figure}
+
+
+\section{Skewing and time-tiling}
+\label{sec:time-tiling}
+
+As outlined in Section~\ref{sec:bg-time-tiling}, we implement time-tiling in two stages: skewing in the DSE (Section~\ref{sec:dse}), and tiling in the DLE (Section~\ref{sec:dle}).
+
+\subsection{The Devito symbolic engine (DSE)}
+\label{sec:dse}
+
+The Devito symbolic engine is responsible for stencil optimisation and common sub-expression elimination.
+At this point the indices and loops have not been generated yet.
+Although we are working with loop transformations, we chose to perform skewing here, as skewing is a modification on the canonical indexing scheme.
+
+In our implementation, inner loops are skewed by a factor of time, and the loop bounds skewed by the same factor, negated.
+This ensures that all accesses refer to the same data as before the transformation, making it valid.
+Note that skewing \emph{does not} change the execution order of the loops.
+
+\subsection{The Devito loop engine (DLE)}
+\label{sec:dle}
+
+The DLE performs loop transformations including loop fission and tiling, while also marking loops to be executed in parallel or that denormal numbers should be flushed.
+Before it is invoked, the loops are built from the previously-manipulated expressions; clearly it would not be possible to implement tiling before this stage.
+
+We then change the tiling algorithm to use the \texttt{min} scheme, rather than remainder loops.
+As we noted in the previous section, this will not change the execution order: we now have skewed tiles on a skewed iteration space (Figure~\ref{fig:skewed-loops-skewed-space}).
+We now need to `straighten' the tiles by aligning the loop bounds.
+
+% TODO: vague
+\begin{figure}[!ht]
+	\centering
+	\begin{tikzpicture}
+	\draw[thick,->] (-1,-.5) -- (13,-.5) node[right]{$t$};
+	\draw[thick,->] (-1,-.5) -- (-1,5.8) node[above]{$x$};
+	
+	\foreach \t in {0,1,2,3,4,5,6}
+	\foreach \x in {0,1,2,3,4,5}
+	\fill[gray] (\t*2,\x/2+\t/2) circle (0.1);
+	
+	\foreach \t in {0,1,2,3,4,5}
+	\foreach \x in {1,2,3,4,5}
+	\draw[thick,->,gray!60] (\t*2+.2,\x/2+\t/2) -- (\t*2+1.8,\x/2+\t/2);
+	
+	\foreach \t in {0,1,2,3,4,5}
+	\foreach \x in {0,1,2,3,4}
+	\draw[thick,->,gray!60] (\t*2+.2,\x/2+\t/2+.05) -- (\t*2+1.8,\x/2+\t/2+.9);
+	
+	\foreach \t in {0,1,2,3,4,5,6}
+	\foreach \x in {0,3}
+	\fill[green,opacity=0.3] (\t*2-.6,\x/2+\t/2-.15) rectangle (\t*2+.6,\x/2+\t/2+1.15);
+	
+	\foreach \t in {0,1,2,3,4,5,6}
+	\draw (\t*2,1pt-.5cm) -- (\t*2,-1pt-.5cm) node[anchor=north] {$\t$};
+	\foreach \x in {0,1,2,3,4,5,6,7,8,9,10,11}
+	\draw (1pt-1cm,\x/2) -- (-1pt-1cm,\x/2) node[anchor=east] {$\x$};
+	\end{tikzpicture}
+	\caption{Skewed tiles on a skewed iteration space. Dependencies between blocks have not changed, and interchange is not valid.}
+	\label{fig:skewed-loops-skewed-space}
+\end{figure}
+
+\section{Further work}

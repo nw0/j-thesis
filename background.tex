@@ -253,12 +253,13 @@ Devito's process can be divided into several stages:
 
 \begin{enumerate}
 	\item Construction of stencil equations (symbolic kernel)
-	\item Indexes the stencil
-	\item OPTIMISATION (incl. CSE)
-	\item Compilation
+	\item Grouping of expressions
+	\item CSE and indexing of stencil (the Devito symbolic engine, Section~\ref{sec:dse})
+	\item Loop optimisation and other transformations (the Devito loop engine, Section~\ref{sec:dle})
+	\item Code generation
 \end{enumerate}
 
-After this, we want to talk about where the transformations will fit in (and maybe more on DSE, DLE generally, not just for the transformations). -- Don't do this here: cover it in impl and ref it!
+Our time-tiling transformation will occur in the DSE and DLE, covered in detail in the respective sections.
 
 
 \section{Survey of related work}

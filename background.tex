@@ -288,41 +288,44 @@ However, the underlying natures of the solutions are very similar: use of stenci
 Analogously to time-tiling, Halide is able to compute tiles across filters.
 This is more general, different filters (hence kernels) may be applied at each step.
 
-It may not be as crucial to use as sophisticated an auto-tuner in Devito, as kernels are applied repeatedly.
+Explicitly giving the user control over time-tiling will be initial implementation attempted, although there is a lot more clarity over how large time-tiles should be, as opposed to tiling through filters.
+Additionally, there is no worry that different filters require different skewing factors in Devito, as the stencil is fixed, unlike filters which may also be re-ordered.
+
+Therefore, it may not be as crucial to use as sophisticated an auto-tuner in Devito, as kernels are applied repeatedly.
 Domain-specific frameworks bring insight to a problem which general-purpose compilers may not possess; the separation of algorithm and schedule, while touted as novel, is essentially what every compiler applies.
-In this case, the separation is explicit for the user and then hidden by the auto-tuner: an important note as this exposes a lower-level API, should one define an unusual filter.
+In this case, the separation is explicit for the user and then hidden by the auto-tuner: an important note as this similarly exposes a lower-level API, should one define an unusual filter.
 
 
 \subsection{Pochoir}
 Pochoir is a compiler for stencil computations focussed on utilising parallelism and multithreading.
-Stencils are defined as C++ templates, from which the computations are generated.
-Pochoir implements a two-phase compilation strategy: the first involves compilation with the Pochoir template library, which ensures compliance with the library. At this stage, one may debug the non-optimised code.
-The second is compilation with the Pochoir compiler\footnote{The Pochoir compiler will also invoke the user's Cilk Plus compiler}, which is the optimisation phase~\cite{pochoir}.
+Stencils are defined with provided C++ templates, from which the computations are generated.
+Pochoir implements a two-phase compilation strategy: the first involves compilation with the Pochoir template library, which ensures compliance and compatibility with the library. At this stage, one may debug the non-optimised code.
+The second is the optimisation phase using the Pochoir compiler\footnote{The Pochoir compiler will also invoke the user's Cilk Plus compiler}~\cite{pochoir}.
 
 \subsubsection{Insight}
 \paragraph{Cache-oblivious algorithms}
-These seek to eliminate tuning of cuts based on cache properties including cache sizes or replacement policies, reasoning that the correct cache-oblivious algorithm will achieve (asymptotically) the same performance~\cite{frigo-cacheoblivious}.
+These seek to eliminate tuning of cuts (tile size) based on cache properties including cache sizes or replacement policies, reasoning that the correct cache-oblivious algorithm will achieve (asymptotically) the same performance~\cite{frigo-cacheoblivious}.
 
 Pochoir uses a cache-oblivious algorithm based on parallel cuts.
-These \emph{hyperspace} and \emph{time cuts} decompose the iteration space (``zoid'') into smaller spaces recursively;
+These \emph{hyperspace} and \emph{time cuts} decompose the iteration spaces (``zoids'') into smaller spaces recursively;
 they are chosen to improve parallelism while maintaining cache efficiency~\cite{frigo-cacheoblivious-alg}.
 
-Thanks to cut dependence analysis, the resultant trapezoids can span iterations of a time loop.
+Thanks to cut dependence analysis, the resultant trapezoids can span iterations of a time loop. It is important to note that Pochoir is a \emph{polyhedral compiler}, which operates on unions of convex polyhedra, which are more general than the hypercube-like iteration spaces described so far.
 
 \subsubsection{Applicability}
-The Cilk Plus framework, which Pochoir uses, is intended to produce optimal scheduling for parallel tasks, and cache-oblivious algorithms may be optimal up to a constant factor.
+The Cilk Plus framework, which Pochoir uses, is intended to produce optimal scheduling for parallel tasks, and cache-oblivious algorithms may be optimal up to a constant factor, which would be interesting when targeting multiple platforms.
 Nevertheless, significant speedup can occur with \emph{cache-aware} algorithms, which employ tuning for multiple levels of cache~\cite{kowarschik-cacheaware}.
+Indeed, due to a difficulty in choosing suitable base case sizes for the interior trapezoids, Pochoir includes an auto-tuner for this purpose.
 This is especially significant to domain specialists who are experimenting and changing models, or those who are performing stencil computations over large iteration spaces.
 
-% TODO: vague
-Additionally, the Cilk Plus framework is in the process of deprecation~\cite{cilkplus-migrate-web}, and Pochoir is not presently maintained.
-While the concepts behind it may be sound and applicable in specific circumstances, it would be unsuitable to integrate with Devito.
+Finally, the Cilk Plus framework is in the process of deprecation~\cite{cilkplus-migrate-web}, and Pochoir is not presently maintained.
+While the concepts behind it may be sound and applicable in specific circumstances, it would be unsuitable for integration with Devito.
 
 
 \subsection{YASK}
 \label{sec:yask}
 
-\emph{Yet Another Stencil Kernel} is a framework that transforms and optimises stencil kernels written in C++, especially targeting the Xeon Phi platform~\cite{yask-web}.
+\emph{Yet Another Stencil Kernel} is a framework from Intel Corp. that transforms and optimises stencil kernels, especially targeting the Xeon Phi platform~\cite{yask-web}.
 Like Pochoir, YASK provides C++ templates for stencils.
 Similarly to Halide, it uses a genetic-algorithm based search for its auto-tuner.
 
@@ -332,15 +335,17 @@ It is intended to function both as a platform for domain specialists to experime
 Stencil kernels rapidly grow complicated.
 Once optimisations have been applied (possibly through a specialised stencil compiler) to stencils, general-purpose compilers are less able to explore the trade-offs of further optimisation which they would ordinarily apply, such as parallelism.
 YASK aims to solve this by, among other things, implementing a two-stage compiler (stencils and loops) and tuning for the execution environment~\cite{yask-paper}.
+We draw a comparison to Devito here.
 
-In contrast to polyhedral research compilers such as PLUTO~\cite{pluto}, YASK has a specific focus on combining optimisations such as vector-folding~\cite{yount-vector} with the loop optimisations which they perform.
+In contrast to polyhedral research compilers such as PLUTO~\cite{pluto}, YASK has a specific focus on combining optimisations such as vector folding~\cite{yount-vector} with the loop optimisations which they perform.
 
 \subsubsection{Applicability}
 YASK was originally created to implement vector folding, a technique which simultaneously takes advantage of SIMD instructions and reduces memory bandwidth usage.
 This is especially relevant in Devito, which has the transformation of arithmetically intensive computations into memory intensive computations as a basis.
 
 Further, with its emphasis on integrating different optimisations, rather than investigating them separately, YASK is a practical tool for a workflow involving stencils.
-There would be no need to apply a stencil compiler, then a polyhedral compiler, without the guarantee that the latter would understand and be able to build open the complexities introduced by the former.
+There would be no need to apply a separate stencil compiler, then a polyhedral compiler, without the guarantee that the latter would understand and be able to build open the complexities introduced by the former.
+One might remark, however, that the same applies when constructing stencils from differential equations: instead they are reduced to a form (C++ templates) that the compiler understands.
 
 As noted in Section~\ref{sec:devito}, Devito is in the process of integrating YASK as a compilation backend.
 
@@ -355,7 +360,7 @@ FEniCS~\cite{fenics}, another tool in the domain of finite-element solvers, sepa
 Successfully optimising the solution of PDEs involves expertise at many levels, from numerical analysis of the equations and mesh generation, to the loop optimisations discussed here.
 Just as we separate stencil optimisations from polyhedral ones, we should also abstract these layers.
 
-Again, this makes optimised solution of partial differential equations accessible to domain specialists without particular expertise in computer architecture, transformation of expressions into efficient kernels~\cite{coffee}, or mesh generation.
+Again, this makes the \emph{optimised} solution of partial differential equations accessible to domain specialists without particular expertise in computer architecture, transformation of expressions into efficient kernels~\cite{coffee}, or mesh generation.
 
 \subsubsection{Applicability}
 Through its many layers of abstraction, Firedrake provides a natural way to access lower-level structures such as kernels and the underlying data structures.
@@ -365,7 +370,7 @@ While many of the problems which Firedrake deals with are not directly related t
 Of particular relevance is the granularity to which abstractions are helpful at the lower levels in which we are interested, the use of kernels (albeit not stencils), and the discretisation of operators.
 
 Hence Firedrake comes far closer to Devito than the previously-discussed tools, as it covers the full process of computation, from the models and differential equations rather than the resultant kernels.
-Although the main optimisation that we discuss, time tiling, functions at the kernel level, Firedrake gives a broader view of the context of the problem to be solved.
+Although the main optimisation that we discuss, time tiling, functions at the kernel level, Firedrake gives a broader view of the context of the problem to be solved, and the model in which Devito resides.
 
 
 \section{Summary}

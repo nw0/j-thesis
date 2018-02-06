@@ -207,6 +207,59 @@ This solves the dependency problem~\cite{boulet98}.
 \end{figure}
 
 
+\section{Devito}
+\label{sec:devito}
+
+Devito~\cite{devito} is a domain-specific language and code generation framework for finite-difference method computations~\cite{devito-web}.
+Its main use case is building solvers for differential equations from high-level mathematical expressions, written using the symbolic library \emph{SymPy}, and is targeted at the domain of seismic imaging.
+
+
+\subsection{Motivation}
+Efficient computation demands that we are able to use every optimisation at our disposal.
+As architecture for computation changes, introducing new instructions, GPUs and distributed systems, specialist research compilers using just a handful of related optimisations do not suffice for high-performance applications.
+
+An equal part of optimisation is reducing the turnaround time in modelling.
+Providing an interface that domain specialists are familiar with reduces friction, and removes the need to construct stencils by hand.
+This also reduces errors by simplifying the inputs that they provide.
+
+This combination of ease of use through the Python and \emph{SymPy} interface and the generation of optimised and fast C code without user intervention make Devito an attractive tool.
+
+
+\subsection{Domain-specificity}
+Polyhedral compilers such as PLUTO~\cite{pluto}, with its backend CLooG~\cite{cloog-isl} are able to apply tiling over generic loop nests.
+Further, the iteration spaces which they handle are unions of convex polyhedra, again far more general than the use cases Devito is likely to encounter.
+This generality is not necessary when merely applying finite-difference methods to solve differential equations, not least when targeting a specific domain which uses such methods.
+
+We can instead make use of this specificity to make informed choices in our optimisations, or streamline an auto-tuning routine.
+Further, we are able to combine different optimisations, at the stencil level and progressively lower levels.
+Finally, considering likely use cases, it may be desirable to target compilation for architectures not supported by more general compilers, such as GPUs.
+
+
+\subsection{Layers of abstraction}
+The separation of symbolic expressions and the underlying C code to which they are compiled is key to Devito's comprehensibility and usage.
+By progressive manipulation, optimisation and modification is possible at many layers.
+A further benefit as a more general software engineering practice is the possibility of small unit tests for individual components.
+
+This also allows the integration of other tools, which may fit a user's needs better, and enables easy benchmarking of Devito's performance against said tools.
+For instance, YASK (Section~\ref{sec:yask}) is being integrated as a compilation backend.
+
+An important feature for seismic imaging is sparse-point interpolation.
+Devito handles this by exposing powerful lower-level APIs to allow the construction of comprehensive representations which would be tedious or impossible at higher levels of abstraction.
+
+
+\subsection{Architecture}
+Devito's process can be divided into several stages:
+
+\begin{enumerate}
+	\item Construction of stencil equations (symbolic kernel)
+	\item Indexes the stencil
+	\item OPTIMISATION (incl. CSE)
+	\item Compilation
+\end{enumerate}
+
+After this, we want to talk about where the transformations will fit in (and maybe more on DSE, DLE generally, not just for the transformations). -- Don't do this here: cover it in impl and ref it!
+
+
 \section{Survey of related work}
 \label{sec:survey}
 
@@ -265,6 +318,8 @@ While the concepts behind it may be sound and applicable in specific circumstanc
 
 
 \subsection{YASK}
+\label{sec:yask}
+
 \emph{Yet Another Stencil Kernel} is a framework that transforms and optimises stencil kernels written in C++, especially targeting the Xeon Phi platform~\cite{yask-web}.
 Like Pochoir, YASK provides C++ templates for stencils.
 Similarly to Halide, it uses a genetic-algorithm based search for its auto-tuner.
@@ -309,20 +364,6 @@ Of particular relevance is the granularity to which abstractions are helpful at 
 
 Hence Firedrake comes far closer to Devito than the previously-discussed tools, as it covers the full process of computation, from the models and differential equations rather than the resultant kernels.
 Although the main optimisation that we discuss, time tiling, functions at the kernel level, Firedrake gives a broader view of the context of the problem to be solved.
-
-
-\section{Devito}
-\label{sec:devito}
-Devito~\cite{devito} is a domain-specific language and code generation framework for finite-difference method computations~\cite{devito-web}.
-Its main purpose is to build solvers for differential equations from high-level mathematical expressions written using the symbolic library \emph{SymPy}.
-
-\begin{itemize}
-\item Transform expression into stencils
-\item Construct stencil equations
-\item Generate code (either natively or YASK, etc.)
-\item For stencil applications (not every finite-difference problem)
-\item Lower level API (recall: sparse point interpolation)
-\end{itemize}
 
 
 \section{Summary}

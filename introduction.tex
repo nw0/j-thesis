@@ -32,27 +32,31 @@ New instructions may be introduced (such as vectorisation); not for nothing are 
 % Context: other stencil DSLs do time tiling starting from stencils
 % Allows us to generate meaningful problem instances (don't write this here)
 
-% TODO: Check definition of stencil
-In modern usage, such computations may be transformed into \emph{stencils}.
-There are many compilers optimising stencil kernels with \emph{time-tiling}, an optimisation which we will discuss in detail.
-
-Devito, a tool for efficient application of finite-difference methods, is able to generate computations from the differential equations themselves, achieving a notion of `vertical integration' within the modelling ecosystem.
+Devito, a tool for efficient application of finite-difference methods, is able to generate computations directly from differential equations, achieving a notion of `vertical integration' within the modelling ecosystem.
 This is extremely helpful if one is experimenting with models, or continually modelling new problems, as one can change the equations used and rapidly generate and execute the relevant computation.
 
+% TODO: Check definition of stencil
+In modern usage, such computations may be transformed into \emph{stencils}.
+There are many compilers optimising stencil kernels with \emph{time-tiling}, an optimisation which has not been implemented in Devito yet.
 % TODO: why it hasn't been solved for Devito
-It has been previously demonstrated that extending tiling to the time dimension has the potential to reduce the run time of `some Devito stencil loops by up to 27.5\%' \cite{dylan};
-the tool was able to perform tiling on all dimensions other than time.
+It has been previously demonstrated that time-tiling has the potential to reduce the run time of `some Devito stencil loops by up to 27.5\%' \cite{dylan} when applying time-tiling against a baseline of tiling in all other dimensions, which the tool was already able to perform.
+In this case, another tool (CLooG) was used to perform the tiling.
+We extend tiling to the time dimension natively in Devito to realise this speedup integrated with its other optimisations, and evaluate the claim.
 
 
 \section{Objectives and (intended) contributions}
-The principal objective of this project was to implement tiling over the time dimension, and to evaluate its efficacy.
-This necessitated an additional transformation to ensure its legality.
+The principal objective of this project was to implement tiling over the time dimension in Devito and evaluate its performance.
 
 In summary, our contributions are:
 
 % TODO: We want a lot more detail in this list
 \begin{itemize}
-	\item A survey of the background required for time-tiling, and related work. (Chapter~\ref{ch:background})
-	\item An implementation of skewing and time-tiling in Devito. A discussion of relevant checks to ensure legality, and a set of relevant test cases. (Chapter~\ref{ch:implementation})
-	\item Evaluation of performance against the claim and other orderings. (Chapter~\ref{ch:evaluation})
+	\item A survey of the background required for time-tiling, and related work. A consideration of the implications of and motivation for time-tiling.
+	(Chapter~\ref{ch:background})
+	\item An implementation of skewing and time-tiling in Devito. An analysis of its legality and the necessary checks to guarantee this, and a set of relevant test cases.
+	(Chapter~\ref{ch:implementation})
+	\item An evaluation of correctness and performance of the time-tiling transformation against the original claim and other orderings, and any actions end-users may need to take to realise performance gains.
+	(Chapter~\ref{ch:evaluation})
+	\item A discussion on further implementation work and integration with other optimisations.
+	(to be determined)
 \end{itemize}

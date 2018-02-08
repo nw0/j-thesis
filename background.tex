@@ -53,7 +53,12 @@ We therefore contrive small iteration spaces by partitioning the original space 
 	\label{fig:tiled-space}
 \end{figure}
 
-Loop tiling is also commonly known as \emph{blocking}, or perhaps less transparently \emph{strip-mine and interchange}, as tiling is typically achieved through these two transformations.\footnote{Tiling may also enable other transformations, such as loop-invariant code motion, which may not be appropriate when the extents of the iteration are too large.}
+Loop tiling is also commonly known as \emph{blocking}, or perhaps less transparently \emph{strip-mine and interchange}, as tiling is typically achieved through these two transformations.
+
+\paragraph{Additional motivation}
+As a remark, the stencils resulting from finite-difference methods tend to have high \emph{arithmetic} intensity, while tiling is used to reduce \emph{memory} pressure.
+As we note later, we can decrease arithmetic intensity (at the expense of increasing memory pressure) by eliminating common sub-expressions, which would ordinarily result in redundant computation.
+Further, tiling may also enable other transformations, such as loop-invariant code motion, which again reduces redundant computation.
 
 \subsection{Strip-mining}
 \begin{figure}[ht]
@@ -249,7 +254,7 @@ Devito handles this by exposing powerful lower-level APIs to allow the construct
 
 
 \subsection{Architecture}
-Devito's process can be divided into several stages:
+The Devito compilation process can be divided into several stages:
 
 \begin{enumerate}
 	\item Construction of stencil equations (symbolic kernel)
@@ -283,24 +288,21 @@ Halide further provides an auto-tuner which estimates, among other things, arith
 Part of its analysis examines the trade-off between additional computation and memory traffic.
 
 \subsubsection{Applicability}
-The problems Halide solves are very different to the difference equations we are concerned with.
+The problem domain, image processing, that Halide is concerned with may appear very different to that of differential equations.
 However, the underlying natures of the solutions are very similar: use of stencil kernels, trade-off between redundant computation and memory pressure, etc.
 Analogously to time-tiling, Halide is able to compute tiles across filters.
-This is more general, different filters (hence kernels) may be applied at each step.
 
-Explicitly giving the user control over time-tiling will be initial implementation attempted, although there is a lot more clarity over how large time-tiles should be, as opposed to tiling through filters.
-Additionally, there is no worry that different filters require different skewing factors in Devito, as the stencil is fixed, unlike filters which may also be re-ordered.
+Likewise, in Devito, \emph{each time iteration} may contain several stencil kernels applied consecutively.
+To extend the analogy, Halide is concerned with tiling within \emph{a single} timestep, while this project investigates tiling over \emph{multiple} timesteps.
 
-Therefore, it may not be as crucial to use as sophisticated an auto-tuner in Devito, as kernels are applied repeatedly.
-Domain-specific frameworks bring insight to a problem which general-purpose compilers may not possess; the separation of algorithm and schedule, while touted as novel, is essentially what every compiler applies.
-In this case, the separation is explicit for the user and then hidden by the auto-tuner: an important note as this similarly exposes a lower-level API, should one define an unusual filter.
+Domain-specific frameworks bring insight to a problem which general-purpose compilers may not possess; the separation of algorithm and schedule, while touted as novel, is essentially what every compiler applies during transformations such as loop interchange.
 
 
 \subsection{Pochoir}
 Pochoir is a compiler for stencil computations focussed on utilising parallelism and multithreading.
 Stencils are defined with provided C++ templates, from which the computations are generated.
 Pochoir implements a two-phase compilation strategy: the first involves compilation with the Pochoir template library, which ensures compliance and compatibility with the library. At this stage, one may debug the non-optimised code.
-The second is the optimisation phase using the Pochoir compiler\footnote{The Pochoir compiler will also invoke the user's Cilk Plus compiler}~\cite{pochoir}.
+The second is the optimisation phase using the Pochoir compiler\footnote{The Pochoir compiler will also invoke the user's Cilk Plus compiler.}~\cite{pochoir}.
 
 \subsubsection{Insight}
 \paragraph{Cache-oblivious algorithms}
@@ -310,7 +312,7 @@ Pochoir uses a cache-oblivious algorithm based on parallel cuts.
 These \emph{hyperspace} and \emph{time cuts} decompose the iteration spaces (``zoids'') into smaller spaces recursively;
 they are chosen to improve parallelism while maintaining cache efficiency~\cite{frigo-cacheoblivious-alg}.
 
-Thanks to cut dependence analysis, the resultant trapezoids can span iterations of a time loop. It is important to note that Pochoir is a \emph{polyhedral compiler}, which operates on unions of convex polyhedra, which are more general than the hypercube-like iteration spaces described so far.
+Thanks to cut dependence analysis, the resultant trapezoids can span iterations of a time loop. Note that the domain which Pochoir operates on are unions of convex polyhedra, which are more general than the hypercube-like iteration spaces described so far.
 
 \subsubsection{Applicability}
 The Cilk Plus framework, which Pochoir uses, is intended to produce optimal scheduling for parallel tasks, and cache-oblivious algorithms may be optimal up to a constant factor, which would be interesting when targeting multiple platforms.

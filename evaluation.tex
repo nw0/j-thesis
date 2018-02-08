@@ -3,23 +3,28 @@
 \chapter{Evaluation}
 \label{ch:evaluation}
 
-Previous evaluation suggested that Devito gain considerable speedup from time-tiling.
+Previous evaluation suggested that Devito gains considerable speedup from time-tiling.
 This chapter focusses on evaluating this statement with general time-tiling implemented in Devito.
+
+\paragraph{Objective}
+We want to evaluate the performance of the time-tiling transformation against that of tiling only in the other dimensions.
+
 
 \section{Functional correctness}
 This will be done primarily using test cases, some of which have already been written to test the features already implemented.
 Where possible, existing test cases are reused, when the output is expected not to vary.
 
-Additionally, Devito's construction as a finite-difference solver gives rise to natural test cases; the lack of dependence on carefully constructed stencils permits the checking of its output against other tools.
+Additionally, while Devito is targeted at seismic imaging, it can also be used to apply finite-difference methods to general differential equations.
+We are therefore able to perform testing against many natural examples, rather than being dependent on hand-crafted stencils.
 
-\section{Baseline evaluation}
-We will use the same (or as close as possible) set-up as in~\cite{dylan}.
-The evaluation will be run on the acoustic wave equation (AWE) stencil, although some consideration will be necessary to deal with time-dimension buffering.
 
-As a remark, it may be necessary to rebase the time-tiling commits onto a previous commit to enable accurate evaluation.
+\section{Initial evaluation}
+We will perform evaluation against a variety of stencils, including the acoustic wave equation (AWE) stencil used in~\cite{dylan}.
+In all cases, consideration will be necessary to deal with time-dimension buffering.
+This evaluation would comprise both timing and memory usage, as well as examining the loop structures of the generated code.
 
 For a more in depth analysis, we would consider memory analyses measuring cache misses and memory traffic, to ensure that improvements are indeed gleaned from time-tiling rather than other factors.
 
 \section{Extended evaluation}
-As mentioned above, Devito gives rise to many other test cases.
+As mentioned above, Devito gives rise to many natural test cases.
 Implementation and time permitting, we could evaluate the benefit of time-tiling against a plethora of problems, such as inversion, or other operator orderings.

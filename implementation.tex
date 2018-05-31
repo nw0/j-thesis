@@ -66,18 +66,26 @@ for (int t = t_s; t < t_e; t++)
 
 Note that skewing \emph{does not} change the execution order of the loops, nor does it change the structure of the loop nest.
 
-\paragraph{Common sub-expression elimination}
+\subsection{Common sub-expression elimination}
 As skewing is merely a substitution of indices and loop bounds, we do not change the expressions.
 Since arithmetic on floats is generally non-commutative, we especially wish to avoid changing the structure of expressions, to simplify testing of the code.
 
 In particular, we ensure than skewing is performed \emph{before} CSE occurs, to avoid expansion during skewing.
 CSE does not remove the skew, as it is partially applied in the loop header, and partially in the expression (see Figure~\ref{lst:skewing-simple}).
 
+\subsection{Implementation}
+This was a straightforward substitution in the Devito symbolic engine, exactly as described above.
+We iterate over the dimensions, first identifying the time dimension, then adding the offset to each inner space dimension.
+We then replace every reference to the space dimension variable with a similar reference, subtracting the offset.
+
+If there is no time dimension, no skewing is applied, as time-tiling would not be relevant.
+
 
 \section{Time-tiling}
 \label{sec:time-tiling}
 As we noted in the previous section, skewing has not changed the execution order: when applying the tiling transformation, we now have skewed tiles on a skewed iteration space (Figure~\ref{fig:skewed-loops-skewed-space}).
 We now need to `straighten' the tiles by aligning the loop bounds.
+All the transformations in this section pertain to tiling, and they are performed in the Devito loop engine.
 
 
 \subsection{Aligning the loop bounds}
@@ -227,9 +235,15 @@ This would have previously resulted in out-of-bounds accesses as bounding did no
 
 Figures~\ref{lst:skewing-bounded} and~\ref{fig:skewing-bounded} combine skewing and min/max bounding.
 
+\subsection{Implementation details}
+The tiling transformation was implemented using the visitor pattern, as it could more flexibly manipulate Devito's internal representation of the loop structure.
 
-% Parallelism troubles leading to the Visitor
-\paragraph{Parallelism}
+% TODO
+\paragraph{WIP} I think this section will be rather longer than the previous `Implementation', summary -- had a problem with fmax and parallelism, so had to hoist the expression out, which meant that compose\_nodes was hard to use, as the loop body was no longer a single Node.
+So I wrote a visitor, which worked beautifully.
+Will explain this in many words (probably no pictures).
+Also find out why fmax doesn't work -- hard!
+
 
 \section{Test suite}
 

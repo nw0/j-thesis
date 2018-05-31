@@ -52,6 +52,35 @@ However, it is equally valid and perhaps more intuitive to skew after indexing.
 The DLE performs loop transformations including loop fission and tiling, while also marking loops to be executed in parallel or that denormal numbers should be flushed.
 Before it is invoked, the loops are built from the previously-manipulated expressions; clearly it would not be possible to implement tiling before this stage.
 
+\subsection{Loop fission}
+Loop fission splits a loop to improve data locality.
+If the body of a loop nest contains code that can be split into otherwise independent parts, it may be a candidate for loop fission (Figure~\ref{lst:fission-valid}), especially the body can be computed in parallel.
+By evaluating the loops one after another, the amount of cache available to each computation increases, resulting in a speedup.
+
+% TODO
+\begin{figure}[!ht]
+\begin{lstlisting}
+Some code here... (wip)
+
+
+It will be at least 4 lines
+\end{lstlisting}
+	\caption{A loop nest on which loop fission would be valid.}
+	\label{lst:fission-valid}
+\end{figure}
+
+We can easily see that this does not affect space-tiling in Devito, as it has no impact on array indices, since the resultant loops appear in the same nest as the original loop, with the variables duplicated.
+Likewise, this holds equally for time-tiling.
+
+\subsection{OpenMP pragmas and parallelisation}
+Another particularly relevant operation of the DLE is the addition of OpenMP pragmas indicating that a particular loop may be parallelised.
+
+% TODO: example
+
+While this transformation is performed after tiling, it is pertinent as loops must be marked as parallelisable in the intermediate representation.
+Loop tiling generates new loops from old, usually resulting in loop nests that are twice as deep.
+It is important to note which of the original loops can be parallelised, and consequently, which of the tiled loops can be parallelised.
+This is not a major concern for spatial tiling, as seen in Section~\ref{sec:spatial-tiling}, but will later be important in time-tiling.
 
 
 \section{Spatial tiling in Devito}

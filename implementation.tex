@@ -3,16 +3,14 @@
 \chapter{Implementation}
 \label{ch:implementation}
 
-We discuss our implementation of time-tiling in detail (Section~\ref{sec:time-tiling}).
+% TODO: rewrite this para
+We discuss our implementation of time-tiling in detail.
 The latter extends the former, while depending crucially on an initial skewing transformation.
 We examine the safeguards necessary to prevent errors caused by improper skewing.
 Finally, we consider the implications on sparse loops, one of Devito's raisons d'\^etre.
 
+As outlined in Section~\ref{sec:bg-time-tiling}, we implement time-tiling in two stages: skewing in the DSE (Section~\ref{sec:skewing}), and tiling in the DLE (Section~\ref{sec:time-tiling}).
 
-\section{Skewing and Devito transformations}
-\label{sec:time-tiling}
-
-As outlined in Section~\ref{sec:bg-time-tiling}, we implement time-tiling in two stages: skewing in the DSE (Section~\ref{sec:dse}), and tiling in the DLE (Section~\ref{sec:dle}).
 
 \section{Skewing}
 \label{sec:skewing}
@@ -233,17 +231,17 @@ Figures~\ref{lst:skewing-bounded} and~\ref{fig:skewing-bounded} combine skewing 
 % Parallelism troubles leading to the Visitor
 \paragraph{Parallelism}
 
-\subsection{Testing}
+\section{Test suite}
 
-\subsection{User-defined blockshapes}
+\section{Auto-tuning}
 
-\subsection{Auto-tuning}
+\paragraph{Tile sizes}
 
 \section{Further work}
 The implementation work that remains can be divided into several tasks:
 
 \begin{description}
-	\item[Time-tiling] This is mostly complete. Some outstanding items:
+	\item[Time-tiling] This is essentially complete. Some outstanding items:
 	\begin{itemize}
 		\item Removal of `empty' blocks -- trivial; does not affect correctness but might produce speedup\footnote{CLooG does it, but one has difficulty imagining that there will indeed be a noticeable speedup}
 		\item Making this work with time buffering -- some reasoning about skewing factor required

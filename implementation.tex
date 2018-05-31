@@ -149,7 +149,7 @@ for (int t_blk = t_s; t_blk < t_e; t_blk += t_blk_size)
                x < min(x_e + t, x_blk + x_blk_size); x++)
         A[t][(x-t)] = A[t-1][(x-t)-1] + A[t-1][(x-t)+1];
 \end{lstlisting}
-	\caption{We add lower bounds for each of the inner (e.g. \texttt{x}, not \texttt{x\_blk}) variables, and we change the upper bounds for the spatial dimensions to be bounded by \texttt{x\_e + t}, instead of \texttt{x\_e + t\_e}. This prevents out of bounds accesses in the lower and upper triangles of Figure~\ref{fig:skewing-bounded} respectively.}
+	\caption{We add lower bounds for each of the inner (e.g. \texttt{x}, not \texttt{x\_blk}) variables, and we change the upper bounds for the spatial dimensions to be bounded by \texttt{x\_e + t}, instead of \texttt{x\_e + t\_e}. This prevents out of bounds accesses in the lower and upper triangular regions of Figure~\ref{fig:skewing-bounded} respectively.}
 	\label{lst:skewing-bounded}
 \end{figure}
 
@@ -160,8 +160,10 @@ for (int t_blk = t_s; t_blk < t_e; t_blk += t_blk_size)
 \draw[thick,->] (-1,-.5) -- (-1,5.8) node[above]{$x$};
 
 % triangles
-\draw (1.5,0) -- (12.5,0) -- (12.5,5/2) -- cycle;
-\draw (-.5,6/2) -- (-.5,11/2) -- (10.5,11/2) -- cycle;
+\draw (1.5,0) -- (12.5,0) node[anchor=south east] {min\{\texttt{x\_blk}\} \(\ge\) \texttt{x\_s}};
+\draw (1.5,0) -- (12,2.375) node[anchor=west] {\texttt{x\_s + t}};
+\draw (10.5,11/2) -- (-.5,11/2) node[anchor=south west] {max\{\texttt{x\_blk + x\_blk\_size}\} \(\le\) \texttt{x\_e + t\_e}};
+\draw (10.5,11/2) -- (0,3.125) node[anchor=south] {\texttt{x\_e + t}};
 
 \foreach \t in {0,1,2,3,4,5,6}
 \foreach \x in {0,1,2,3,4,5}
@@ -216,7 +218,7 @@ for (int t_blk = t_s; t_blk < t_e; t_blk += t_blk_size)
 \foreach \x in {0,1,2,3,4,5,6,7,8,9,10,11}
 \draw (1pt-1cm,\x/2) -- (-1pt-1cm,\x/2) node[anchor=east] {$\x$};
 \end{tikzpicture}
-\caption{Straightened tiles on a skewed iteration space, with restrictions to valid accesses.}
+\caption{Straightened tiles on a skewed iteration space, with restrictions to valid accesses. The lower triangular reason corresponds to the \texttt{max} bound in Figure~\ref{lst:skewing-bounded}, restricting accesses by the greater of the two lines. Likewise the upper triangular reason corresponds to the \texttt{min} bound.}
 \label{fig:skewing-bounded}
 \end{figure}
 

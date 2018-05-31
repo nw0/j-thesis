@@ -3,6 +3,16 @@
 \chapter{Evaluation}
 \label{ch:evaluation}
 
+This chapter is devoted to the evaluation of performance of time-tiling as implemented in Chapter~\ref{ch:implementation}.
+We discuss the functionality of the time-tiling implementation and its technical requirements (Section XX), and the test methodology (Section XX).
+Section XX examines results under the Laplacian operator.
+Finally, we discuss limitations of testing (Section XX), and consider further work in evaluation (Section XX).
+
+
+
+\paragraph{BREAK}
+Everything that follows here is old.
+
 Previous evaluation suggested that Devito gains considerable speedup from time-tiling.
 This chapter focusses on evaluating this statement with general time-tiling implemented in Devito.
 
@@ -18,12 +28,17 @@ Additionally, while Devito is targeted at seismic imaging, it can also be used t
 We are therefore able to perform testing against many natural examples, rather than being dependent on hand-crafted stencils.
 
 
-\section{Initial evaluation}
+\section{Initial performance evaluation}
+The initial evaluation was completed using a machine in the Department of Computing Student Lab (\texttt{graphic12}).
+We used an iteration space of dimensions \(384^3\) under a Laplacian operator, larger than the cache size to ensure that the tiling functionality was utilised.
+A 30.7\% decrease in runtime was recorded with the Intel C++ Compiler (31.5\% under GCC) over 30 runs.
+
 We will perform evaluation against a variety of stencils, including the acoustic wave equation (AWE) stencil used in~\cite{dylan}.
 In all cases, consideration will be necessary to deal with time-dimension buffering.
 This evaluation would comprise both timing and memory usage, as well as examining the loop structures of the generated code.
 
 For a more in depth analysis, we would consider memory analyses measuring cache misses and memory traffic, to ensure that improvements are indeed gleaned from time-tiling rather than other factors.
+
 
 \section{Extended evaluation}
 As mentioned above, Devito gives rise to many natural test cases.

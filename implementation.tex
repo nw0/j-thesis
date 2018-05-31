@@ -16,14 +16,64 @@ As outlined in Section~\ref{sec:bg-time-tiling}, we implement time-tiling in two
 
 \section{Skewing}
 \label{sec:skewing}
-In our implementation, inner loops are skewed by a factor of time, and the loop bounds skewed by the same factor, negated.
-This ensures that all accesses refer to the same data as before the transformation, making it valid.
-Note that skewing \emph{does not} change the execution order of the loops.
+A loop nest comprises several nested loops, each with its own loop variable.
+We may assume the outermost loop holds the time variable without loss of generality.\footnote{Otherwise, ignore any outer loops.}
+In our implementation, inner loop variables are increased by a factor of time, and the index accesses of that variable are decreased by the same factor in the loop body (Figures~\ref{lst:skewing-simple} and~\ref{fig:skewed-loops-skewed-space}).
+In this way, all accesses refer to the same data as before the transformation, ensuring its validity.
+
+\begin{figure}[!ht]
+\begin{lstlisting}
+for (int t = t_s; t < t_e; t++)
+  for (int x = x_s; x < x_e; x++)
+    A[t][x] = A[t-1][x-1] + A[t-1][x+1];
+
+for (int t = t_s; t < t_e; t++)
+  for (int x = x_s + t; x < x_e + t; x++)
+    A[t][(x-t)] = A[t-1][(x-t)-1] + A[t-1][(x-t)+1];
+\end{lstlisting}
+	\caption{The code transformation of skewing: an unskewed loop, and a skewed version of the same loop. Note that all index accesses still refer to the same values.}
+	\label{lst:skewing-simple}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\begin{tikzpicture}
+\draw[thick,->] (-1,-.5) -- (13,-.5) node[right]{$t$};
+\draw[thick,->] (-1,-.5) -- (-1,5.8) node[above]{$x$};
+
+\foreach \t in {0,1,2,3,4,5,6}
+\foreach \x in {0,1,2,3,4,5}
+\fill[darkgray] (\t*2,\x/2+\t/2) circle (0.1);
+
+\foreach \t in {0,1,2,3,4,5}
+\foreach \x in {1,2,3,4,5}
+\draw[thick,->,gray!60] (\t*2+.2,\x/2+\t/2) -- (\t*2+1.8,\x/2+\t/2);
+
+\foreach \t in {0,1,2,3,4,5}
+\foreach \x in {0,1,2,3,4}
+\draw[thick,->,gray!60] (\t*2+.2,\x/2+\t/2+.05) -- (\t*2+1.8,\x/2+\t/2+.9);
+
+\foreach \t in {0,1,2,3,4,5,6}
+\foreach \x in {0,3}
+\fill[green,opacity=0.3] (\t*2-.6,\x/2+\t/2-.15) rectangle (\t*2+.6,\x/2+\t/2+1.15);
+
+\foreach \t in {0,1,2,3,4,5,6}
+\draw (\t*2,1pt-.5cm) -- (\t*2,-1pt-.5cm) node[anchor=north] {$\t$};
+\foreach \x in {0,1,2,3,4,5,6,7,8,9,10,11}
+\draw (1pt-1cm,\x/2) -- (-1pt-1cm,\x/2) node[anchor=east] {$\x$};
+\end{tikzpicture}
+\caption{A skewed iteration space. Dependencies between blocks have not changed, and interchange is \emph{not} valid. (Skewed) tiles included for reference.}
+\label{fig:skewed-loops-skewed-space}
+\end{figure}
+
+Note that skewing \emph{does not} change the execution order of the loops, nor does it change the structure of the loop nest.
 
 \paragraph{Common sub-expression elimination}
-As skewing is merely a substitution of indices and loop bounds, we do not expect to change the expressions.
+As skewing is merely a substitution of indices and loop bounds, we do not change the expressions.
 Since arithmetic on floats is generally non-commutative, we especially wish to avoid changing the structure of expressions, to simplify testing of the code.
+
 In particular, we ensure than skewing is performed \emph{before} CSE occurs, to avoid expansion during skewing.
+CSE does not remove the skew, as it is partially applied in the loop header, and partially in the expression (see Figure~\ref{lst:skewing-simple}).
 
 
 \section{Time-tiling}

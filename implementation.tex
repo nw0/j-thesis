@@ -59,30 +59,35 @@ We now need to `straighten' the tiles by aligning the loop bounds.
 	\foreach \x in {0,1,2,3,4,5,6,7,8,9,10,11}
 	\draw (1pt-1cm,\x/2) -- (-1pt-1cm,\x/2) node[anchor=east] {$\x$};
 	\end{tikzpicture}
-	\caption{Skewed tiles on a skewed iteration space. Dependencies between blocks have not changed, and interchange is not valid.}
+	\caption{Skewed tiles on a skewed iteration space. Dependencies between blocks have not changed, and interchange is \emph{not} valid.}
 	\label{fig:skewed-loops-skewed-space}
 \end{figure}
 
+\subsection{Making the tiling transformation valid}
+% TODO: elaborate: challenges, specific details
 Having straightened the tiles (as in Figure~\ref{fig:dependence-skew}),
 
 % Parallelism troubles leading to the Visitor
+\paragraph{Parallelism}
 
-\section{Remaining work}
+\subsection{Testing}
+
+\subsection{User-defined blockshapes}
+
+\subsection{Auto-tuning}
+
+\section{Further work}
 The implementation work that remains can be divided into several tasks:
 
 \begin{description}
-	\item[Straightening of tiles] (end Feb.) This will make the interchange valid, enabling time-tiling. There are a number of concerns:
+	\item[Time-tiling] This is mostly complete. Some outstanding items:
 	\begin{itemize}
-		\item The actual straightening, involving some reasoning about loop bounds, use of \texttt{max} -- trivial
-		\item Modification to tile the time loop, possibly by incorporating the \texttt{blockshape} parameter -- moderate difficulty due to test cases
 		\item Removal of `empty' blocks -- trivial; does not affect correctness but might produce speedup\footnote{CLooG does it, but one has difficulty imagining that there will indeed be a noticeable speedup}
 		\item Making this work with time buffering -- some reasoning about skewing factor required
-		\item Test cases -- important; partially done
-		\item Removal of test cases assuming a remainder loop structure.
-		\item Verification that a given skewing factor is valid -- deferred
+		\item Test cases -- more can be added
+		\item Removal of test cases assuming a remainder loop structure
+		\item Verification that a given skewing factor is valid -- this should be very easy as Devito knows all about the stencil
 	\end{itemize}
-
-	\item[Verification of skewing validity] This may be challenging.\footnote{It should be quite easy with knowledge of the data dependence vectors.} For the moment, skewing will work via manual input of skewing factors, hence shifting the responsibility of this onto the user. Clearly, this is not a viable strategy for code acceptance and usage, but it will (minimally) enable our evaluation.
 
 	\item[DSE aggressive mode] Currently, no reason to suppose that this cannot work with \texttt{min}-bounded instead of remainder loops. Need to prove/disprove this, and make it work. Revert to remainder loops if necessary. In particular, we must examine the references made to certain variables.\footnote{Of particular interest are \texttt{blockshape} (the tile size) and dimension extents (e.g.~symbolic extent vs offsets).}
 

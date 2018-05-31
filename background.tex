@@ -40,7 +40,7 @@ We therefore contrive small iteration spaces by partitioning the original space 
 	\centering
 	\begin{tikzpicture}
 	\fill[gray!30!white] (0,0) rectangle (14,5.6);
-	\draw[step=1.6cm,white,very thin] (0,0) grid (14,5.6);
+	\draw[step=1.6cm,white,thick] (0,0) grid (14,5.6);
 
 	\draw[thick,->] (0,0) -- (14.4,0) node[right]{$x$};
 	\draw[thick,->] (0,0) -- (0,6.2) node[above]{$y$};
@@ -154,15 +154,15 @@ Figure~\ref{fig:dependence} illustrates how dependences may look in a (1-dimensi
 
 	\foreach \t in {0,1,2,3,4,5,6}
 	\foreach \x in {0,1,2,3,4,5}
-		\fill[gray] (\t*2,\x) circle (0.1);
+		\fill[darkgray] (\t*2,\x) circle (0.1);
 
 	\foreach \t in {0,1,2,3,4,5}
 	\foreach \x in {1,2,3,4,5}
-		\draw[thick,->,gray!60] (\t*2+.2,\x-.1) -- (\t*2+1.8,\x-.9);
+		\draw[thick,->,darkgray!60] (\t*2+.2,\x-.1) -- (\t*2+1.8,\x-.9);
 
 	\foreach \t in {0,1,2,3,4,5}
 	\foreach \x in {0,1,2,3,4}
-		\draw[thick,->,gray!60] (\t*2+.2,\x+.1) -- (\t*2+1.8,\x+.9);
+		\draw[thick,->,darkgray!60] (\t*2+.2,\x+.1) -- (\t*2+1.8,\x+.9);
 
 	\foreach \t in {0,1,2,3,4,5,6}
 	\foreach \x in {0,3}
@@ -189,15 +189,15 @@ This solves the dependency problem~\cite{boulet98}.
 
 	\foreach \t in {0,1,2,3,4,5,6}
 	\foreach \x in {0,1,2,3,4,5}
-		\fill[gray] (\t*2,\x/2+\t/2) circle (0.1);
+		\fill[darkgray] (\t*2,\x/2+\t/2) circle (0.1);
 
 	\foreach \t in {0,1,2,3,4,5}
 	\foreach \x in {1,2,3,4,5}
-		\draw[thick,->,gray!60] (\t*2+.2,\x/2+\t/2) -- (\t*2+1.8,\x/2+\t/2);
+		\draw[thick,->,darkgray!60] (\t*2+.2,\x/2+\t/2) -- (\t*2+1.8,\x/2+\t/2);
 
 	\foreach \t in {0,1,2,3,4,5}
 	\foreach \x in {0,1,2,3,4}
-		\draw[thick,->,gray!60] (\t*2+.2,\x/2+\t/2+.05) -- (\t*2+1.8,\x/2+\t/2+.9);
+		\draw[thick,->,darkgray!60] (\t*2+.2,\x/2+\t/2+.05) -- (\t*2+1.8,\x/2+\t/2+.9);
 
 	\foreach \t in {0,1,2,3,4,5,6}
 	\foreach \x in {0,3,6,9}

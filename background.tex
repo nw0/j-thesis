@@ -208,7 +208,7 @@ This solves the dependency problem~\cite{boulet98}.
 	\foreach \x in {0,1,2,3,4,5,6,7,8,9,10,11}
 		\draw (1pt-1cm,\x/2) -- (-1pt-1cm,\x/2) node[anchor=east] {$\x$};
 	\end{tikzpicture}
-	\caption{The same iteration space skewed by a factor of \texttt{t} in the \texttt{x} dimension. Note that the tiling is now valid and we can execute the tiles in either dimension first, and that we can merge tiles in the \texttt{t} dimension.}
+	\caption{The same iteration space skewed by a factor of \texttt{t} in the \texttt{x} dimension. Note that the tiling is now valid (as long as we avoid out-of-bounds accesses) and we can execute the tiles in either dimension first, and that we can merge tiles in the \texttt{t} dimension.}
 	\label{fig:dependence-skew}
 \end{figure}
 

@@ -77,11 +77,28 @@ CSE does not remove the skew, as it is partially applied in the loop header, and
 
 
 \section{Time-tiling}
-We then change the tiling algorithm to use the \texttt{min} scheme, rather than remainder loops.
-As we noted in the previous section, this will not change the execution order: we now have skewed tiles on a skewed iteration space (Figure~\ref{fig:skewed-loops-skewed-space}).
+\label{sec:time-tiling}
+As we noted in the previous section, skewing has not changed the execution order: when applying the tiling transformation, we now have skewed tiles on a skewed iteration space (Figure~\ref{fig:skewed-loops-skewed-space}).
 We now need to `straighten' the tiles by aligning the loop bounds.
 
-% TODO: vague
+
+\subsection{Aligning the loop bounds}
+We need to modify the tiling transformation slightly to make the interchange valid.
+This was explored in Section~\ref{sec:bg-time-tiling}.
+As this alignment was achieved alongside bounding for valid array accesses (detailed in the next section), Figures~\ref{lst:skew-straight} and~\ref{fig:skew-straight} are for illustrative purposes only.
+
+\begin{figure}[!ht]
+\begin{lstlisting}
+for (int t_blk = t_s; t_blk < t_e; t_blk += t_blk_size)
+  for (int t = t_blk; t < min(t_e, t_blk + t_blk_size); t++)
+    for (int x_blk = x_s; x_blk < x_e + t_e; x_blk += x_blk_size)
+      for (int x = x_blk; x < min(x_e + t_e, x_blk + x_blk_size); x++)
+        A[t][(x-t)] = A[t-1][(x-t)-1] + A[t-1][(x-t)+1];
+\end{lstlisting}
+	\caption{Code which has been tiled following a skewing transformation. This code contains invalid array accesses.}
+	\label{lst:skew-straight}
+\end{figure}
+
 \begin{figure}[!ht]
 	\centering
 	\begin{tikzpicture}
@@ -89,28 +106,32 @@ We now need to `straighten' the tiles by aligning the loop bounds.
 	\draw[thick,->] (-1,-.5) -- (-1,5.8) node[above]{$x$};
 	
 	\foreach \t in {0,1,2,3,4,5,6}
+	\foreach \x in {0,1,2,3,4,5,6,7,8,9,10,11}
+	\draw (\t*2,\x/2) node[cross=2.4,red]{};
+	
+	\foreach \t in {0,1,2,3,4,5,6}
 	\foreach \x in {0,1,2,3,4,5}
 	\fill[darkgray] (\t*2,\x/2+\t/2) circle (0.1);
 	
 	\foreach \t in {0,1,2,3,4,5}
 	\foreach \x in {1,2,3,4,5}
-	\draw[thick,->,gray!60] (\t*2+.2,\x/2+\t/2) -- (\t*2+1.8,\x/2+\t/2);
+	\draw[thick,->,darkgray!60] (\t*2+.2,\x/2+\t/2) -- (\t*2+1.8,\x/2+\t/2);
 	
 	\foreach \t in {0,1,2,3,4,5}
 	\foreach \x in {0,1,2,3,4}
-	\draw[thick,->,gray!60] (\t*2+.2,\x/2+\t/2+.05) -- (\t*2+1.8,\x/2+\t/2+.9);
+	\draw[thick,->,darkgray!60] (\t*2+.2,\x/2+\t/2+.05) -- (\t*2+1.8,\x/2+\t/2+.9);
 	
 	\foreach \t in {0,1,2,3,4,5,6}
-	\foreach \x in {0,3}
-	\fill[green,opacity=0.3] (\t*2-.6,\x/2+\t/2-.15) rectangle (\t*2+.6,\x/2+\t/2+1.15);
+	\foreach \x in {0,3,6,9}
+	\fill[green,opacity=0.3] (\t*2-.6,\x/2-.15) rectangle (\t*2+.6,\x/2+1.15);
 	
 	\foreach \t in {0,1,2,3,4,5,6}
 	\draw (\t*2,1pt-.5cm) -- (\t*2,-1pt-.5cm) node[anchor=north] {$\t$};
 	\foreach \x in {0,1,2,3,4,5,6,7,8,9,10,11}
 	\draw (1pt-1cm,\x/2) -- (-1pt-1cm,\x/2) node[anchor=east] {$\x$};
 	\end{tikzpicture}
-	\caption{Skewed tiles on a skewed iteration space. Dependencies between blocks have not changed, and interchange is \emph{not} valid.}
-	\label{fig:skewed-loops-skewed-space}
+	\caption{Straightened tiles on a skewed iteration space. Invalid array accesses indicated by crosses.}
+	\label{fig:skew-straight}
 \end{figure}
 
 \subsection{Making the tiling transformation valid}

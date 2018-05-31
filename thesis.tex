@@ -9,6 +9,8 @@
 
 \usepackage{color}
 \usepackage{tikz}
+\usetikzlibrary{shapes.misc}
+\tikzset{cross/.style={cross out, draw=black, minimum size=2*(#1-\pgflinewidth), inner sep=0pt, outer sep=0pt}, cross/.default={1pt}}
 
 \usepackage{listings}
 \lstset{language=C,frame=single,basicstyle=\footnotesize\ttfamily}

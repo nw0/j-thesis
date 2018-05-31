@@ -93,6 +93,8 @@ With spatial tiling, dependencies do not cross tile boundaries, instead only ref
 Therefore, skewing is not required.
 
 \subsection{Remainder loops}
+\label{sec:remainder-loops}
+
 When discussing loop tiling in Section~\ref{sec:bg-loop-tiling}, we constrained our tiles with \texttt{min} constraints.
 To deal with the case when the tile size does not divide the extent of the iteration space, Devito instead implements \emph{remainder loops}, which Figures~\ref{fig:tiled-remainder-space} and~\ref{lst:remainder} illustrate.
 

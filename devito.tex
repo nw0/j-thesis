@@ -6,15 +6,43 @@
 % TODO: elaborate
 This chapter provides a summary of the existing Devito compilation process, in particular the existing implementation of spatial-tiling (Section~\ref{sec:spatial-tiling}).
 
+In general, we have assumed that Devito only performs valid transformations, which we verify against its extensive test suite.
+Therefore, we are only concerned with the transformations that occur between skewing and tiling.
+
 
 \section{The Devito symbolic engine (DSE)}
 \label{sec:dse}
 
 The Devito symbolic engine is responsible for stencil optimisation and common sub-expression elimination (CSE).
-At this point the indices and loops have not been generated yet.
-Although we are working with loop transformations, we chose to perform skewing (Section~\ref{sec:skewing}) here, as skewing is a modification on the canonical indexing scheme.
+At this point the indices and loops have not been generated yet, but we have generated the stencil and know its data dependencies.
 
-% TODO: examples
+Although we are working with loop transformations, we will perform skewing (Section~\ref{sec:skewing}) in the DSE, as skewing is a modification to the canonical indexing scheme.
+
+\subsection{Common sub-expression elimination (CSE)}
+The purpose of CSE is to reduce redundant computation, by removing duplicate expressions~\cite{muchnick-acdi}.
+Figure~\ref{lst:cse-valid} illustrates a situation in which CSE would be used.
+In this situation, CSE would remove the two expressions, replacing it with one that subtracted \texttt{0.5F*u[time][x][y][z]}.
+
+\begin{figure}[!ht]
+\begin{lstlisting}
+float tcse0 = -1.0F*u[time][x][y][z] + ...
+              + .5F*u[time][x][y][z];
+\end{lstlisting}
+	\caption{Code (from Devito) eligible for common sub-expression elimination. Formatting is my own.}
+	\label{lst:cse-valid}
+\end{figure}
+
+In the DSE, this is also performed at a higher level.
+There is a balance to be made here: time-invariant expressions are first separated and assigned to temporaries, avoiding needless CSE, thus decreasing code-generation time.
+
+\subsection{Indexing}
+Indexing in Devito is the transformation of a stencil equation with distance co-ordinates to an expression of an indexed data access.
+It is a transformation between internal representations of the stencil.
+
+% TODO: consider example
+
+Despite being considered a loop transformation, we have chosen to perform skewing before any indexing occurs, for reasons which will be clear in the next chapter.
+However, it is equally valid and perhaps more intuitive to skew after indexing.
 
 
 \section{The Devito loop engine (DLE)}

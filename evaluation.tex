@@ -4,10 +4,37 @@
 \label{ch:evaluation}
 
 This chapter is devoted to the evaluation of performance of time-tiling as implemented in Chapter~\ref{ch:implementation}.
-We discuss the functionality of the time-tiling implementation and its technical requirements (Section XX), and the test methodology (Section XX).
-Section XX examines results under the Laplacian operator.
-Finally, we discuss limitations of testing (Section XX), and consider further work in evaluation (Section XX).
+We discuss the functionality of the time-tiling implementation and its technical requirements (Section~\ref{sec:time-tiling-reqs}), and the test methodology (Section~\ref{sec:test-method}).
+Section~\ref{sec:perf-laplace} examines results under the Laplacian operator.
+Finally, we discuss limitations of testing (Section~\ref{sec:perf-limitations}), and consider further work in evaluation (Section~\ref{sec:further-eval}).
 
+
+\section{Pre-requisites for time-tiling}
+\label{sec:time-tiling-reqs}
+
+% Nothing but Devito
+% Time buffering and save=n>2*time tile size (a nice diagram!)
+% Further prereqs to use the AT
+
+
+\section{Testing methodology}
+\label{sec:test-method}
+
+% Tern, openmp, icc, cat envs
+% Usage of AT -- parameters (skewing factor, time and space tile sizes)
+% Discuss roofline model
+
+
+\section{Performance under the Laplace operator}
+\label{sec:perf-laplace}
+
+
+\section{Limitations of performance evaluation}
+\label{sec:perf-limitations}
+
+
+\section{Further evaluation}
+\label{sec:further-eval}
 
 
 \paragraph{BREAK}

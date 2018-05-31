@@ -86,8 +86,11 @@ This is not a major concern for spatial tiling, as seen in Section~\ref{sec:spat
 \section{Spatial tiling in Devito}
 \label{sec:spatial-tiling}
 
-Under the existing tiling transformation, tiling is performed over every dimension but the innermost, which benefits from vectorisation.
-In the generated stencils, skewing is not required, as dependencies do not cross tile boundaries, instead referencing values computed in the previous time iteration.
+Under the existing tiling transformation in Devito, tiling is performed over every spatial dimension.
+Note that the innermost dimension may be vectorised instead.
+
+With spatial tiling, dependencies do not cross tile boundaries, instead only referencing values computed in the previous time iteration.
+Therefore, skewing is not required.
 
 \subsection{Remainder loops}
 When discussing loop tiling in Section~\ref{sec:bg-loop-tiling}, we constrained our tiles with \texttt{min} constraints.
@@ -107,7 +110,7 @@ To deal with the case when the tile size does not divide the extent of the itera
 	\foreach \y in {0,10,20,30}
 	\draw (1pt,\y*0.2 cm) -- (-1pt,\y*0.2 cm) node[anchor=east] {$\y$};
 	
-	\draw[xstep=12.8,ystep=4.8,black,very thin] (0,0) grid (14,5.6);
+	\draw[xstep=12.8,ystep=4.8,black,thick] (0,0) grid (14,5.6);
 	\draw (6,2.8) circle [radius=0.3] node {$1$};
 	\draw (13.4,2.8) circle [radius=0.3] node {$2$};
 	\draw (6,5.2) circle [radius=0.3] node {$3$};
@@ -137,6 +140,11 @@ for (int x = x_e - (x_e-x_s)%x_bs; x < x_e; x++)
   for (int y = y_e - (y_e-y_s)%y_bs; y < y_e; y++)
     A[x][y] = B[x][y] + B[x][y+1];  // Nest 4
 \end{lstlisting}
-	\caption{Replacement of \texttt{min} constraints with remainder loops from Figure~\ref{lst:interchange}. First the main tiles, then the remainder in \texttt{x} then \texttt{y} dimensions, and finally the remainders in both dimensions. Braces removed for concision.}
+	\caption{Replacement of \texttt{min} constraints of Figure~\ref{lst:interchange} with remainder loops. First the main tiles, then the remainder in \texttt{x} then \texttt{y} dimensions, and finally the remainders in both dimensions. Nest numbering according to Figure~\ref{fig:tiled-remainder-space}. Braces removed for concision.}
 	\label{lst:remainder}
 \end{figure}
+
+\subsection{Determination of tile sizes}
+One notes that the loop tiling method includes code to match tile sizes from a user-provided parameter and check their validity.
+Nevertheless, this is not relevant to the discussion of time-tiling in this report, apart from the straightforward addition of another dimension.
+Therefore, it is omitted from this section.

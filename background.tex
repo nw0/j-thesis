@@ -9,13 +9,13 @@
 \chapter{Background and related work}
 \label{ch:background}
 
-% TODO: \ref sections here
-We first provide an overview of loop nest optimisations, techniques, and analyses that we have applied, with specific reference to the polyhedral model. % TODO: cite
-This forms the basis and context for the entire report, and in particular informs our overview of Devito (Section~\ref{sec:devito}) and the survey of related work, which composes the remainder of this chapter (Section~\ref{sec:survey}).
+We first provide an overview of loop nest optimisations, techniques, and analyses that we have applied, with specific reference to the polyhedral model.
+This forms the basis and context for the entire report, and specifically informs our overview of Devito (Section~\ref{sec:devito}) and the survey of related work, which composes the remainder of this chapter (Section~\ref{sec:survey}).
 
-% TODO: grandiose
 This project extends a well-established idea from compiler theory, \emph{tiling}, to another dimension (time) in Devito.
-This has traditionally been a challenging problem, as evaluating data dependences efficiently is beset with difficulties.
+When tiling, particular attention need be paid to data dependences, locality, and parallelism of the resultant code.
+Despite the confluence of factors, tiling is a remarkably simple concept.
+Nevertheless, it can be difficult to employ optimally.
 
 % We have a tradeoff between computation and memory usage
 % Big IDEA: can use more memory, less computation ("this really should be true")
@@ -28,19 +28,20 @@ This has traditionally been a challenging problem, as evaluating data dependence
 % TODO: mention that iteration spaces under consideration are (nice rectangular continuous) matrices
 
 \subsubsection{Optimisations on loop nests}
-The bulk of computation for finite difference methods lies in loops. % TODO: cite
+The bulk of computation lies in loops~\cite{aho-cptt}.
+Finite-difference methods are no exception, and in such computations, nested loops (`loop nests') are frequently encountered.
 Loop nest optimisations seek to transform a loop, possibly changing its execution order to use data locality, parallelism, or otherwise avoid unnecessary operations.
 
 \subsection{Insight}
 To exploit data locality, we must use data before it gets evicted from the cache; ideally, data is not loaded into the cache more than once.
-This is a complex process \cite{lam91}; nevertheless reuse does occur within sufficiently small iteration spaces.
+Caching and predicting reuse is a complex process \cite{lam91}; empirically, reuse does occur within sufficiently small iteration spaces.
 We therefore contrive small iteration spaces by partitioning the original space into smaller tiles (Figure~\ref{fig:tiled-space}).
 
 \begin{figure}[ht]
 	\centering
 	\begin{tikzpicture}
 	\fill[gray!30!white] (0,0) rectangle (14,5.6);
-	\draw[step=1.6cm,white,thick] (0,0) grid (14,5.6);
+	\draw[xstep=2.6cm,ystep=1.6cm,white,thick] (0,0) grid (14,5.6);
 
 	\draw[thick,->] (0,0) -- (14.4,0) node[right]{$x$};
 	\draw[thick,->] (0,0) -- (0,6.2) node[above]{$y$};
@@ -56,24 +57,24 @@ We therefore contrive small iteration spaces by partitioning the original space 
 Loop tiling is also commonly known as \emph{blocking}, or perhaps less transparently \emph{strip-mine and interchange}, as tiling is typically achieved through these two transformations.
 
 \paragraph{Additional motivation}
-As a remark, the stencils resulting from finite-difference methods tend to have high \emph{arithmetic} intensity, while tiling is used to reduce \emph{memory} pressure.
-As we note later, we can decrease arithmetic intensity (at the expense of increasing memory pressure) by eliminating common sub-expressions, which would ordinarily result in redundant computation.
+As a remark, the stencils resulting from finite-difference methods tend to have high \emph{arithmetic} intensity, while tiling is used to reduce \emph{memory} pressure.\footnote{i.e.~stencils may benefit from memory reuse, since the bottleneck might occur at the CPU.}
+However, as we note later, arithmetic intensity can be decreased (at the expense of increasing memory pressure) by eliminating common sub-expressions and other transformations, which would ordinarily result in redundant computation.
 Further, tiling may also enable other transformations, such as loop-invariant code motion, which again reduces redundant computation.
 
 \subsection{Strip-mining}
 \begin{figure}[ht]
 \begin{lstlisting}
-for (int x = x_start + 1; x < x_end - 1; x++) {
+for (int x = x_start; x < x_end; x++) {
   A[x] = B[x-1] + B[x+1];
 }
 
-for (int x_blk = x_start + 1; x_blk < x_end - 1; x_blk += x_blk_size) {
-  for (int x = x_blk; x < min (x_end - 1, x_blk + x_blk_size); x++) {
+for (int x_blk = x_start ; x_blk < x_end; x_blk += x_blk_size) {
+  for (int x = x_blk; x < min (x_end, x_blk + x_blk_size); x++) {
     A[x] = B[x-1] + B[x+1]; // loop body unchanged
   }
 }
 \end{lstlisting}
-	\caption{A regular loop, then strip-mined over the variable \texttt{x}. Offsets are used on \texttt{x\_start}, \texttt{x\_end} to prevent out-of-bounds accesses. The \texttt{min} function avoids the need for remainder loops, in case the tile (block) size does not evenly divide the extent of the iteration. We will abbreviate the variable names in further examples.}
+	\caption{A regular loop, and the same loop strip-mined over the variable \texttt{x}. \texttt{x\_start} and \texttt{x\_end} are chosen to prevent out-of-bounds accesses. In case the tile (block) size does not evenly divide the extent of the iteration, the \texttt{min} function avoids the need for remainder loops (discussed in Section~\ref{sec:remainder-loops}). We will abbreviate the variable names in subsequent examples.}
 	\label{lst:stripmine-basic}
 \end{figure}
 
@@ -99,7 +100,7 @@ for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
 	\label{lst:stripmine}
 \end{figure}
 
-% TODO: consider visualising the iteration space here
+% TODO: consider visualising the iteration space here, with pointy arrow diagrams
 
 \subsection{Loop interchange}
 \label{sec:interchange}
@@ -118,25 +119,27 @@ for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
   }
 }
 \end{lstlisting}
-	\caption{The loop nest of Figure~\ref{lst:stripmine}, with the \texttt{x} and \texttt{y\_blk} loops interchanged.}
+	\caption{The loop nest of Figure~\ref{lst:stripmine}, with the \texttt{x} and \texttt{y\_blk} loops interchanged. This is a \emph{tiled} loop.}
 	\label{lst:interchange}
 \end{figure}
 
 This is valid when each point in the iteration space does not depend on the values calculated in the same iteration.
 Therefore, one must be extremely careful that no data dependences cross boundaries between tiles; if they do, they must be permitted to cross only in one direction, and the tiles must be scheduled in that order.
+This will become clear in Section~\ref{sec:bg-skewing}.
 
 
 \section{Tiling in the time dimension}
 \label{sec:bg-time-tiling}
 
 \subsection{Motivation}
-% TODO: vague; so what?
 Many problems involving finite difference methods are computationally bounded, rather than bounded by memory throughput.
 However, it is possible to reduce the operation count by exploiting the structure of expressions computed at the cost of increased memory pressure~\cite{fabio-memory}.
-We are therefore interested to perform time-tiling to realise significant performance gains, possibly 27.5\% in Devito alone~\cite{dylan}.
+
+We are therefore interested to perform time-tiling in addition to the existing spatial tiling to alleviate the increased memory pressure and realise significant performance gains, possibly 27.5\% in Devito alone~\cite{dylan}.
 This improvement is significant over the optimisation from tiling in all dimensions apart from time~\cite{pluto}.
 
 \subsection{Skewing}
+\label{sec:bg-skewing}
 In Section~\ref{sec:interchange} we stated that interchange is valid when data dependences do not cross boundaries between tiles.
 This is clear, as if there are no inter-tile dependences, the tiles can be executed in any order.
 
@@ -178,9 +181,8 @@ Figure~\ref{fig:dependence} illustrates how dependences may look in a (1-dimensi
 \end{figure}
 
 We employ skewing to make the interchange valid (Figure~\ref{fig:dependence-skew}).
-This solves the dependency problem~\cite{boulet98}.
+This solves the dependency problem~\cite{boulet98}, and allows for loop interchange.
 
-% TODO: vague
 \begin{figure}[!ht]
 	\centering
 	\begin{tikzpicture}

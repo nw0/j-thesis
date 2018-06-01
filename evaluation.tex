@@ -12,9 +12,52 @@ Finally, we discuss limitations of testing (Section~\ref{sec:perf-limitations}),
 \section{Pre-requisites for time-tiling}
 \label{sec:time-tiling-reqs}
 
-% Nothing but Devito
+As time-tiling has been implemented within Devito, there is no need for any external tool such as a polyhedral compiler.
+Nevertheless, some attention must be paid to configuration when using time-tiling, as follows.
+
+\subsection{Time-buffering}
 % Time buffering and save=n>2*time tile size (a nice diagram!)
+Time-buffering is a memory saving technique.
+
+\begin{figure}[!ht]
+\begin{lstlisting}
+for (int t = t_s; t < t_e; t++)
+  for (int x = x_s; x < x_e; x++)
+    A[t][x] = A[t-1][x] + A[t-2][x] + ... + A[t-n][x];
+\end{lstlisting}
+	\caption{A stencil with a value depending on data in the previous \(n\) time iterations. \(n\) is usually small compared to the problem domain, \texttt{t\_e - t\_s + n} here.}
+	\label{lst:buffer-eg}
+\end{figure}
+
+A stencil may only have dependencies on data from finitely many previous time iterations.
+Consider a stencil with a data dependence on the last \(n\) time iterations (Figure~\ref{lst:buffer-eg}).
+It is clear that whenever \(t \ge n+1\), data from the \(t=0\) iteration is not required.
+
+When space-tiling in Devito, each time iteration only begins once the previous has finished.
+Therefore, we only need to store \(n+1\) time iterations of data: the current iteration being computed; and the previous \(n\) iterations, its dependencies.
+
+% TODO: a diagram explaining the footnote? (promote the footnote)
+To allow for rigorous correctness checks (Section~\ref{sec:eval-func-corr}), we have \emph{not} used time-buffering during the evaluation.
+Nevertheless, it is an easy exercise that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.\footnote{From a synchronisation perspective, this would be extremely challenging. It is fairly clear that time-tiling needs at most \(2n+1\) time iterations of storage, and we would recommend this approach.}
+
+\subsection{Auto-tuner iterations}
 % Further prereqs to use the AT
+Previously covered in Section~\ref{sec:autotune}, the Devito auto-tuner experimentally searches for tile sizes achieving the lowest runtime.
+To do this, it needs to store some time iterations of computations: this value is governed by a parameter.\footnote{The \texttt{at\_squeezer} parameter is the number of iterations that are computed, therefore requiring \(n + \texttt{at\_squeezer}\) time iterations of storage.}
+
+For its results to be meaningful, we need to compute enough time iterations to try large time tile sizes.
+Without time-tiling, a fairly small number of time iterations (4) sufficed for auto-tuning.
+In our evaluation, we decided that the largest desirable time tile size was 16, to which we set the parameter.
+
+\subsection{Time-tiling parameters}
+Time-tiling requires more parameters: a valid skewing factor, and a tile size for the time dimension.
+The tile size search was integrated into the auto-tuner, as it already had functionality to search for spatial tile sizes.
+% TODO: evidence??
+Arguments on data alignment give that the minimum valid skewing factor would produce the lowest runtime computation.
+% TODO: go back and write what a valid skewing factor is
+It was decided to try skewing factors by hand, as their validity would depend on the stencil (Section TODO).
+% TODO: write this up
+We have found that that the data alignment argument holds for the experiments that we have performed (see Appendix TODO for the complete results).
 
 
 \section{Testing methodology}
@@ -23,6 +66,9 @@ Finally, we discuss limitations of testing (Section~\ref{sec:perf-limitations}),
 % Tern, openmp, icc, cat envs
 % Usage of AT -- parameters (skewing factor, time and space tile sizes)
 % Discuss roofline model
+
+\subsection{Functional correctness}
+\label{sec:eval-func-corr}
 
 
 \section{Performance under the Laplace operator}

@@ -235,14 +235,45 @@ This would have previously resulted in out-of-bounds accesses as bounding did no
 
 Figures~\ref{lst:skewing-bounded} and~\ref{fig:skewing-bounded} combine skewing and min/max bounding.
 
-\subsection{Implementation details}
-The tiling transformation was implemented using the visitor pattern, as it could more flexibly manipulate Devito's internal representation of the loop structure.
+\subsection{Implementation}
+Unlike skewing implemented in the DSE, tiling was not done through a simple substitution of variables.
+Instead, the visitor pattern was used to manipulate Devito's internal representation of the loop structure.
 
-% TODO
-\paragraph{WIP} I think this section will be rather longer than the previous `Implementation', summary -- had a problem with fmax and parallelism, so had to hoist the expression out, which meant that compose\_nodes was hard to use, as the loop body was no longer a single Node.
-So I wrote a visitor, which worked beautifully.
-Will explain this in many words (probably no pictures).
-Also find out why fmax doesn't work -- hard!
+Together, the following paragraphs explain this design decision.
+
+\paragraph{OpenMP and \texttt{fmax}}
+While we have used the \texttt{max} function in examples, the only similar function in C, which Devito generates, is \texttt{fmax}.
+However, it is known that we are unable to use \texttt{fmax} in a loop header when the loop is parallelised under OpenMP due to scoping and optimisation problems~\cite{openmp-fmax}.
+
+\paragraph{Loop nest structure}
+Each tiled loop would be tiled into two loops: an inner \texttt{x} loop, and an outer \texttt{x\_blk} loop, for the tiles.
+Substitution would be tricky, as the body of each loop would have to be copied and substituted in turn.
+Only then could the loops be interchanged.
+
+\paragraph{Perfect loop nests}
+Definition. A \emph{perfect loop nest} is a loop which fulfilling this condition: its body contains either a perfect loop nest, or only non-loop statements.
+
+\begin{figure}[!ht]
+\begin{lstlisting}
+for (int x_blk = x_s; x_blk < x_e + t_e; x_blk += x_blk_size)
+  int x_lb = fmax(x_s + t, x_blk);
+  int x_ub = fmin(x_e + t, x_blk + x_blk_size);
+  for (int x = x_lb; x < x_ub; x++)
+    A[t][(x-t)] = A[t-1][(x-t)-1] + A[t-1][(x-t)+1];
+\end{lstlisting}
+	\caption{Bounds hoisted out of the loop header.}
+	\label{lst:hoist-bounds}
+\end{figure}
+
+\paragraph{Direct construction of loop nests}
+In Devito's existing implementation of spatial tiling, loops were tiled with a function designed to manipulate perfect loop nests.
+Each loop would be duplicated, adjusting the bounds on the resultant loop, then composed, along with the body of the innermost loop.
+However, as it proved impossible to insert the \texttt{fmax} function directly into the loop header, it was necessary to hoist computation of the bounds to before each loop (Figure~\ref{lst:hoist-bounds}).
+As this did not resemble a perfect loop nest,\footnote{Note that the control-flow graph of the program would not change under hoisting this expression, and the code motion is legal as the value is loop-invariant.} the approach of composition failed.
+
+\subsubsection{Visitor pattern}
+Given the above constraints, we found that the visitor pattern would be the most practical solution to constructing a new tiled loop nest.
+This allowed for easy propagation of loop properties, offsets to the upper and lower bounds, and a clear distinction between the parallelisable inner loops, and the sequential outer tile loops.
 
 
 \section{Test suite}

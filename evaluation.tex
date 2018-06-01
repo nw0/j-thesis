@@ -87,8 +87,35 @@ Time-tiling reduces memory pressure by increasing reuse of cached data before it
 Accepting the premise that arithmetic intensity can be reduced sufficiently, time-tiling can be used to full effect in reducing memory pressure.\footnote{See Section~\ref{sec:roofline-intro} (``Roofline model'') for more detail.}
 Therefore, we will mainly explore test cases which are already bound by memory throughput.
 
+\subsection{Environment}
+Evaluation was performed on a machine running Ubuntu 16.04 LTS, with all running services required either for the operating system or our evaluation, to minimise external effects on runtime.
+The machine used an Intel Xeon E5-2470 at 2.30 GHz, with 8 cores and 16 threads, and had 64 GB of memory.
+
+% TODO: cache?
+
+To ensure a realistic testing environment and utilise all the available resources, the following hold throughout the experiments:
+
+% TODO: what is openmp
+\begin{itemize}
+	\item OpenMP directives enabled in Devito. Indicates that a loop should be computed in parallel (typically the body of the inner time loop).
+	\item OpenMP environment variable to utilise all 16 available threads.
+	% TODO: cite
+	\item OpenMP environment variable not to migrate threads (``thread pinning''), as well as allocate threads to different cores. Thread migration incurs a significant performance overhead, and parallelism would not help if all threads executed in serial on one core.
+	\item Usage of the Intel C Compiler, \texttt{icc}.
+	\item Devito enables the highest level of compiler optimisation and parallelism in the compiler by default.
+\end{itemize}
+
+\subsection{Use of auto-tuner}
 % Usage of AT -- parameters (skewing factor, time and space tile sizes)
-% Discuss roofline model
+We were wary of assuming which tile sizes might be optimal for time-tiling, as they are not easily predicted from those optimal for spatial tiling or cache size~\cite{lam91}.
+Therefore, the extended Devito auto-tuner (Section~\ref{sec:autotune}) was used to explore as many plausible tile sizes combinations as possible.
+
+As detailed above, experimentation on the skewing factor was done manually.
+An exhaustive search was performed, as the space was relatively small, and the effect on our stencils not well studied.
+
+As a matter of expedience, the auto-tuner was run for at least 3 trials.
+If these produced the same combination of tile sizes, this combination would be chosen as optimal, and run repeatedly to determine its runtime.
+This obviated the need to run the (rather lengthy) auto-tuning for each data point.
 
 \subsection{Functional correctness}
 \label{sec:eval-func-corr}

@@ -315,11 +315,11 @@ The implementation work that remains can be divided into several tasks:
 		\item Verification that a given skewing factor is valid -- this should be very easy as Devito knows all about the stencil
 	\end{itemize}
 
-	\item[DSE aggressive mode] Currently, no reason to suppose that this cannot work with \texttt{min}-bounded instead of remainder loops. Need to prove/disprove this, and make it work. Revert to remainder loops if necessary. In particular, we must examine the references made to certain variables.\footnote{Of particular interest are \texttt{blockshape} (the tile size) and dimension extents (e.g.~symbolic extent vs offsets).}
+	\item[DSE aggressive mode] Currently, no reason to suppose that this cannot work with \texttt{min}-bounded instead of remainder loops. Need to prove/disprove this, and make it work. In particular, we must examine the references made to certain variables.\footnote{Of particular interest are \texttt{blockshape} (the tile size) and dimension extents (e.g.~symbolic extent vs offsets).}
 
 	\item[Sparse loop interpolation] Gather more context and understanding of the problem will be important for reasoning about how this affects time-tiling. Ideally, eventually a proof of what it does/why it does not.
 
 	\item[Detection of when to apply skewing and calculation of the skewing factor] Whether time-tiling is an appropriate optimisation, for a given stencil. Entirely beyond the scope of this work.
 
-	\item[Vectorisation and time-tiling] Suspect something is going wrong, full length of inner dimension are slower than non-blockinner trials.
+	\item[Vectorisation and time-tiling] Suspect something is going wrong, full length of inner dimension are slower than non-blockinner trials. Remark: because of AT fail, probably having \texttt{z\_bs = 8}.
 \end{description}

@@ -79,12 +79,22 @@ We have found that that the data alignment argument holds for the experiments th
 \section{Testing methodology}
 \label{sec:test-method}
 
-% Tern, openmp, icc, cat envs
+Realistic test cases vary from those that are more memory-intensive to those that are more computationally intensive on a given hardware configuration.
+Under the former regime, computational (arithmetic) intensity is fairly low, and the CPU uses data faster than it can be transferred from memory; in the latter case, data can be transferred more rapidly than it can be utilised.
+
+A key premise of Devito is that arithmetic intensity can be decreased at the cost of higher memory pressure, by manipulating expressions~\cite{fabio-memory}.
+Time-tiling reduces memory pressure by increasing reuse of cached data before it is evicted.
+Accepting the premise that arithmetic intensity can be reduced sufficiently, time-tiling can be used to full effect in reducing memory pressure.\footnote{See Section~\ref{sec:roofline-intro} (``Roofline model'') for more detail.}
+Therefore, we will mainly explore test cases which are already bound by memory throughput.
+
 % Usage of AT -- parameters (skewing factor, time and space tile sizes)
 % Discuss roofline model
 
 \subsection{Functional correctness}
 \label{sec:eval-func-corr}
+
+\subsection{Roofline model}
+\label{sec:roofline-intro}
 
 
 \section{Performance under the Laplace operator}

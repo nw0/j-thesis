@@ -54,7 +54,7 @@ Therefore, we only need to store \(n+1\) time iterations of data: the current it
 
 % TODO: a diagram explaining the footnote? (promote the footnote)
 To allow for rigorous correctness checks (Section~\ref{sec:eval-func-corr}), we have \emph{not} used time-buffering during the evaluation.
-Nevertheless, it is an easy exercise that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.\footnote{From a synchronisation perspective, this would be extremely challenging. It is fairly clear that time-tiling needs at most \(2n+1\) time iterations of storage, and we would recommend this approach.}
+Nevertheless, it is clear to see that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.\footnote{From a synchronisation perspective, this would be extremely challenging. It is a fairly simple exercise to show that time-tiling needs at most \(n+t\) time iterations of storage, where \(t\) is the size of a time tile, and we would recommend this approach.}
 
 \subsection{Auto-tuner iterations}
 % Further prereqs to use the AT
@@ -134,13 +134,41 @@ Additional checks were used to determine that the results were not merely zeroes
 \section{Performance under the Laplace operator}
 \label{sec:perf-laplace}
 
+% Sample code from apply.py
+% Insert perf1.py into appendix (invocation of the operator, testing rigour)
+% Performance figures -- the spreadsheet
+% Why report min
+% Explain the parameters used
+% Percentage improvement over space-tiling
+% Discussion of skew factor
+% Sample program output in appendix
+% Discuss peak memory bandwidth, benchmarked bandwidth, and how much Devito used
+% Show that I am memory bounded, not cpu bounded -- ask TJ -- urgent
+
 
 \section{Limitations of performance evaluation}
 \label{sec:perf-limitations}
+% "Why I could be wrong/this isn't representative of real world problems"
+
+% Ask Paul/Fabio
+% No time buffering, so not the same memory accesses
+% Only ran X trials
+% Didn't run vtune, can't prove -why- we're faster. See Dylan 6.7
 
 
 \section{Further evaluation}
 \label{sec:further-eval}
+
+% Bigger time tiles
+% Time buffering (since we store everything to verify)
+% More grid sizes!
+% Run vtune
+% Try more stencils (eqns etc)
+% Try bigger grids
+
+
+\section{Conclusion}
+\label{sec:eval-conclusion}
 
 
 \paragraph{BREAK}

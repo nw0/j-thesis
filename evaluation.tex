@@ -9,6 +9,22 @@ Section~\ref{sec:perf-laplace} examines results under the Laplacian operator.
 Finally, we discuss limitations of testing (Section~\ref{sec:perf-limitations}), and consider further work in evaluation (Section~\ref{sec:further-eval}).
 
 
+\section{Motivation}
+The motivation for this project is to reduce computational runtime by exploiting data locality through time-tiling.
+We have described the motivation and investigated tools which have achieve performance gains from the technique.
+It had previously been shown that Devito benefits from reductions in runtime of up to 27.5\% with time-tiling using CLooG.
+
+Chapter~\ref{ch:implementation} described our implementation of time-tiling in Devito.
+The objective of this evaluation are as follows:
+
+\begin{itemize}
+	\item Measure the performance gain against spatially-tiled computation;
+	\item Verify any requirements to perform time-tiling effectively;
+	\item Determine procedures and heuristics to identify the best-performing parameters for time-tiling;
+	\item Additional verification of correctness, and margin of error introduced against non-tiled code\footnote{For example, due to non-associativity of floating-point arithmetic.}, if any.
+\end{itemize}
+
+
 \section{Pre-requisites for time-tiling}
 \label{sec:time-tiling-reqs}
 

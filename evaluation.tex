@@ -131,19 +131,38 @@ Additional checks were used to determine that the results were not merely zeroes
 \label{sec:roofline-intro}
 
 
+\subsection{Reporting of runtimes}
+Wherever runtimes have been collected in this evaluation, the reported figure will be the \emph{minimum} of the runtimes collected in trials.
+This is taken as most representative, as any noise on the testing machine is minimised, since outside factors can only increase the runtime of our computations.
+
+
 \section{Performance under the Laplace operator}
 \label{sec:perf-laplace}
 
+\subsection{Application of the operator}
 % Sample code from apply.py
 % Insert perf1.py into appendix (invocation of the operator, testing rigour)
+
+\subsection{Parameters}
+\paragraph{Skewing factor}
+The skewing factor was varied to understand the relationship between skewing factor and runtime.
+In particular, we wished to determine if the minimum legal skewing factor would result in the minimum runtime as hypothesised.
+
+\paragraph{Space order}
+The space order of the computation determines the precision of the result.
+In solving differential equations, is the order of the approximation, beyond which smaller terms are discarded.
+A higher space order means each cell is computed using more of its neighbours, resulting in greater precision.
+This would require a larger stencil, and hence a larger skewing factor.
+
+\subsection{Results}
+% Sample program output
 % Performance figures -- the spreadsheet
-% Why report min
-% Explain the parameters used
 % Percentage improvement over space-tiling
-% Discussion of skew factor
-% Sample program output in appendix
 % Discuss peak memory bandwidth, benchmarked bandwidth, and how much Devito used
 % Show that I am memory bounded, not cpu bounded -- ask TJ -- urgent
+
+\subsection{Effect of the skewing factor}
+% Discussion of skew factor
 
 
 \section{Limitations of performance evaluation}

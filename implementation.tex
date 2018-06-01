@@ -246,11 +246,30 @@ Also find out why fmax doesn't work -- hard!
 
 
 \section{Test suite}
+Devito has an extensive test suite, which we endeavoured not to break while implementing time-tiling.
+In particular, the existing tests used for spatial tiling were helpful, as they provided a benchmark for the correct tiling behaviour.
+
+We extended the test suite, verifying the following:
+
+\begin{itemize}
+	\item Skewing must not change the numerical results.
+	\item Spatial tiling behaves as it did before.
+	\item Time-tiling with skewing produces the same results as non-tiled code. This would be equal to the spatially-tiled code.
+\end{itemize}
+
 
 \section{Auto-tuning}
 \label{sec:autotune}
 
-\paragraph{Tile sizes}
+% TODO: rewrite
+Time-tiling introduces two parameters that can be tuned: the skewing factor, and time tile size.
+
+Since time-tiling had not been implemented in Devito before, it was decided that the auto-tuner should try all reasonable time tile sizes.
+It was modified for this behaviour, as well as minor changes to try additional specific combinations, such as trying the maximum block size for the innermost dimension.
+
+We have not extended the auto-tuner to try different skewing factors as we hope to include it in the evaluation.
+Therefore, auto-tuning will be performed for the relevant skewing factors.
+Manually varying the skewing factor is not an undue burden, as there are very few plausible skewing factors.
 
 \section{Further work}
 The implementation work that remains can be divided into several tasks:
@@ -270,4 +289,6 @@ The implementation work that remains can be divided into several tasks:
 	\item[Sparse loop interpolation] Gather more context and understanding of the problem will be important for reasoning about how this affects time-tiling. Ideally, eventually a proof of what it does/why it does not.
 
 	\item[Detection of when to apply skewing and calculation of the skewing factor] Whether time-tiling is an appropriate optimisation, for a given stencil. Entirely beyond the scope of this work.
+
+	\item[Vectorisation and time-tiling] Suspect something is going wrong, full length of inner dimension are slower than non-blockinner trials.
 \end{description}

@@ -235,6 +235,46 @@ This would have previously resulted in out-of-bounds accesses as bounding did no
 
 Figures~\ref{lst:skewing-bounded} and~\ref{fig:skewing-bounded} combine skewing and min/max bounding.
 
+\subsection{Parallelisation of loops}
+A major requirement to maximising reductions in runtime is the parallelisation of computation.
+In spatial tiling, the outer space tile loops (Figure~\ref{lst:parallel-space}) may be computed in parallel.
+
+\begin{figure}[!ht]
+\begin{lstlisting}
+for (int t = t_s, t < t_e; t++)
+  // parallelise the x_blk loop below
+  for (int x_blk = x_s; x_blk < x_e + t_e; x_blk += x_blk_size)
+    for (int x = max(x_s + t, x_blk);
+             x < min(x_e + t, x_blk + x_blk_size); x++)
+      A[t][(x-t)] = A[t-1][(x-t)-1] + A[t-1][(x-t)+1];
+\end{lstlisting}
+	\caption{Under spatial tiling, the loops iterating over the tiles may be parallelised.}
+	\label{lst:parallel-space}
+\end{figure}
+
+One may hope that we can parallelise the same outer space tile loops under time-tiling, but this is not the case.
+Consider a time tile size at least as large as the extent of the time dimension, so that the time dimension forms a single tile.
+The time tile loop will only execute once, so we can ignore it (Figure~\ref{lst:parallel-time}).
+
+\begin{figure}[!ht]
+\begin{lstlisting}
+// cannnot parallelise the x_blk loop, as dependences cross space tiles
+for (int x_blk = x_s; x_blk < x_e + t_e; x_blk += x_blk_size)
+  // parallelising the time loop is never valid
+  for (int t = t_s; t < t_e; t++)
+    // finally, parallelise the inner space loops
+    for (int x = max(x_s + t, x_blk);
+             x < min(x_e + t, x_blk + x_blk_size); x++)
+      A[t][(x-t)] = A[t-1][(x-t)-1] + A[t-1][(x-t)+1];
+\end{lstlisting}
+	\caption{Time-tiled loop nest (including interchange), with the outermost loop removed and bounds on the inner time loop adjusted accordingly. The resultant loop structure is identical to spatial tiling, except with the time loop interchanged to appear within space tile loops.}
+	\label{lst:parallel-time}
+\end{figure}
+
+It is clear to see that the loops iterating over the tiles cannot be parallelised, as there are dependences that cross tile boundaries.
+Since parallelisation of the time loop is always invalid, the first loop that can be parallelised is the outermost space loop that iterates within a spatial tile.
+This can be parallelised as it has no dependences within a time iteration.
+
 \subsection{Implementation}
 Unlike skewing implemented in the DSE, tiling was not done through a simple substitution of variables.
 Instead, the visitor pattern was used to manipulate Devito's internal representation of the loop structure.

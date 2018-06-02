@@ -214,10 +214,14 @@ This solves the dependency problem~\cite{boulet98}, and allows for loop intercha
 	\label{fig:dependence-skew}
 \end{figure}
 
+% TODO: I have avoided talking about dependence vectors. Should this change?
 \subsubsection{Validity of skewing factors}
 We have seen that skewing is a tool to enable loop interchange, and that interchange is legal when dependences only cross tile boundaries in one direction.
 To ensure this, a sufficiently large skewing factor must be used.
-We claim that the minimum valid skewing factor is equal to the maximum spatial dependence~\cite{boulet98}, i.e.~in a stencil \texttt{A[t][x] = c0*A[t-1][x] + c1*A[t-1][x-1] + ... + cn*A[t-1][x-n];}, the minimum valid skewing factor is \texttt{n}.
+We claim that the maximum spatial dependence distance is a valid skewing factor~\cite{xue97-tiling}, i.e.~in a stencil \texttt{A[t][x] = c0*A[t-1][x] + c1*A[t-1][x-1] + ... + cn*A[t-1][x-n];}, the minimum valid skewing factor is \texttt{n}.
+
+As a remark, in this work we have largely decided to skew all spatial dimensions with this skewing factor, due to its simplicity, and the stencils under consideration.
+However, it is equally valid to skew each spatial dimension by the dependence distance \emph{for that particular dimension}~\cite{schreiber-dongarra}.
 
 
 \section{Devito}

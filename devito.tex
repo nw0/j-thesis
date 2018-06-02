@@ -89,16 +89,16 @@ Before it is invoked, the loops are built from the previously-manipulated expres
 
 \subsection{Loop fission}
 Loop fission splits a loop to improve data locality.
-If the body of a loop nest contains code that can be split into otherwise independent parts, it may be a candidate for loop fission (Figure~\ref{lst:fission-valid}), especially the body can be computed in parallel.
+If the body of a loop nest contains code that can be split into otherwise independent parts, it may be a candidate for loop fission (Figure~\ref{lst:fission-valid}), especially the body can be computed in parallel~\cite{page2009}.
 By evaluating the loops one after another, the amount of cache available to each computation increases, resulting in a speedup.
 
 % TODO
 \begin{figure}[!ht]
 \begin{lstlisting}
-Some code here... (wip)
-
-
-It will be at least 4 lines
+for (int x = x_s; x < x_e; x++){
+  A[x] = A[x-1] + A[x-2];
+  B[x] = B[x-1] + B[x-3];
+}
 \end{lstlisting}
 	\caption{A loop nest on which loop fission would be valid.}
 	\label{lst:fission-valid}
@@ -108,7 +108,7 @@ We can easily see that this does not affect space-tiling in Devito, as it has no
 Likewise, this holds equally for time-tiling.
 
 \subsection{OpenMP pragmas and parallelisation}
-Another particularly relevant operation of the DLE is the addition of OpenMP pragmas indicating that a particular loop may be parallelised.
+Another particularly relevant operation of the DLE is the addition of OpenMP pragmas indicating that a particular loop may be parallelised~\cite{openmp-spec}.
 
 % TODO: example
 

@@ -11,6 +11,41 @@ In general, we have assumed that Devito only performs valid transformations, whi
 Therefore, we are only concerned with the transformations that occur between skewing and tiling.
 
 
+\section{Overview}
+Devito generates computations using finite-difference methods to solve differential equations, which are defined using \emph{SymPy}.
+These are defined as operators, which define a problem domain and the equations to be applied (Figure~\ref{lst:devito-op}).
+A stencil is then derived, optimised, and placed into loops, which are further optimised.
+
+\begin{figure}[!ht]
+\begin{lstlisting}[language=Python]
+def operator(shape, **kwargs):
+    grid = Grid(shape=shape)
+    spacing, a, c = 0.1, 0,5, 0,5
+    dx2, dy2 = spacing**2, spacing**2
+    dt = dx2 * dy2 / (2 * a * (dx2 + dy2))
+
+    # Allocate the grid and set initial condition
+    u = TimeFunction(name='u', grid=grid, time_order=2, space_order=2)
+    u.data[0, :] = np.linspace(1e-20, 2e-20,
+                               num=reduce(mul, shape)).reshape(shape)
+
+    # Derive the stencil according to devito conventions
+    eqn = Eq(u.dt, a * (u.dx2 + u.dy2) - c * (u.dxl + u.dyl))
+    stencil = solve(eqn, u.forward, rational=False)[0]
+    op = Operator(Eq(u.forward, stencil), **kwargs)
+
+    # Execute the generated Devito stencil operator
+    op.apply(u=u, t=10, dt=dt)
+    return u.data[1, :], op
+\end{lstlisting}
+	\caption{Defining and applying an operator in Devito. Some set-up is required to define the equation, here a Laplace operator in the \(x,y\) dimensions. In actual usage, the grid (\texttt{u.data[0]}) would be the input domain. The stencil is derived, then applied to the grid.}
+	\label{lst:devito-op}
+\end{figure}
+
+Our starting point is the stencil that Devito has generated, following its transformation from stencil optimisation in the DSE until the point where loop tiling is applied in the DLE.
+We have chosen to restrict the scope of this chapter to these components, which are pertinent to the time-tiling transformation that we implement in Chapter~\ref{ch:implementation}.
+
+
 \section{The Devito symbolic engine (DSE)}
 \label{sec:dse}
 

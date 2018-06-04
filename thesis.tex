@@ -3,6 +3,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{palatino}
 \usepackage{inconsolata}
+\usepackage{mathpazo}
 
 \usepackage{subfiles}
 \usepackage{fullpage}
@@ -12,14 +13,21 @@
 \usetikzlibrary{shapes.misc}
 \tikzset{cross/.style={cross out, draw=black, minimum size=2*(#1-\pgflinewidth), inner sep=0pt, outer sep=0pt}, cross/.default={1pt}}
 
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+
 \usepackage{listings}
 \lstset{language=C,frame=single,basicstyle=\footnotesize\ttfamily}
 
 \usepackage{amsmath}
 
+\usepackage[font=small,labelfont=bf,margin=6pt]{caption}
 \usepackage[hidelinks]{hyperref}
 
-\linespread{1.2}
+\hypersetup{pdftitle={Time-tiling in Devito},pdfauthor={Nicholas Sim}}
+
+\linespread{1.15}
 
 % Throughout this thesis, we shall use `tiling'.
 
@@ -44,6 +52,7 @@
 	\subfile{devito}
 	\subfile{implementation}
 	\subfile{evaluation}
+	\subfile{conclusion}
 
 	\clearpage
 	\addcontentsline{toc}{chapter}{Bibliography}

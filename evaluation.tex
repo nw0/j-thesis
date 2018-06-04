@@ -196,6 +196,29 @@ t,1 & \footnotesize runtime (s) & 2.939 & - & - & - & 2.712 & - & - & - \\
 \end{table}
 
 % Percentage improvement over space-tiling
+\begin{table}[!ht]
+\centering
+\begin{tabular}{rcccc}
+\toprule
+Space-order & Tiling & Arith. intensity & Ach. GFlops & Memory transfer \\
+\midrule
+2 & Time & 4.69 & 50.80 & 10.8 GB/s \\
+2 & Space & 4.69 & 39.49 & 8.42 GB/s \\
+\midrule
+4 & Time & 6.31 & 66.44 & 10.5 GB/s \\
+4 & Space & 6.31 & 54.91 & 8.70 GB/s \\
+\midrule
+8 & Time & 9.29 & 82.97 & 8.93 GB/s \\
+8 & Space & 9.29 & 74.06 & 7.97 GB/s \\
+\midrule
+16 & Time & 15.81 & 94.19 & 5.96 GB/s \\
+16 & Space & 15.81 & 93.24 & 5.90 GB/s \\
+\bottomrule
+\end{tabular}
+\caption{Memory transfer rates for different space-orders under spatial and time-tiling. Arithmetic intensity is the number of floating-point operation performed per byte of data used. Achieved GFlops reported by Devito. Memory transfer rate obtained be dividing the latter by the former.}
+\label{tab:laplace-gflops}
+\end{table}
+
 % Discuss peak memory bandwidth, benchmarked bandwidth, and how much Devito used
 % Show that I am memory bounded, not cpu bounded -- ask TJ -- urgent
 

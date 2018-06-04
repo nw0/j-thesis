@@ -141,6 +141,9 @@ This is taken as most representative, as any noise on the testing machine is min
 \label{sec:perf-laplace}
 
 \subsection{Application of the operator}
+The Laplacian is the operator giving the divergence of the gradient of a scalar function, commonly used in mechanics.
+In our evaluation, we used three spatial dimensions and a time dimension, with a deterministically generated input domain for numerical verification.
+The input domain was chosen to avoid divergence of values, again for the purposes of numerical verification.
 % Sample code from apply.py
 % Insert perf1.py into appendix (invocation of the operator, testing rigour)
 
@@ -154,6 +157,12 @@ The space order of the computation determines the precision of the result.
 In solving differential equations, is the order of the approximation, beyond which smaller terms are discarded.
 A higher space order means each cell is computed using more of its neighbours, resulting in greater precision.
 This would require a larger stencil, and hence a larger skewing factor.
+
+\paragraph{Domain size}
+The size of the domain is the product of all four dimensions in the simulation.
+As memory was limited to 64GB needed to store both time-tiled results and non-tiled results for numerical verification, we decided to use shorter time dimensions, maximising the spatial dimension size for realism.
+We justify this choice, reasoning that runtime should be proportional to the number of time tiles executed.\footnote{This was verified using smaller spatial dimensions.}
+Therefore, we chose time dimensions 16 or 32, as these would be small multiples of the time tile size.
 
 \subsection{Results}
 % Sample program output

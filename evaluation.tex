@@ -88,9 +88,9 @@ Time-tiling reduces memory pressure by increasing reuse of cached data before it
 Accepting the premise that arithmetic intensity can be reduced sufficiently, time-tiling can be used to full effect in reducing memory pressure.\footnote{See Section~\ref{sec:roofline-intro} (``Roofline model'') for more detail.}
 Therefore, we will mainly explore test cases which are already bound by memory throughput.
 
-\subsection{Environment}
-Evaluation was performed on a machine running Ubuntu 16.04 LTS, with all running services required either for the operating system or our evaluation, to minimise external effects on runtime.
-The machine used an Intel Xeon E5-2470 at 2.30 GHz, with 8 cores and 16 threads, and had 64 GB of memory.
+\subsection{Hardware and software environment}
+Evaluation was performed on a machine equipped with a single Intel Xeon\textregistered E5-2470 operating at 2.30 GHz, with 8 cores and 16 threads, and 64 GB of DRAM.
+It ran Ubuntu 16.04 LTS, with all running services required either for the operating system or our evaluation, to minimise external effects on runtime.
 
 % TODO: cache?
 
@@ -184,7 +184,7 @@ Therefore, we chose time dimensions 16 or 32, as these would be small multiples 
 \centering
 \begin{tabular}{rr|cccc|cccc}
 \toprule
-& Grid size & \multicolumn{4}{c}{<32,500,500,500>} & \multicolumn{4}{c}{<16,600,600,600>} \\
+& Grid size & \multicolumn{4}{c}{\( 32 \times 500^3 \)} & \multicolumn{4}{c}{\( 16 \times 600^3 \)} \\
 & Space-order & 2 & 4 & 8 & 16 & 2 & 4 & 8 & 16 \\
 \midrule
 N & \footnotesize runtime (s) & 6.121 & 7.572 & 10.65  & 16.941 & 5.189 & 6.402 & 9.026 & 14.87 \\
@@ -252,7 +252,7 @@ Space-order & Tiling & Arith. intensity & Ach. GFlops & Memory transfer \\
 16 & Space & 15.81 & 93.24 & 5.90 GB/s \\
 \bottomrule
 \end{tabular}
-\caption{Memory transfer rates for different space-orders under spatial and time-tiling. Arithmetic intensity is the number of floating-point operation performed per byte of data used. Achieved GFlops reported by Devito. Memory transfer rate obtained be dividing the latter by the former.}
+\caption{Memory transfer rates for different space-orders under spatial and time-tiling, grid size \(16 \times 600^3\). Arithmetic intensity is the number of floating-point operations performed per byte of data used. Achieved GFlops reported by Devito. Memory transfer rate obtained by dividing the latter by the former.}
 \label{tab:laplace-gflops}
 \end{table}
 
@@ -283,7 +283,9 @@ Therefore, we expect that we are nearing the computational bound of our test mac
 % Show that I am memory bounded, not cpu bounded -- ask TJ -- urgent
 
 \subsection{Effect of the skewing factor}
-% Discussion of skew factor
+We observe that in almost every case, time-tiling with a smaller skewing factor produces a lower runtime than a larger one, and that there is a progressive increase in runtime as the skewing factor increases.
+
+However, we would be wary of drawing this conclusion for stencils under Devito in general, until other stencils have been sampled.
 
 
 \section{Limitations of performance evaluation}

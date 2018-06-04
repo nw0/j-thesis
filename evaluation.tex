@@ -201,7 +201,13 @@ t,1 & \footnotesize runtime (s) & 2.939 & - & - & - & 2.712 & - & - & - \\
 \label{tab:laplace-results}
 \end{table}
 
-% Percentage improvement over space-tiling
+Table~\ref{tab:laplace-results} shows the runtimes arising from running time-tiling compared to spatial tiling under the Laplace operator.
+Two grid sizes were chosen in accordance with our discussion on domain size above.
+
+Immediately evident is that the benefit from time-tiling rapidly tapers as the space-order increases, with usage of broader stencils.
+There are two likely (related) explanations for this: an increase in the amount of data needed to compute any one tile, and an increase in arithmetic intensity, slowing the rate of data consumption, making memory bandwidth less relevant.
+Table~\ref{tab:laplace-gflops} shows a calculation achieved memory transfer rates.
+
 \begin{table}[!ht]
 \centering
 \begin{tabular}{rcccc}
@@ -224,6 +230,11 @@ Space-order & Tiling & Arith. intensity & Ach. GFlops & Memory transfer \\
 \caption{Memory transfer rates for different space-orders under spatial and time-tiling. Arithmetic intensity is the number of floating-point operation performed per byte of data used. Achieved GFlops reported by Devito. Memory transfer rate obtained be dividing the latter by the former.}
 \label{tab:laplace-gflops}
 \end{table}
+
+It is fairly clear that the achieved memory transfer rates decreases progressively as the space-order increases.
+We also note that arithmetic intensity increases significantly from a space-order of 2 to 16.
+At the same time, reported GFlops increase from under half of the 130 GFlops achieved by the \emph{LINPACK} benchmark, to nearly 75\%.
+Therefore, we expect that we are nearing the computational bound of our test machine, and in accordance with the roofline model, would expect little improvement from memory bandwidth improvements such as time-tiling.
 
 % Discuss peak memory bandwidth, benchmarked bandwidth, and how much Devito used
 % Show that I am memory bounded, not cpu bounded -- ask TJ -- urgent

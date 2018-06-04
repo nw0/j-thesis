@@ -3,13 +3,12 @@
 \chapter{Implementation}
 \label{ch:implementation}
 
-% TODO: rewrite this para
-We discuss our implementation of time-tiling in detail.
-The latter extends the former, while depending crucially on an initial skewing transformation.
-We examine the safeguards necessary to prevent errors caused by improper skewing.
-Finally, we consider the implications on sparse loops, one of Devito's raisons d'\^etre.
+Having previously seen the concepts of time-tiling and the relevant components of Devito, this chapter presents our implementation of time-tiling in Devito, with reference to the design choices made.
+For the most part, the implementation follows naturally from the previous chapters, although great care was required for the details, particularly the correct propagation of loop bounds under the transformations.
 
 As outlined in Section~\ref{sec:bg-time-tiling}, we implement time-tiling in two stages: skewing in the DSE (Section~\ref{sec:skewing}), and tiling in the DLE (Section~\ref{sec:time-tiling}).
+% TODO: talk about test suite, AT?
+Finally, we consider the implications on sparse loops, one of Devito's raisons d'\^etre.
 
 
 \section{Skewing}

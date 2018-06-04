@@ -15,7 +15,7 @@ We have described the motivation and investigated tools which have achieve perfo
 It had previously been shown that Devito benefits from reductions in runtime of up to 27.5\% with time-tiling using CLooG.
 
 Chapter~\ref{ch:implementation} described our implementation of time-tiling in Devito.
-The objective of this evaluation are as follows:
+The objectives of this evaluation are as follows:
 
 \begin{itemize}
 	\item Measure the performance gain against spatially-tiled computation;
@@ -130,6 +130,12 @@ Additional checks were used to determine that the results were not merely zeroes
 
 \subsection{Roofline model}
 \label{sec:roofline-intro}
+
+The Sandy Bridge architecture supports execution of up to 16 single-precision floating point operations per cycle, giving a theoretical maximum of 294.4 GFlops.
+The \emph{LINPACK} benchmark, highly optimised and likely to perform faster than any stencil we evaluate, achieves a maximum of 131 GFlops on this machine.
+In particular, to avoid approaching this limit, we intend to focus on stencils achieving performance well below this figure.
+
+The \emph{STREAM} benchmark indicates that the peak memory bandwidth of the machine is 16.3 GB/s.
 
 
 \subsection{Reporting of runtimes}

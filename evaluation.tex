@@ -131,10 +131,17 @@ Additional checks were used to determine that the results were not merely zeroes
 \subsection{Roofline model}
 \label{sec:roofline-intro}
 
+The roofline model describes how arithmetic (or \emph{operational}) intensity kernel affects its performance on a given system.
+In particular, it gives upper bounds for performance, and describes the bottlenecks that a program would encounter based on its arithmetic intensity.~\cite{roofline}.
+The model states that as arithmetic intensity increases, performance increases at a rate determined by the memory bandwidth, until it reaches the performance limit (in Flops, floating-point operations per second) of the processor.
+
+% TODO: this needs a picture
+Time-tiling is an optimisation to improve the re-use of cache data, increasing the effective memory bandwidth of a system.
+Therefore, its benefit will only be seen under a sufficiently low arithmetic intensity, and will taper off as we approach the performance ceiling of the processor.
+
 The Sandy Bridge architecture supports execution of up to 16 single-precision floating point operations per cycle, giving a theoretical maximum of 294.4 GFlops.
 The \emph{LINPACK} benchmark, highly optimised and likely to perform faster than any stencil we evaluate, achieves a maximum of 131 GFlops on this machine.
 In particular, to avoid approaching this limit, we intend to focus on stencils achieving performance well below this figure.
-
 The \emph{STREAM} benchmark indicates that the peak memory bandwidth of the machine is 16.3 GB/s.
 
 

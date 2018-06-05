@@ -66,6 +66,8 @@ for (int t = t_s; t < t_e; t++)
 Note that skewing \emph{does not} change the execution order of the loops, nor does it change the structure of the loop nest.
 
 \subsection{Common sub-expression elimination}
+\label{sec:impl-cse}
+
 As skewing is merely a substitution of indices and loop bounds, we do not change the expressions.
 Since arithmetic on floats is generally non-commutative, we especially wish to avoid changing the structure of expressions, to simplify testing of the code.
 
@@ -165,9 +167,9 @@ for (int t_blk = t_s; t_blk < t_e; t_blk += t_blk_size)
 \draw[thick,->] (-1,-.5) -- (-1,5.8) node[above]{$x$};
 
 % triangles
-\draw (1.5,0) -- (12.5,0) node[anchor=south east] {min\{\texttt{x\_blk}\} \(\ge\) \texttt{x\_s}};
+\draw (1.5,0) -- (12.5,0) node[anchor=south east] {min\{\texttt{x\_blk}\} = \texttt{x\_s}};
 \draw (1.5,0) -- (12,2.375) node[anchor=west] {\texttt{x\_s + t}};
-\draw (10.5,11/2) -- (-.5,11/2) node[anchor=south west] {max\{\texttt{x\_blk + x\_blk\_size}\} \(\le\) \texttt{x\_e + t\_e}};
+\draw (10.5,11/2) -- (-.5,11/2) node[anchor=south west] {max\{\texttt{x\_blk + x\_blk\_size}\} = \texttt{x\_e + t\_e}};
 \draw (10.5,11/2) -- (0,3.125) node[anchor=south] {\texttt{x\_e + t}};
 
 \foreach \t in {0,1,2,3,4,5,6}

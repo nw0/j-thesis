@@ -58,7 +58,7 @@ We therefore contrive small iteration spaces by partitioning the original space 
 Loop tiling is also commonly known as \emph{blocking}, or perhaps less transparently \emph{strip-mine and interchange}, as tiling is typically achieved through these two transformations.
 
 \paragraph{Additional motivation}
-As a remark, the stencils resulting from finite-difference methods tend to have high \emph{arithmetic} intensity, while tiling is used to reduce \emph{memory} pressure.\footnote{i.e.~stencils may benefit from memory reuse, since the bottleneck might occur at the CPU.}
+As a remark, the stencils resulting from finite-difference methods tend to have high \emph{arithmetic} intensity, while tiling is used to reduce \emph{memory} pressure.\footnote{Thus stencils may not benefit from memory reuse if the bottleneck occurs at the CPU.}
 However, as we note later, arithmetic intensity can be decreased (at the expense of increasing memory pressure) by eliminating common sub-expressions and other transformations, which would ordinarily result in redundant computation.
 Further, tiling may also enable other transformations, such as loop-invariant code motion, which again reduces redundant computation.
 

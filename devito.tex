@@ -77,7 +77,7 @@ It is a transformation between internal representations of the stencil.
 
 \clar{Need example?}
 
-Despite being considered a loop transformation, we have chosen to perform skewing before any indexing occurs, for reasons which will be clear in the next chapter.
+Despite being considered a loop transformation, we have chosen to perform skewing before any indexing occurs, for reasons which will be clear in Section~\ref{sec:impl-cse}.
 However, it is equally valid and perhaps more intuitive to skew after indexing.
 
 
@@ -89,7 +89,7 @@ Before it is invoked, the loops are built from the previously-manipulated expres
 
 \subsection{Loop fission}
 Loop fission splits a loop to improve data locality.
-If the body of a loop nest contains code that can be split into otherwise independent parts, it may be a candidate for loop fission (Figure~\ref{lst:fission-valid}), especially the body can be computed in parallel~\cite{page2009}.
+If the body of a loop nest contains code that can be split into otherwise independent loops, it may be a candidate for loop fission (Figure~\ref{lst:fission-valid}), especially the body can be computed in parallel~\cite{page2009}.
 By evaluating the loops one after another, the amount of cache available to each computation increases, resulting in a speedup.
 
 \begin{figure}[!ht]
@@ -112,7 +112,7 @@ Another particularly relevant operation of the DLE is the addition of OpenMP pra
 \clar{Need example?}
 
 While this transformation is performed after tiling, it is pertinent as loops must be marked as parallelisable in the intermediate representation.
-Loop tiling generates new loops from old, usually resulting in loop nests that are twice as deep.
+Loop tiling generates new loops from old, resulting in loop nests that are twice as deep.
 It is important to note which of the original loops can be parallelised, and consequently, which of the tiled loops can be parallelised.
 This is not a major concern for spatial tiling, as seen in Section~\ref{sec:spatial-tiling}, but will later be important in time-tiling.
 
@@ -152,7 +152,7 @@ To deal with the case when the tile size does not divide the extent of the itera
 	\draw (6,5.2) circle [radius=0.3] node {$3$};
 	\draw (13.4,5.2) circle [radius=0.3] node {$4$};
 	\end{tikzpicture}
-	\caption{Tiles over an iteration space. Note that the tile size need not be the same in each dimension, or divide the extent of the iteration cleanly.}
+	\caption{Tiles over an iteration space, with loop nests numbered 1--4. 1 indicates the main loop nest, the rest are remainder loop nests.}
 	\label{fig:tiled-remainder-space}
 \end{figure}
 

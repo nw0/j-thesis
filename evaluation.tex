@@ -5,8 +5,8 @@
 
 This chapter is devoted to the evaluation of performance of time-tiling as implemented in Chapter~\ref{ch:implementation}.
 We discuss the functionality of the time-tiling implementation and its technical requirements (Section~\ref{sec:time-tiling-reqs}), and the test methodology (Section~\ref{sec:test-method}).
-Section~\ref{sec:perf-laplace} examines results under the Laplacian operator.
-Finally, we discuss limitations of testing (Section~\ref{sec:perf-limitations}), and consider further work in evaluation (Section~\ref{sec:further-eval}).
+Section~\ref{sec:perf-laplace} examines results under the Laplace operator, and Section~\ref{sec:perf-awe} the acoustic wave equation.
+Finally, we discuss limitations of our performance testing (Section~\ref{sec:perf-limitations}), and consider further work in evaluation (Section~\ref{sec:further-eval}).
 
 
 \section{Motivation}
@@ -47,11 +47,12 @@ for (int t = t_s; t < t_e; t++)
 
 A stencil may only have dependencies on data from finitely many previous time iterations.
 Consider a stencil with a data dependence on the last \(n\) time iterations (Figure~\ref{lst:buffer-eg}).
-It is clear that whenever \(t > n+1\), data from the \(t=0\)-th iteration is no longer required, and can be overwritten.
+It is clear that whenever \(t > n\), data from the 0-th time iteration is no longer required, and can be overwritten.
 
 When space-tiling in Devito, each time iteration only begins once the previous iteration has finished.
 Therefore, we only need storage for \(n+1\) time iterations of data: the current iteration being computed; and the previous \(n\) iterations, its dependencies.
 
+\wip{Using time buffering for AWE}
 To allow for rigorous correctness checks (Section~\ref{sec:eval-func-corr}), we have \emph{not} used time-buffering during the evaluation.
 Nevertheless, it is straightforward to establish bounds on the size of a time buffer.
 It is clear that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.
@@ -74,7 +75,7 @@ In our evaluation, we decided that the largest desirable time tile size was 16, 
 Time-tiling provides more parameters: a valid skewing factor, and a tile size for the time dimension.
 The tile size search was integrated into the auto-tuner, as it already had functionality to search for spatial tile sizes.
 Arguments on data alignment give that the minimum valid skewing factor would produce the lowest runtime computation.
-It was decided to try skewing factors by hand, as their validity would depend on the stencil (Section TODO).
+It was decided to try skewing factors by hand, as their validity would depend on the stencil (Section~\ref{sec:bg-skewing}).
 We have found that that the data alignment argument holds for the experiments that we have performed (see Appendix TODO for the complete results).
 
 
@@ -116,6 +117,7 @@ Therefore, the extended Devito auto-tuner (Section~\ref{sec:autotune}) was used 
 As detailed above, experimentation on the skewing factor was done manually.
 An exhaustive search was performed, as the space was relatively small, and the effect on our stencils not well studied.
 
+\wip{For Laplace only}
 As a matter of expedience, the auto-tuner was run for at least 3 trials.
 If these produced the same combination of tile sizes, this combination would be chosen as optimal, and run repeatedly to determine its runtime.
 This obviated the need to run the (rather lengthy) auto-tuning for each data point.

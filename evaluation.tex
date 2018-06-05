@@ -150,17 +150,7 @@ Wherever runtimes have been collected in this evaluation, the reported figure wi
 This is taken as most representative, as any noise on the testing machine is minimised, since outside factors can only increase the runtime of our computations.
 
 
-\section{Performance under the Laplace operator}
-\label{sec:perf-laplace}
-
-\subsection{Application of the operator}
-The Laplacian is the operator giving the divergence of the gradient of a scalar function, commonly used in mechanics.
-In our evaluation, we used three spatial dimensions and a time dimension, with a deterministically generated input domain for numerical verification.
-The input domain was chosen to avoid divergence of values, again for the purposes of numerical verification.
-% Sample code from apply.py
-% Insert perf1.py into appendix (invocation of the operator, testing rigour)
-
-\subsection{Parameters}
+\section{Test parameters}
 \paragraph{Skewing factor}
 The skewing factor was varied to understand the relationship between skewing factor and runtime.
 In particular, we wished to determine if the minimum legal skewing factor would result in the minimum runtime as hypothesised.
@@ -176,6 +166,17 @@ The size of the domain is the product of all four dimensions in the simulation.
 As memory was limited to 64GB needed to store both time-tiled results and non-tiled results for numerical verification, we decided to use shorter time dimensions, maximising the spatial dimension size for realism.
 We justify this choice, reasoning that runtime should be proportional to the number of time tiles executed.\footnote{This was verified using smaller spatial dimensions.}
 Therefore, we chose time dimensions 16 or 32, as these would be small multiples of the time tile size.
+
+
+\section{Performance under the Laplace operator}
+\label{sec:perf-laplace}
+
+\subsection{Application of the operator}
+The Laplacian is the operator giving the divergence of the gradient of a scalar function, commonly used in mechanics.
+In our evaluation, we used three spatial dimensions and a time dimension, with a deterministically generated input domain for numerical verification.
+The input domain was chosen to avoid divergence of values, again for the purposes of numerical verification.
+% Sample code from apply.py
+% Insert perf1.py into appendix (invocation of the operator, testing rigour)
 
 \subsection{Results}
 % Sample program output
@@ -267,10 +268,12 @@ ytick distance=10,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-sp600.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-tm600.csv};
+\addplot [domain=4:8] {16.3*x};
+\addplot [domain=8:16] {130.4};
 \legend{Space-tiling,Time-tiling}
 \end{axis}
 \end{tikzpicture}
-\caption{Graph of performance against arithmetic intensity for the Laplace operator, grid size \(16 \times 600^3\). As predicted by the roofline model, GFlops achieved increases for stencils of lower arithmetic intensity, but tapers off as arithmetic increases.}
+\caption{Graph of performance against arithmetic intensity for the Laplace operator, grid size \(16 \times 600^3\). As predicted by the roofline model, GFlops achieved increases for stencils of lower arithmetic intensity, but tapers off as arithmetic increases. The solid line is the theoretical maximum predicted by the roofline model.}
 \label{fig:laplace-roofline}
 \end{figure}
 
@@ -282,10 +285,22 @@ Therefore, we expect that we are nearing the computational bound of our test mac
 % Discuss peak memory bandwidth, benchmarked bandwidth, and how much Devito used
 % Show that I am memory bounded, not cpu bounded -- ask TJ -- urgent
 
-\subsection{Effect of the skewing factor}
+
+\section{Performance under the acoustic wave equation operator}
+\label{sec:perf-awe}
+
+\subsection{Application of the operator}
+The acoustic wave equation (AWE) determines the propagation of acoustic waves, describing velocity as a function of space and time.
+In our evaluation, we again used three spatial dimensions and a time dimension, with deterministically generated input.
+
+\subsection{Results}
+
+
+\section{Effect of the skewing factor}
 We observe that in almost every case, time-tiling with a smaller skewing factor produces a lower runtime than a larger one, and that there is a progressive increase in runtime as the skewing factor increases.
 
-However, we would be wary of drawing this conclusion for stencils under Devito in general, until other stencils have been sampled.
+% TODO: Discuss odd skewing factors, e.g. k=3
+However, we would be wary of drawing this conclusion for stencils under Devito in general, until more stencils have been sampled.
 
 
 \section{Limitations of performance evaluation}

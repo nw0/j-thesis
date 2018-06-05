@@ -4,7 +4,7 @@
 \label{ch:devito}
 
 We reviewed Devito's motivation and overall architecture in Section~\ref{sec:devito}.
-% TODO: elaborate
+\wip{elaborate}
 This chapter examines the details of the existing Devito compilation process pertinent to our implementation of time-tiling, in particular the existing implementation of spatial-tiling (Section~\ref{sec:spatial-tiling}).
 
 In general, we have assumed that Devito only performs valid transformations, which we verify against its extensive test suite.
@@ -75,7 +75,7 @@ There is a balance to be made here: time-invariant expressions are first separat
 Indexing in Devito is the transformation of a stencil equation with distance co-ordinates to an expression of an indexed data access.
 It is a transformation between internal representations of the stencil.
 
-% TODO: consider example
+\clar{Need example?}
 
 Despite being considered a loop transformation, we have chosen to perform skewing before any indexing occurs, for reasons which will be clear in the next chapter.
 However, it is equally valid and perhaps more intuitive to skew after indexing.
@@ -92,7 +92,6 @@ Loop fission splits a loop to improve data locality.
 If the body of a loop nest contains code that can be split into otherwise independent parts, it may be a candidate for loop fission (Figure~\ref{lst:fission-valid}), especially the body can be computed in parallel~\cite{page2009}.
 By evaluating the loops one after another, the amount of cache available to each computation increases, resulting in a speedup.
 
-% TODO
 \begin{figure}[!ht]
 \begin{lstlisting}
 for (int x = x_s; x < x_e; x++){
@@ -110,7 +109,7 @@ Likewise, this holds equally for time-tiling.
 \subsection{OpenMP pragmas and parallelisation}
 Another particularly relevant operation of the DLE is the addition of OpenMP pragmas indicating that a particular loop may be parallelised~\cite{openmp-spec}.
 
-% TODO: example
+\clar{Need example?}
 
 While this transformation is performed after tiling, it is pertinent as loops must be marked as parallelisable in the intermediate representation.
 Loop tiling generates new loops from old, usually resulting in loop nests that are twice as deep.

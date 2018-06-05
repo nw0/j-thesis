@@ -3,6 +3,10 @@
 \chapter{Introduction}
 % Limit myself to 2 paras here?
 
+\clar{Target audience? `People who know about PDEs and computing them'?}
+
+\wip{(How) is this \emph{truly} exciting?}
+
 In many engineering domains, finite-difference methods are used to find approximate solutions to differential equations.
 For scientists using differential equations in novel ways, tools which can compute partial differential equations directly are helpful, as it enables them to refine their models quickly.
 
@@ -28,7 +32,6 @@ This is extremely helpful if one is experimenting with models, or continually mo
 % TODO: Check definition of stencil
 In modern usage, such computations may be transformed into \emph{stencils}.
 There are many compilers optimising stencil kernels with \emph{time-tiling}, an optimisation which has not been implemented in Devito yet.
-% TODO: why it hasn't been solved for Devito
 It has been previously demonstrated that time-tiling has the potential to reduce the run time of `some Devito stencil loops by up to 27.5\%' \cite{dylan} when performing time-tiling against the existing spatial tiling which the tool is able to perform.
 In this case, another tool (CLooG) was used to add time-tiling to the Devito code.
 
@@ -41,7 +44,7 @@ The principal objective of this project was to implement tiling over the time di
 
 In summary, our contributions are:
 
-% TODO: We want a lot more detail in this list
+\clar{More detail in this list?}
 \begin{itemize}
 	\item An implementation of time-tiling in Devito, including a simplification of the generated loop structure.
 	An analysis of its legality and the necessary checks to guarantee this.

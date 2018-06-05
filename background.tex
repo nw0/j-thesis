@@ -25,7 +25,8 @@ Nevertheless, it can be difficult to employ optimally.
 
 \section{Loop tiling}
 \label{sec:bg-loop-tiling}
-% TODO: mention that iteration spaces under consideration are (nice rectangular continuous) matrices
+
+\wip{Mention that we are considering hypercube-like iteration spaces}
 
 \subsubsection{Optimisations on loop nests}
 The bulk of computation lies in loops~\cite{aho-cptt}.
@@ -100,8 +101,6 @@ for (int x_blk = x_s; x_blk < x_e; x_blk += x_bs) {
 	\label{lst:stripmine}
 \end{figure}
 
-% TODO: consider visualising the iteration space here, with pointy arrow diagrams
-
 \subsection{Loop interchange}
 \label{sec:interchange}
 Loop interchange is based on the observation that a change in execution order does not change the correctness of a strip-mined program.
@@ -143,11 +142,11 @@ This improvement is significant over the optimisation from tiling in all dimensi
 In Section~\ref{sec:interchange} we stated that interchange is valid when data dependences do not cross boundaries between tiles.
 This is clear, as if there are no inter-tile dependences, the tiles can be executed in any order.
 
-% TODO: "problems we discuss later": verify these are indeed discussed
-% This could probably be clearer
+\wip{Definition here could be clearer}
 \emph{Data dependences} occur when two statements reference a datum, at least one of which change it.
 To preserve the dependence, we must preserve the order in which these statements are executed.
 Figure~\ref{fig:dependence} illustrates how dependences may look in a (1-dimensional) iteration space similar to the problems we discuss later.
+\wip{Verify that these problems were indeed discussed later}
 
 \begin{figure}[ht]
 	\centering
@@ -214,8 +213,9 @@ This solves the dependency problem~\cite{boulet98}, and allows for loop intercha
 	\label{fig:dependence-skew}
 \end{figure}
 
-% TODO: I have avoided talking about dependence vectors. Should this change?
 \subsubsection{Validity of skewing factors}
+\clar{Should I explicitly mention dependence vectors? Would have to define them.}
+
 We have seen that skewing is a tool to enable loop interchange, and that interchange is legal when dependences only cross tile boundaries in one direction.
 To ensure this, a sufficiently large skewing factor must be used.
 We claim that the maximum spatial dependence distance is a valid skewing factor~\cite{xue97-tiling}, i.e.~in a stencil \texttt{A[t][x] = c0*A[t-1][x] + c1*A[t-1][x-1] + ... + cn*A[t-1][x-n];}, the minimum valid skewing factor is \texttt{n}.

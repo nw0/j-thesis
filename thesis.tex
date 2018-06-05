@@ -9,6 +9,7 @@
 \usepackage{fullpage}
 
 \usepackage{color}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{shapes.misc}
 \tikzset{cross/.style={cross out, draw=black, minimum size=2*(#1-\pgflinewidth), inner sep=0pt, outer sep=0pt}, cross/.default={1pt}}
@@ -30,10 +31,13 @@
 
 \linespread{1.15}
 
+\newcommand{\wip}[1]{\fcolorbox{red}{white}{\color{red}\textbf{WIP}\quad#1}}
+\newcommand{\clar}[1]{\fcolorbox{RoyalBlue}{white}{\color{RoyalBlue}\textbf{To clarify}\quad#1}}
+
 % Throughout this thesis, we shall use `tiling'.
 
 \begin{document}
-	\title{Time-tiling in Devito \\\large REPORT DRAFT}
+	\title{Time-tiling in Devito \\\clar{Finalise this wording?} \\\large REPORT DRAFT}
 	\author{
 		Imperial College London\\
 		Department of Computing\\

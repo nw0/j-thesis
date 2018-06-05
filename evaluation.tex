@@ -52,10 +52,12 @@ It is clear that whenever \(t > n+1\), data from the \(t=0\)-th iteration is no 
 When space-tiling in Devito, each time iteration only begins once the previous iteration has finished.
 Therefore, we only need storage for \(n+1\) time iterations of data: the current iteration being computed; and the previous \(n\) iterations, its dependencies.
 
-% TODO: a diagram explaining the footnote? (promote the footnote)
 To allow for rigorous correctness checks (Section~\ref{sec:eval-func-corr}), we have \emph{not} used time-buffering during the evaluation.
 Nevertheless, it is straightforward to establish bounds on the size of a time buffer.
-It is clear that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.\footnote{From a synchronisation perspective, this would needlessly challenging. It is a fairly simple exercise to show that time-tiling needs at most \(n+t\) time iterations of storage, where \(t\) is the size of a time tile. We would recommend this approach.}
+It is clear that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.
+\footnote{From a synchronisation perspective, this would needlessly challenging. It is a fairly simple exercise to show that time-tiling needs at most \(n+t\) time iterations of storage, where \(t\) is the size of a time tile. We would recommend this approach.
+\clar{Should this be in a footnote? Need diagram/proof?}}
+
 
 \subsection{Auto-tuner iterations}
 % Further prereqs to use the AT
@@ -67,13 +69,12 @@ Without time-tiling, a fairly small number of time iterations (4) sufficed for a
 In our evaluation, we decided that the largest desirable time tile size was 16, to which we set the parameter.
 
 \subsection{Time-tiling parameters}
+\wip{What arguments; define skewing factor; redundant? discussed later}
+
 Time-tiling provides more parameters: a valid skewing factor, and a tile size for the time dimension.
 The tile size search was integrated into the auto-tuner, as it already had functionality to search for spatial tile sizes.
-% TODO: evidence??
 Arguments on data alignment give that the minimum valid skewing factor would produce the lowest runtime computation.
-% TODO: go back and write what a valid skewing factor is
 It was decided to try skewing factors by hand, as their validity would depend on the stencil (Section TODO).
-% TODO: write this up
 We have found that that the data alignment argument holds for the experiments that we have performed (see Appendix TODO for the complete results).
 
 
@@ -92,16 +93,17 @@ Therefore, we will mainly explore test cases which are already bound by memory t
 Evaluation was performed on a machine equipped with a single Intel Xeon\textregistered E5-2470 operating at 2.30 GHz, with 8 cores and 16 threads, and 64 GB of DRAM.
 It ran Ubuntu 16.04 LTS, with all running services required either for the operating system or our evaluation, to minimise external effects on runtime.
 
-% TODO: cache?
+\clar{Discuss cache?}
 
 To ensure a realistic testing environment and utilise all the available resources, the following hold throughout the experiments:
 
-% TODO: what is openmp
+\clar{Assume reader knows about OpenMP?}
+
+\wip{Explicit variables, check definitions in references}
 \begin{itemize}
 	\item OpenMP directives enabled in Devito. Indicates that a loop should be computed in parallel (typically the body of the inner time loop).
 	\item OpenMP environment variable to utilise all 16 available threads.
-	% TODO: cite
-	\item OpenMP environment variable not to migrate threads (``thread pinning''), as well as allocate threads to different cores. Thread migration incurs a significant performance overhead, and parallelism would not help if all threads executed in serial on one core.
+	\item OpenMP environment variable not to migrate threads (``thread pinning''), as well as allocate threads to different cores. Thread migration incurs a significant performance overhead, and parallelism would not help if all threads executed in serial on one core. \clar{Too brief?}
 	\item Usage of the Intel C Compiler, \texttt{icc}.
 	\item Devito enables the highest level of compiler optimisation and parallelism in the compiler by default.
 \end{itemize}
@@ -121,8 +123,9 @@ This obviated the need to run the (rather lengthy) auto-tuning for each data poi
 \subsection{Functional correctness}
 \label{sec:eval-func-corr}
 
-% TODO: update when operator allows for t=64 without diverging
 In addition to new test cases, to build confidence in correctness of the newly-implemented skewing and tiling transformations, each application of time-tiling was numerically verified against a non-tiled computation.
+
+\wip{Keep this box until results finalised: result equality claim}
 
 In all experiments, the results were discovered to be equal.\footnote{We refer to equality under floating-point comparison; this is \emph{bitwise equality}.}
 Since floating-point arithmetic is non-associative, the natural implication is that the resulting value in each field was reached through the same expressions, although the computations had been re-ordered.
@@ -135,7 +138,8 @@ The roofline model describes how arithmetic (or \emph{operational}) intensity ke
 In particular, it gives upper bounds for performance, and describes the bottlenecks that a program would encounter based on its arithmetic intensity.~\cite{roofline}.
 The model states that as arithmetic intensity increases, performance increases at a rate determined by the memory bandwidth, until it reaches the performance limit (in Flops, floating-point operations per second) of the processor.
 
-% TODO: this needs a picture
+\wip{Diagram}
+
 Time-tiling is an optimisation to improve the re-use of cache data, increasing the effective memory bandwidth of a system.
 Therefore, its benefit will only be seen under a sufficiently low arithmetic intensity, and will taper off as we approach the performance ceiling of the processor.
 
@@ -170,6 +174,7 @@ Therefore, we chose time dimensions 16 or 32, as these would be small multiples 
 
 \section{Performance under the Laplace operator}
 \label{sec:perf-laplace}
+\clar{Confirm drop of \( 16 \times 400^3 \) cases}
 
 \subsection{Application of the operator}
 The Laplacian is the operator giving the divergence of the gradient of a scalar function, commonly used in mechanics.
@@ -288,6 +293,7 @@ Therefore, we expect that we are nearing the computational bound of our test mac
 
 \section{Performance under the acoustic wave equation operator}
 \label{sec:perf-awe}
+\wip{Name this section something shorter}
 
 \subsection{Application of the operator}
 The acoustic wave equation (AWE) determines the propagation of acoustic waves, describing velocity as a function of space and time.
@@ -299,7 +305,8 @@ In our evaluation, we again used three spatial dimensions and a time dimension, 
 \section{Effect of the skewing factor}
 We observe that in almost every case, time-tiling with a smaller skewing factor produces a lower runtime than a larger one, and that there is a progressive increase in runtime as the skewing factor increases.
 
-% TODO: Discuss odd skewing factors, e.g. k=3
+\wip{Discuss odd skewing factors, e.g. k=3}
+
 However, we would be wary of drawing this conclusion for stencils under Devito in general, until more stencils have been sampled.
 
 

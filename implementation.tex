@@ -6,8 +6,8 @@
 Having previously seen the concepts of time-tiling and the relevant components of Devito, this chapter presents our implementation of time-tiling in Devito, with reference to the design choices made.
 For the most part, the implementation follows naturally from the previous chapters, although great care was required for the details, particularly the correct propagation of loop bounds under the transformations.
 
+\wip{Rewrite para}
 As outlined in Section~\ref{sec:bg-time-tiling}, we implement time-tiling in two stages: skewing in the DSE (Section~\ref{sec:skewing}), and tiling in the DLE (Section~\ref{sec:time-tiling}).
-% TODO: talk about test suite, AT?
 Finally, we consider the implications on sparse loops, one of Devito's raisons d'\^etre.
 
 
@@ -333,7 +333,7 @@ We extended the test suite, verifying the following:
 \section{Auto-tuning}
 \label{sec:autotune}
 
-% TODO: rewrite
+\wip{Rewrite section}
 Time-tiling introduces two parameters that can be tuned: the skewing factor, and time tile size.
 
 Since time-tiling had not been implemented in Devito before, it was decided that the auto-tuner should try all reasonable time tile sizes.
@@ -352,15 +352,15 @@ The implementation work that remains can be divided into several tasks:
 		\item Removal of `empty' blocks -- trivial; does not affect correctness but might produce speedup\footnote{CLooG does it, but one has difficulty imagining that there will indeed be a noticeable speedup}
 		\item Making this work with time buffering -- some reasoning about skewing factor required
 		\item Test cases -- more can be added
-		\item Removal of test cases assuming a remainder loop structure
+		\item Removal of (2) test cases specifically testing remainder loops
 		\item Verification that a given skewing factor is valid -- this should be very easy as Devito knows all about the stencil
 	\end{itemize}
 
-	\item[DSE aggressive mode] Currently, no reason to suppose that this cannot work with \texttt{min}-bounded instead of remainder loops. Need to prove/disprove this, and make it work. In particular, we must examine the references made to certain variables.\footnote{Of particular interest are \texttt{blockshape} (the tile size) and dimension extents (e.g.~symbolic extent vs offsets).}
+	\item[DSE aggressive mode] Devito uses my loop bounds one line before they are defined. Switch them round, run the test cases (and eyeball the loop structure).
 
-	\item[Sparse loop interpolation] Gather more context and understanding of the problem will be important for reasoning about how this affects time-tiling. Ideally, eventually a proof of what it does/why it does not.
+	\item[Sparse loop interpolation] \clar{What is this?}
 
 	\item[Detection of when to apply skewing and calculation of the skewing factor] Whether time-tiling is an appropriate optimisation, for a given stencil. Entirely beyond the scope of this work.
 
-	\item[Vectorisation and time-tiling] Suspect something is going wrong, full length of inner dimension are slower than non-blockinner trials. Remark: because of AT fail, probably having \texttt{z\_bs = 8}.
+	\item[Vectorisation and time-tiling] Suspect something is going wrong, full length of inner dimension are slower than non-blockinner trials. Remark: fmax slow? (test this again)
 \end{description}

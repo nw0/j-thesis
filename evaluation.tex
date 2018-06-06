@@ -379,22 +379,26 @@ However, we would be wary of drawing this conclusion for stencils under Devito i
 \label{sec:perf-limitations}
 % "Why I could be wrong/this isn't representative of real world problems"
 
-% Ask Paul/Fabio
-% No time buffering, so not the same memory accesses
-% Only ran X trials
-% Didn't run vtune, can't prove -why- we're faster. See Dylan 6.7
+\begin{itemize}
+	\item No time buffering (Laplace) -- not the same memory accesses?
+	\item Limited, small (?) grids, few time iterations
+	\item Didn't collect data on cache misses...
+	\item \clar{What else?}
+\end{itemize}
 
 
 \section{Further evaluation}
 \label{sec:further-eval}
 
-% Bigger time tiles
-% Time buffering (since we store everything to verify)
-% More grid sizes!
-% Try more stencils (eqns etc)
-% Try bigger grids
+\wip{Consider moving to Conclusion}
 
 For a more in depth analysis, we would consider memory analyses measuring cache misses and memory traffic, to ensure that improvements are indeed gleaned from time-tiling rather than other factors.
+
+\begin{itemize}
+	\item More stencils + sizes, everything else covered above
+	\item Source and receiver loops
+	\item \clar{More?}
+\end{itemize}
 
 
 \section{Conclusion}

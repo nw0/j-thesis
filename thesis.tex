@@ -34,6 +34,14 @@
 \newcommand{\wip}[1]{\fcolorbox{red}{white}{\color{red}\textbf{WIP}\quad#1}}
 \newcommand{\clar}[1]{\fcolorbox{RoyalBlue}{white}{\color{RoyalBlue}\textbf{To clarify}\quad#1}}
 
+\usepackage{afterpage}
+
+\newcommand\blankpage{%
+	\null
+	\thispagestyle{empty}%
+	\addtocounter{page}{-1}%
+	\newpage}
+
 % Throughout this thesis, we shall use `tiling'.
 
 \begin{document}
@@ -45,10 +53,14 @@
 		Nicholas Sim\\\\
 		Supervisors: Fabio Luporini; Paul H. J. Kelly}
 	\maketitle{}
+	\afterpage{\blankpage}
 
+	\setlength{\parskip}{0.6em plus0.25em minus0.2em}
 	\include{abstract}
-	\include{acknowledgements}
-	\setcounter{page}{4} % This is a nasty hack, also 4 = LEFT PAGE
+%	\include{acknowledgements}
+
+	\setcounter{page}{7} % This is a nasty hack, also 4 = LEFT PAGE
+	\setlength{\parskip}{0.0pt plus 1.0pt}
 	\tableofcontents{}
 
 	\setlength{\parskip}{0.6em plus0.25em minus0.2em}

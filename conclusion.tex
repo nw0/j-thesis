@@ -3,8 +3,24 @@
 \chapter{Conclusion}
 \label{ch:conclusion}
 
+
+\section{Context and review}
+
+This project drew together aspects of compiler transformations, differential equations and computation, computer architecture, and software engineering.
+The different perspectives of the fields provided immense insight into the complexity of numerically approximating partial differential equations---a far cry from anything Taylor may have imagined in the 18th century!
+These insights culminated in a transformation yielding significant performance gains in Devito's target domain: seismic imaging.
+Though time-tiling is a well-established optimisation, this implementation is undoubtedly a step forward for Devito.
+
+While the concept of time-tiling is straightforward, its implementation was decidedly not so: unlike interfacing with a `back-end' polyhedral compiler, such as CLooG or Pochoir (Section~\ref{sec:pochoir}) with all its attendant integration problems, implementation within Devito meant understanding the numerous stages of internal representation used to transform a differential equation into code.
+Without these layers, Devito would not be able to expose APIs at different levels for more intricate applications; making a transformation that would work with these was a major hurdle.
+
+The performance evaluation was enlightening and challenging in its own ways.
+It is easy to be convinced of the benefits of time-tiling from the literature, and another experience altogether to witness real decreases in runtime while watching a wall clock;
+mustering the scepticism required to confirm its validity required much deeper deeper reference to computer architecture and computation than implementing the transformation had needed.
+
+
 \section{Contributions}
-\wip{An introductory paragraph here (context):}
+A summary of the contributions of this project.
 
 \wip{Results change, proofread this late}
 \begin{itemize}

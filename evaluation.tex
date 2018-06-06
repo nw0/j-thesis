@@ -148,7 +148,7 @@ Therefore, its benefit will only be seen under a sufficiently low arithmetic int
 The Sandy Bridge architecture supports execution of up to 16 single-precision floating point operations per cycle, giving a theoretical maximum of 294.4 GFlops.
 The \emph{LINPACK} benchmark~\cite{linpack}, highly optimised and likely to perform faster than any stencil we evaluate, achieves a maximum of 131 GFlops on this machine.
 In particular, to avoid approaching this limit, we intend to focus on stencils achieving performance well below this figure.
-The \emph{STREAM} benchmark~\cite{stream} indicates that the peak memory bandwidth of the machine is 16.3 GB/s.
+The \emph{STREAM} benchmark~\cite{stream} indicates that the peak memory bandwidth of the machine is 17.3 GB/s.
 
 
 \subsection{Reporting of runtimes}
@@ -275,8 +275,8 @@ ytick distance=10,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-sp600.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-tm600.csv};
-\addplot [domain=4:8] {16.3*x};
-\addplot [domain=8:16] {130.4};
+\addplot [domain=4:7.5] {17.3*x};
+\addplot [domain=7.5:16] {129.75};
 \legend{Space-tiling,Time-tiling}
 \end{axis}
 \end{tikzpicture}
@@ -303,6 +303,69 @@ In our evaluation, we again used three spatial dimensions and a time dimension, 
 
 \subsection{Results}
 
+\wip{More space-orders, skewing factors}
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{rr|ccc}
+\toprule
+& Grid size & \multicolumn{3}{c}{\( 512^3 \)} \\
+& Space-order & 4 & 8 & 16 \\
+\midrule
+S & result (s) & 4.558 & 4.655 & 5.608 \\
+T & result (s) & 2.492 & 2.941 & 4.468 \\
+& decrease (\%) & 45.3\% & 26.8\% & 20.3\% \\
+\bottomrule
+\end{tabular}
+\caption{Runtimes from using the acoustic wave equation operator. N, S, T represent minimum runtimes without tiling, with spatial tiling, and with time-tiling respectively. t,\(n\) indicates results for time-tiling with a skewing factor of \(n\); T indicates the minimum of these. Decrease is from spatial tiling to time-tiling. Only valid skewing factors used.}
+\label{tab:awe-results}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{rcccc}
+\toprule
+Space-order & Tiling & Arith. intensity & Ach. GFlops & Memory transfer \\
+\midrule
+4 & Space & 2.10 & 27.57 & 13.1 GB/s \\
+4 & Time & 2.10 & 50.44 & 24.0 GB/s \\
+\midrule
+8 & Space & 2.89 & 37.12 & 12.8 GB/s \\
+8 & Time & 2.89 & 58.76 & 20.3 GB/s \\
+\midrule
+16 & Space & 4.42 & 47.10 & 10.7 GB/s \\
+16 & Time & 4.42 & 5.911 & 13.4 GB/s \\
+\bottomrule
+\end{tabular}
+\caption{Memory transfer rates for different space-orders under spatial and time-tiling, grid size \(512^3\). Arithmetic intensity is the number of floating-point operations performed per byte of data used. Achieved GFlops reported by Devito. Memory transfer rate obtained by dividing the latter by the former.}
+\label{tab:awe-gflops}
+\end{table}
+
+\wip{Maybe I miscompiled STREAM?}
+
+\wip{Text analysing the results}
+
+Significant benefit, especially at lower arithmetic intensity, as predicted by the roofline model.
+Note that the achieved GFlops seem to taper off quickly. \clar{Why?}
+
+\begin{figure}[!ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+legend style={at={(0.95,0.05)},anchor=south east},
+xlabel={Arithmetic intensity},
+ylabel={GFlops achieved},
+ytick distance=10,
+]
+\addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-sp512.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-tm512.csv};
+\addplot [domain=2:5] {17.3*x};
+\legend{Space-tiling,Time-tiling}
+\end{axis}
+\end{tikzpicture}
+\caption{Graph of performance against arithmetic intensity for the acoustic wave equation operator, grid size \(512^3\). As predicted by the roofline model, GFlops achieved increases for stencils of lower arithmetic intensity, but tapers off as arithmetic increases. The solid line is the theoretical maximum predicted by the roofline model.}
+\label{fig:awe-roofline}
+\end{figure}
 
 \section{Effect of the skewing factor}
 We observe that in almost every case, time-tiling with a smaller skewing factor produces a lower runtime than a larger one, and that there is a progressive increase in runtime as the skewing factor increases.

@@ -4,8 +4,9 @@
 \label{ch:devito}
 
 We reviewed Devito's motivation and overall architecture in Section~\ref{sec:devito}.
-\wip{elaborate}
-This chapter examines the details of the existing Devito compilation process pertinent to our implementation of time-tiling, in particular the existing implementation of spatial-tiling (Section~\ref{sec:spatial-tiling}).
+In order to inform our implementation of time-tiling, this chapter examines the details of the existing Devito compilation process pertinent to our implementation of time-tiling
+We examine the transformations that will be relevant to the time-tiling procedure, and those that occur immediately before and after tiling and skewing.
+In particular, we review the existing implementation of spatial-tiling (Section~\ref{sec:spatial-tiling}).
 
 In general, we have assumed that Devito only performs valid transformations, which we verify against its extensive test suite.
 Therefore, we are only concerned with the transformations that occur between skewing and tiling.
@@ -120,11 +121,14 @@ This is not a major concern for spatial tiling, as seen in Section~\ref{sec:spat
 \section{Spatial tiling in Devito}
 \label{sec:spatial-tiling}
 
-Under the existing tiling transformation in Devito, tiling is performed over every spatial dimension.
-Note that the innermost dimension may be vectorised instead.
+This section documents the existing spatial tiling transformation in Devito, and outlines some important differences and concepts not previously discussed.
+Note that in the current transformation, only spatial dimensions may be tiled, and the innermost dimension may be vectorised instead.
 
 With spatial tiling, dependencies do not cross tile boundaries, instead only referencing values computed in the previous time iteration.
 Therefore, skewing is not required.
+
+\subsection{Parametrisation}
+\wip{Write this}
 
 \subsection{Remainder loops}
 \label{sec:remainder-loops}
@@ -184,3 +188,6 @@ for (int x = x_e - (x_e-x_s)%x_bs; x < x_e; x++)
 One notes that the loop tiling method includes code to match tile sizes from a user-provided parameter and check their validity.
 Nevertheless, this is not relevant to the discussion of time-tiling in this report, apart from the straightforward addition of another dimension.
 Therefore, it is omitted from this section.
+
+\section{Summary}
+\wip{}

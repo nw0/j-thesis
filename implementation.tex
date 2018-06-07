@@ -3,7 +3,7 @@
 \chapter{Implementation}
 \label{ch:implementation}
 
-Having previously seen the concepts of time-tiling and the relevant components of Devito, this chapter presents our implementation of time-tiling in Devito, with reference to the design choices made.
+Having previously discussed the goal of time-tiling, i.e.~to improve cache reuse by exploiting data locality between time iterations, this chapter presents our implementation of time-tiling in Devito, with reference to the design choices made.
 For the most part, the implementation follows naturally from the previous chapters, although great care was required for the details, particularly the correct propagation of loop bounds under the transformations.
 
 \wip{Rewrite para}

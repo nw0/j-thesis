@@ -3,13 +3,22 @@
 \chapter{Evaluation}
 \label{ch:evaluation}
 
-This chapter is devoted to the evaluation of performance of time-tiling as implemented in Chapter~\ref{ch:implementation}.
-We discuss the functionality of the time-tiling implementation and its technical requirements (Section~\ref{sec:time-tiling-reqs}), and the test methodology (Section~\ref{sec:test-method}).
-Section~\ref{sec:perf-laplace} examines results under the Laplace operator, and Section~\ref{sec:perf-awe} the acoustic wave equation.
-Finally, we discuss limitations of our performance testing (Section~\ref{sec:perf-limitations}), and consider further work in evaluation (Section~\ref{sec:further-eval}).
+This chapter is devoted to the performance evaluation of our implementation of time-tiling in Devito.
+It is organised into a number of sections:
+
+\begin{itemize}
+	\item First, we recall the motivation of this project, and the objectives of our evaluation (Section~\ref{sec:eval-objs}).
+	\item We then discuss the requirements that time-tiling imposes on our use of Devito, and the considerations that it warrants (Section~\ref{sec:time-tiling-reqs}).
+	\item Next, we present the test methodology we have adopted (Section~\ref{sec:test-method}), and introduce the \emph{roofline model}, which is widely used to understand the performance of stencil calculations.
+	We also discuss the parameters varied in the tests (Section~\ref{sec:eval-params}).
+	\item Sections~\ref{sec:perf-laplace} and~\ref{sec:perf-awe} examine results under the Laplace and acoustic wave equation operators respectively.
+	\item Finally, we discuss limitations of our performance testing (Section~\ref{sec:perf-limitations}), and consider further work in evaluation (Section~\ref{sec:further-eval}).
+\end{itemize}
 
 
 \section{Motivation}
+\label{sec:eval-objs}
+
 The motivation for this project is to reduce computational runtime by exploiting data locality through time-tiling.
 We have described the motivation and investigated tools which have achieve performance gains from the technique.
 It had previously been shown that Devito benefits from reductions in runtime of up to 27.5\% with time-tiling using CLooG.
@@ -86,9 +95,9 @@ Realistic test cases vary from those that are more memory-intensive to those tha
 Under the former regime, computational (arithmetic) intensity is fairly low, and the CPU uses data faster than it can be transferred from memory; in the latter case, data can be transferred more rapidly than it can be utilised.
 
 A key premise of Devito is that arithmetic intensity can be decreased at the cost of higher memory pressure, by manipulating expressions~\cite{fabio-memory}.
-Time-tiling reduces memory pressure by increasing reuse of cached data before it is evicted.
+Time-tiling reduces memory pressure by increasing reuse of cached data before it is evicted.\footnote{However, this effectively increases the arithmetic intensity, as discussed in this chapter.}
 Accepting the premise that arithmetic intensity can be reduced sufficiently, time-tiling can be used to full effect in reducing memory pressure.\footnote{See Section~\ref{sec:roofline-intro} (``Roofline model'') for more detail.}
-Therefore, we will mainly explore test cases which are already bound by memory throughput.
+Therefore, the most relevant test cases to time-tiling are those which are bound by memory throughput.
 
 \subsection{Hardware and software environment}
 Evaluation was performed on a machine equipped with a single Intel Xeon\textregistered E5-2470 operating at 2.30 GHz, with 8 cores and 16 threads, and 64 GB of DRAM.
@@ -133,30 +142,31 @@ In all experiments, the results were discovered to be equal.\footnote{We refer t
 Since floating-point arithmetic is non-associative, the natural implication is that the resulting value in each field was reached through the same expressions, although the computations had been re-ordered.
 Additional checks were used to determine that the results were not merely zeroes, or diverging to infinity.
 
-\subsection{Roofline model}
-\label{sec:roofline-intro}
-
-The roofline model describes how arithmetic (or \emph{operational}) intensity kernel affects its performance on a given system.
-In particular, it gives upper bounds for performance, and describes the bottlenecks that a program would encounter based on its arithmetic intensity~\cite{roofline}.
-The model states that as arithmetic intensity increases, performance increases at a rate determined by the memory bandwidth, until it reaches the performance limit (in Flops, floating-point operations per second) of the processor.
-
-\wip{Diagram}
-
-Time-tiling is an optimisation to improve the re-use of cache data, increasing the effective memory bandwidth of a system.
-Therefore, its benefit will only be seen under a sufficiently low arithmetic intensity, and will taper off as we approach the performance ceiling of the processor.
-
-The Sandy Bridge architecture supports execution of up to 16 single-precision floating point operations per cycle, giving a theoretical maximum of 294.4 GFlops.
-The \emph{LINPACK} benchmark~\cite{linpack}, highly optimised and likely to perform faster than any stencil we evaluate, achieves a maximum of 131 GFlops on this machine.
-In particular, to avoid approaching this limit, we intend to focus on stencils achieving performance well below this figure.
-The \emph{STREAM} benchmark~\cite{stream} indicates that the peak memory bandwidth of the machine is 17.3 GB/s.
-
-
 \subsection{Reporting of runtimes}
 Wherever runtimes have been collected in this evaluation, the reported figure will be the \emph{minimum} of the runtimes collected in trials.
 This is taken as most representative, as any noise on the testing machine is minimised, since outside factors can only increase the runtime of our computations.
 
 
+\section{Roofline model}
+\label{sec:roofline-intro}
+
+The roofline model describes how arithmetic (or \emph{operational}) intensity kernel affects its performance on a given system.
+In particular, it gives upper bounds for performance based on memory bandwidth and CPU performance, and describes the bottlenecks that a program would encounter based on its arithmetic intensity~\cite{roofline}.
+The model states that as arithmetic intensity increases, performance increases at a rate determined by the memory bandwidth, until it reaches the performance limit (in Flops, floating-point operations per second) of the processor.
+
+\subsection{Bounds of the test machine}
+The Sandy Bridge architecture supports execution of up to 16 single-precision floating point operations per cycle, giving a theoretical maximum of 294.4 GFlops.\footnote{Calculated as 16 floating-point operations/cycle \(\times 2.3 \times 10^9\) cycles/sec/core \(\times\) 8 cores (on a single-node machine) \(= 294.4\) GFlops.}
+The \emph{LINPACK} benchmark~\cite{linpack}, highly optimised and likely to perform faster than any stencil we evaluate, achieves a maximum of 131 GFlops on this machine; it is standard practice to double this figure to obtain the maximum for single-precision floating-point operations, giving a practical bound of 262 GFlops in our test scenarios.
+The \emph{STREAM} benchmark~\cite{stream} indicates that the peak memory bandwidth of the machine is 17.3 GB/s.
+
+
+Time-tiling is an optimisation to improve the re-use of cache data, increasing the effective memory bandwidth of a system.
+Therefore, its benefit will only be seen under a sufficiently low arithmetic intensity, and will taper off as we approach the performance ceiling of the processor.
+
+
 \section{Test parameters}
+\label{sec:eval-params}
+
 \paragraph{Skewing factor}
 The skewing factor was varied to understand the relationship between skewing factor and runtime.
 In particular, we wished to determine if the minimum legal skewing factor would result in the minimum runtime as hypothesised.

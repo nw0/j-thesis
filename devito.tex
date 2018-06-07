@@ -128,7 +128,20 @@ With spatial tiling, dependencies do not cross tile boundaries, instead only ref
 Therefore, skewing is not required.
 
 \subsection{Parametrisation}
-\wip{Write this}
+A challenge when tiling general loops as required in Devito parametrisation of loop bounds, and the correct propagation of these bounds.
+As seen in the examples of Section~\ref{sec:bg-loop-tiling}, the tile size for each dimension is a variable such as \texttt{x\_blk\_size}.
+This means that tile sizes can be changed at runtime, which enables features such as auto-tuning, which is discussed later.
+Therefore, there is no need to re-optimise and re-compile a stencil from a change in domain size; resulting in considerable time savings.
+
+\subsection{Auto-tuner}
+While not strictly part of the compilation process, the Devito auto-tuner is relevant as it uses the above-mentioned tile size parameters to experimentally determine an optimal combination of tile sizes for a particular stencil and domain.
+
+In particular, an implementation of time-tiling would have to expose similar parameters, supplemented with an additional parameter for the time dimension.
+
+\subsection{Determination of tile sizes}
+One notes that the loop tiling method includes code to validate user-provided tile sizes, or provide default otherwise.
+Nevertheless, this is not relevant to the discussion of time-tiling in this report, apart from the straightforward addition of the time dimension.
+Therefore, it is omitted from this section.
 
 \subsection{Remainder loops}
 \label{sec:remainder-loops}
@@ -184,10 +197,6 @@ for (int x = x_e - (x_e-x_s)%x_bs; x < x_e; x++)
 	\label{lst:remainder}
 \end{figure}
 
-\subsection{Determination of tile sizes}
-One notes that the loop tiling method includes code to match tile sizes from a user-provided parameter and check their validity.
-Nevertheless, this is not relevant to the discussion of time-tiling in this report, apart from the straightforward addition of another dimension.
-Therefore, it is omitted from this section.
-
 \section{Summary}
-\wip{}
+This chapter outlined the existing compilation process in Devito, highlighting details that require our attention in Chapter~\ref{ch:implementation}, the implementation of time-tiling.
+These transformations and representations bely the abstractions that Devito uses to expose lower-level APIs, and they must be preserved fully when constructing a new transformation such as time-tiling.

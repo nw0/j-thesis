@@ -159,9 +159,30 @@ The Sandy Bridge architecture supports execution of up to 16 single-precision fl
 The \emph{LINPACK} benchmark~\cite{linpack}, highly optimised and likely to perform faster than any stencil we evaluate, achieves a maximum of 131 GFlops on this machine; it is standard practice to double this figure to obtain the maximum for single-precision floating-point operations, giving a practical bound of 262 GFlops in our test scenarios.
 The \emph{STREAM} benchmark~\cite{stream} indicates that the peak memory bandwidth of the machine is 17.3 GB/s.
 
+Figure~\ref{fig:roofline-benchmark} shows and explains the bounds of a stencil of a given arithmetic intensity.
 
-Time-tiling is an optimisation to improve the re-use of cache data, increasing the effective memory bandwidth of a system.
-Therefore, its benefit will only be seen under a sufficiently low arithmetic intensity, and will taper off as we approach the performance ceiling of the processor.
+\begin{figure}[!ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+legend style={at={(0.95,0.05)},anchor=south east},
+xlabel={Arithmetic intensity},
+ylabel={GFlops achieved},
+ytick distance=25,
+]
+% roofline
+\addplot [domain=4:15.15,name path=A] {17.3*x};
+\addplot [domain=15.15:25] {262.01};
+% boundary
+\path[name path=X] (4, 0) -- (200, 0);
+\addplot[gray, pattern=north west lines] fill between[of=A and X, soft clip={domain=4:15.15}];
+\addplot +[mark=none,dashed] coordinates {(15.15, 69.2) (15.15, 259.5)};
+\end{axis}
+\end{tikzpicture}
+\caption{Roofline graph for the test machine. Performance of any stencil (GFlops) of given arithmetic intensity cannot exceed the solid lines plotted. A stencil falling into the shaded region (arithmetic intensity < 15.15) will be bounded by memory bandwidth indicated by the sloped line, and those in unshaded region (arithmetic intensity > 15.15) are bounded by processor performance, the horizontal line.}
+\label{fig:roofline-benchmark}
+\end{figure}
+
 
 
 \section{Test parameters}

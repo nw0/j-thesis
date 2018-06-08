@@ -345,18 +345,40 @@ We have not extended the auto-tuner to try different skewing factors as we hope 
 Therefore, auto-tuning will be performed for the relevant skewing factors.
 Manually varying the skewing factor is not an undue burden, as there are very few plausible skewing factors.
 
-\section{Further work}
-The implementation work that remains can be divided into several tasks:
+\section{Summary and further implementation work}
+\label{sec:impl-further}
+
+In this work, we have provided an implementation of time-tiling for Devito, which handles perfect loop nests, the primary and best-studied scenario in time-tiling.
+
+Below, we discuss further implementation work in time-tiling that Devito will benefit from, summarising their motivation and why we have chosen not to implement them in this project.
+In Section~\ref{sec:future-work}, we will elaborate on their significance, challenges, and present some approaches to solving them.
+
+\subsection{Minor extensions}
+The following are fairly straightforward to comprehend, and appear accordingly straightforward to implement. We elected not to implement them in order to devote more time to a rigorous evaluation of the transformation.
 
 \begin{description}
-	\item[Time-tiling] This is essentially complete. Some outstanding items:
-	\begin{itemize}
-		\item Removal of `empty' blocks -- trivial; does not affect correctness but might produce speedup\footnote{CLooG does it, but one has difficulty imagining that there will indeed be a noticeable speedup}
-		\item Making this work with time buffering -- some reasoning about skewing factor required
-		\item Test cases -- more can be added
-		\item Removal of (2) test cases specifically testing remainder loops
-		\item Verification that a given skewing factor is valid -- this should be very easy as Devito knows all about the stencil
-	\end{itemize}
+	\item[Skewing factor legality detection] In Section~\ref{sec:bg-skewing}, we stated the minimum legal skewing factor for time-tiling.
+	Currently, the skewing factor is user-defined parameter.
+	Regardless of its source, its legality should be checked, as Devito possesses the stencil space order and can determine this as a safety check.
+	For our evaluation, this was not necessary as we were aware of the constraints and performed extensive numerical verification.
+
+	\item[Time buffering] Time buffering is a space-saving optimisation discussed in our evaluation, based on the observation that some data will not be required.
+	At the moment, time buffering is configured to allocate the minimum amount of memory for spatial tiling; for our evaluation we have manually specified the appropriate number of time iterations to store.
+	In Section~\ref{sec:time-buffering} we provide an exact bound for the size of the buffer, which should be implemented as specified.
+
+	\item[Supplementary Test cases] We have already included test cases adapted from spatial tiling and ones that specifically test skewing.
+	Additional test cases should be added to test the integration of time-tiling with other transformations, beyond the existing skewing and tiling tests.
+	In particular, Devito could benefit from more skewing integration tests.
+	This was not an issue in our evaluation each application of time-tiling was numerically verified to be correct.
+	Finally, there are two obsolete test cases which exist to test the structure of remainder loops, which have been superseded by our loop bounding strategy.
+	These should be deprecated and eventually removed.
+
+	\item[Removal of zero-iteration tiles] These are tiles which contain no iterations as they are outside the boundary of the skewed iteration space; those occurring in the triangular region of Figure~\ref{fig:skewing-bounded}.
+	The polyhedral compiler CLooG removes these at the cost of an additional bounding computation per dimension per time tile.
+	Clearly a trade-off is to be made here: it may only be worthwhile performing this when the skewing factor is large.
+\end{description}
+
+\begin{description}
 
 	\item[DSE aggressive mode] Devito uses my loop bounds one line before they are defined. Switch them round, run the test cases (and eyeball the loop structure).
 

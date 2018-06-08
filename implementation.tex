@@ -353,6 +353,24 @@ In this work, we have provided an implementation of time-tiling for Devito, whic
 Below, we discuss further implementation work in time-tiling that Devito will benefit from, summarising their motivation and why we have chosen not to implement them in this project.
 In Section~\ref{sec:future-work}, we will elaborate on their significance, challenges, and present some approaches to solving them.
 
+\subsection{Source and receiver loops}
+Sources and receivers are commonly used with the acoustic wave equation, so that it can model not only wave propagation, but also the addition of ongoing waves or generated waves; consider sonar or tremors, to take an example from geology.
+These are an important use case for Devito, as it targets the domain of seismic imaging.
+
+However, these are added as source and receiver loops performed during each time iteration, making the time loop an imperfect loop nest.
+Our implementation of time-tiling is unable to deal with imperfect loop nests, although this is possible with a few more transformations~\cite{ahmed-imperfect}.
+We considered this to be beyond the scope of the project, as the transformations, while only marginally more difficult than skewing conceptually, presented an equally large software engineering burden.
+Further, this might present a version of Devito that diverged too far from the original, causing the basis for evaluation to be too vague.
+
+We will address source and receiver loops in considerable detail later, and demonstrate that the problem is not insurmountable.
+
+\subsection{DSE aggressive mode}
+DSE aggressive mode is used to performed advanced manipulation of symbolic expressions and extract loop invariants.
+Loop hoisting is a technique used in general-purpose optimising compilers to eliminate redundant computation, and this is a specific situation in which hoisting is used.
+
+While important, we felt that supporting this feature would be time-consuming and would not add significant value to our evaluation.
+It would be time consuming as the most obvious issue is that it attempts to use our computed loop bounds just one line before they are defined, but since the hoist occurs long after tiling has been completed, it might require extensive changes to the visitor that it uses to hoist expressions.
+
 \subsection{Minor extensions}
 The following are fairly straightforward to comprehend, and appear accordingly straightforward to implement. We elected not to implement them in order to devote more time to a rigorous evaluation of the transformation.
 
@@ -379,10 +397,6 @@ The following are fairly straightforward to comprehend, and appear accordingly s
 \end{description}
 
 \begin{description}
-
-	\item[DSE aggressive mode] Devito uses my loop bounds one line before they are defined. Switch them round, run the test cases (and eyeball the loop structure).
-
-	\item[Sparse loop interpolation] \clar{What is this?}
 
 	\item[Detection of when to apply skewing and calculation of the skewing factor] Whether time-tiling is an appropriate optimisation, for a given stencil. Entirely beyond the scope of this work.
 

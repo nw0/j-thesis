@@ -293,17 +293,17 @@ T & \footnotesize runtime (s) & 2.939 & 2.957 & 3.762 & 5.718 & 2.712 & 2.790 & 
 & \footnotesize decrease (\%) & 25.9\% & 21.4\% & 7.34\% & 1.04\% & 22.3\% & 17.4\% & 10.8\% & 1.02\% \\
 
 \midrule
-t,8 & \footnotesize runtime (s) & 3.348 & 3.257 & 3.762 & 5.718 & 3.089 & 2.966 & 3.341 & 4.929 \\
+(t,8) & \footnotesize runtime (s) & 3.348 & 3.257 & 3.762 & 5.718 & 3.089 & 2.966 & 3.341 & 4.929 \\
 % & tile size & 16,32,64 & 16,32,64 & 16,32,64 & 1,16,16 & 16,64,24 & 16,32,64 & 16,16,128 & 1,16,32 \\
-t,4 & \footnotesize runtime (s) & 3.114 & 3.090 & 3.764 & - & 2.844 & 2.811 & 3.288 & - \\
+(t,4) & \footnotesize runtime (s) & 3.114 & 3.090 & 3.764 & - & 2.844 & 2.811 & 3.288 & - \\
 % & tile size & 16,32,64 & 16,32,64 & 8,16,16 & & 16,48,24 & 8,16,16 & 16,32,64 & \\
-t,2 & \footnotesize runtime (s) & 2.956 & 2.957 & - & - & 2.788 & 2.790 & - & - \\
+(t,2) & \footnotesize runtime (s) & 2.956 & 2.957 & - & - & 2.788 & 2.790 & - & - \\
 % & tile size & 16,32,64 & 16,32,64 & & & 8,16,32 & 8,16,16 & & \\
-t,1 & \footnotesize runtime (s) & 2.939 & - & - & - & 2.712 & - & - & - \\
+(t,1) & \footnotesize runtime (s) & 2.939 & - & - & - & 2.712 & - & - & - \\
 % & & 16,32,64 & & & & 16,32,32 & & & \\
 \bottomrule
 \end{tabular}
-\caption{Runtimes from using the Laplace operator. N, S, T represent minimum runtimes without tiling, with spatial tiling, and with time-tiling respectively. t,\(n\) indicates results for time-tiling with a skewing factor of \(n\); T indicates the minimum of these. Decrease is from spatial tiling to time-tiling. Only valid skewing factors used.}
+\caption{Runtimes from using the Laplace operator. N, S, T represent minimum runtimes without tiling, with spatial tiling, and with time-tiling respectively. (t,\(k\)) indicates results for time-tiling with a skewing factor of \(k\); T indicates the minimum of these. Decrease is from spatial tiling to time-tiling. Only valid skewing factors used.}
 \label{tab:laplace-results}
 \end{table}
 
@@ -338,17 +338,17 @@ Table~\ref{tab:laplace-gflops} shows a calculation achieved memory transfer rate
 \toprule
 Space-order & Tiling & Arith. intensity & Ach. GFlops & Memory transfer \\
 \midrule
-2 & Time & 4.69 & 50.80 & 10.8 GB/s \\
 2 & Space & 4.69 & 39.49 & 8.42 GB/s \\
+2 & Time & 75.05 & 50.80 & 10.8 GB/s \\
 \midrule
-4 & Time & 6.31 & 66.44 & 10.5 GB/s \\
 4 & Space & 6.31 & 54.91 & 8.70 GB/s \\
+4 & Time & 50.5 & 66.44 & 10.5 GB/s \\
 \midrule
-8 & Time & 9.29 & 82.97 & 8.93 GB/s \\
 8 & Space & 9.29 & 74.06 & 7.97 GB/s \\
+8 & Time & 149 & 82.97 & 8.93 GB/s \\
 \midrule
-16 & Time & 15.81 & 94.19 & 5.96 GB/s \\
 16 & Space & 15.81 & 93.24 & 5.90 GB/s \\
+16 & Time & 15.81 & 94.19 & 5.96 GB/s \\
 \bottomrule
 \end{tabular}
 \caption{Memory transfer rates for different space-orders under spatial and time-tiling, grid size \(16 \times 600^3\). Arithmetic intensity is the number of floating-point operations performed per byte of data used. Achieved GFlops reported by Devito. Memory transfer rate obtained by dividing the latter by the former.}
@@ -359,16 +359,17 @@ Space-order & Tiling & Arith. intensity & Ach. GFlops & Memory transfer \\
 \centering
 \begin{tikzpicture}
 \begin{axis}[
-legend style={at={(0.95,0.05)},anchor=south east},
+legend style={at={(0.05,0.95)},anchor=north west},
 xlabel={Arithmetic intensity},
 ylabel={GFlops achieved},
-ytick distance=10,
+ytick distance=25,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-sp600.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-tm600.csv};
-\addplot [domain=4:7.5] {17.3*x};
-\addplot [domain=7.5:16] {129.75};
 \legend{Space-tiling,Time-tiling}
+% roofline
+\addplot [domain=2:15.15,name path=A] {17.3*x};
+\addplot [domain=15.15:152] {262.01};
 \end{axis}
 \end{tikzpicture}
 \caption{Graph of performance against arithmetic intensity for the Laplace operator, grid size \(16 \times 600^3\). As predicted by the roofline model, GFlops achieved increases for stencils of lower arithmetic intensity, but tapers off as arithmetic increases. The solid line is the theoretical maximum predicted by the roofline model.}

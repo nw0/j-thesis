@@ -88,6 +88,8 @@ It was decided to try skewing factors by hand, as their validity would depend on
 We have found that that the data alignment argument holds for the experiments that we have performed (see Appendix TODO for the complete results).
 
 \subsection{Arithmetic intensity under time-tiling}
+\label{sec:arithmetic-intensity}
+
 Recall that \emph{arithmetic intensity} is defined to be the number of floating point operations performed per byte.
 Time-tiling is an optimisation to improve the re-use of cached data, effectively increasing the arithmetic intensity of a stencil, as it needs to be fetched from memory less frequently.
 
@@ -195,12 +197,18 @@ The roofline model describes how arithmetic (or \emph{operational}) intensity ke
 In particular, it gives upper bounds for performance based on memory bandwidth and CPU performance, and describes the bottlenecks that a program would encounter based on its arithmetic intensity~\cite{roofline}.
 The model states that as arithmetic intensity increases, performance increases at a rate determined by the memory bandwidth, until it reaches the performance limit (in Flops, floating-point operations per second) of the processor.
 
+As a primitive, since a stencil computation on a grid of a particular size requires a fixed number of floating-point operations, we want to maximise this number.
+
 \subsection{Bounds of the test machine}
-The Sandy Bridge architecture supports execution of up to 16 single-precision floating point operations per cycle, giving a theoretical maximum of 294.4 GFlops.\footnote{Calculated as 16 floating-point operations/cycle \(\times 2.3 \times 10^9\) cycles/sec/core \(\times\) 8 cores (on a single-node machine) \(= 294.4\) GFlops.}
+The Sandy Bridge architecture supports execution of up to 16 single-precision floating point operations per cycle, giving a theoretical maximum of 294.4 GFlops.\footnote{Calculated as 16 floating-point operations/cycle \(\times 2.3 \times 10^9\) cycles/sec/core \(\times\) 8 cores (on a single-node machine) \(= 294.4\) GFlops.
+\\\wip{Fabio: 2.3GHz is the `processor base frequency', which I suspect is still not what you mean? Pl. confirm.}}
 The \emph{LINPACK} benchmark~\cite{linpack}, highly optimised and likely to perform faster than any stencil we evaluate, achieves a maximum of 131 GFlops on this machine; it is standard practice to double this figure to obtain the maximum for single-precision floating-point operations, giving a practical bound of 262 GFlops in our test scenarios.
 The \emph{STREAM} benchmark~\cite{stream} indicates that the peak memory bandwidth of the machine is 17.3 GB/s.
 
+\subsection{Arithmetic intensity and cache reuse}
 Figure~\ref{fig:roofline-benchmark} shows and explains the bounds of a stencil of a given arithmetic intensity.
+A given stencil computation can be plotted as a point on the graph, determined by its GFlops achieved, which we measure at runtime, and its inherent arithmetic intensity.
+Clearly, these are strict bounds on the performance of a stencil.
 
 \begin{figure}[!ht]
 \centering
@@ -220,9 +228,22 @@ ytick distance=25,
 \addplot +[mark=none,dashed] coordinates {(15.15, 69.2) (15.15, 259.5)};
 \end{axis}
 \end{tikzpicture}
-\caption{Roofline graph for the test machine. Performance of any stencil (GFlops) of given arithmetic intensity cannot exceed the solid lines plotted. A stencil falling into the shaded region (arithmetic intensity < 15.15) will be bounded by memory bandwidth indicated by the sloped line, and those in unshaded region (arithmetic intensity > 15.15) are bounded by processor performance, the horizontal line.}
+\caption{Roofline graph for the test machine. Performance of any stencil (GFlops) of given arithmetic intensity cannot exceed the solid lines plotted. A stencil falling into the shaded region (arithmetic intensity < 15.15) will be bounded by memory bandwidth indicated by the sloped line, and those in unshaded region (arithmetic intensity > 15.15) are bounded by processor performance, the horizontal line. These two solid lines are the \emph{roofline}.}
 \label{fig:roofline-benchmark}
 \end{figure}
+
+We previously suggested that it was preferable to overestimate arithmetic intensity than underestimate it.
+As we can see from the graph, if we permit ourselves to underestimate arithmetic intensity, a point could lie \emph{above} the roofline, contradicting the model.
+Therefore, we must not underestimate arithmetic intensity.
+
+Recall that the objective of time-tiling is to maximise cache reuse by exploiting data locality between time iterations.
+As previously argued, if a computation is bounded by memory throughput (hence in the shaded region), improving effective throughput through more effective cache usage could be reasonably argued to decrease the runtime.
+From the previous discussion (Section~\ref{sec:arithmetic-intensity}), we established that tiling transformations effectively increase the arithmetic intensity of a stencil computation, resulting in a rightward shift of a data point on this graph.
+
+We see from the diagram that such a rightward shift starting from any point in the shaded region increases the performance bound under the roofline.
+Therefore, we seek to demonstrate that this is accompanied by an upward shift (combined, a diagonal shift) of the performance of a memory-bounded stencil computation.
+In particular, we hypothesise that the performance increase of stencils that are more memory bounded (lower arithmetic intensity) will yield the greatest benefit from time-tiling.
+
 
 \section{Test parameters}
 \label{sec:eval-params}

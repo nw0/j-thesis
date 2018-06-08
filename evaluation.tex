@@ -104,7 +104,7 @@ Devito reports arithmetic intensity as `operational intensity', and calculates i
 	For each time iteration, this requires the previous \(n\) time iterations of data to be loaded from memory.
 	This produces the same figure for arithmetic intensity as the measure for non-tiled code above, if the stencil only requires data from the previous time iteration, as data needs to be loaded into the cache again for each time iteration.
 	Since the dependencies of tiles overlap in previous time iterations, with a sufficiently large iteration space, some dependencies will need to be loaded into cache more than once (assuming at least two spatial dimensions with non-zero space order).\footnote{This is fairly simple to see. Ignore all but two spatial dimensions with non-zero space order, and suppose otherwise for a contradiction. Arbitrarily choose a finite cache size of \(\Omega\) floating-point numbers, and call our spatial dimensions \texttt{x}, \texttt{y} with dimension extents \(x, y\) respectively. W.l.o.g.~\(x \le y\) and that the stencil has space order \(d>0\) in both dimensions (take the minimum). Now we need \(xd \le \Omega\), since minimising dependency overlap along the \texttt{x} dimension demands that we calculate the first \texttt{x} `row' before any other \texttt{x}-tiles. But we can choose \(x > \Omega / d\).}
-	Thus this measure also \emph{overestimates} arithmetic intensity, but to a far smaller extent.
+	Thus this measure also \emph{overestimates} arithmetic intensity, but to a smaller extent that can be estimated.\footnote{To see that the bound is realistic, consider `row-by-row' tile scheduling as in the previous proof, and spatial dimensions \texttt{x1}, ..., \texttt{xn}, with extents \(x_1, ..., x_n\), space orders \(d_1, ..., d_n\), and chosen tile sizes \(b_1, ..., b_n\). Can be shown that the data the \(x_i d_i\) points from each \texttt{xi}-row need be loaded into cache at most twice. Since an \texttt{xi}-row spans \(b_i\) iterations, at most \(d_i / b_i\) points are loaded into cache twice for the \texttt{xi}-dimension. An easy addition exercise gives an overall bound for the iteration space, and the measure under spatial tiling is clearly a tighter estimate than the measure under non-tiled computation.}
 \end{description}
 
 Remark: later, we will see that it is preferable to overestimate the arithmetic intensity of a stencil computation than underestimate it, and we provides arguments for why the measures stated in this section are useful and fairly realistic.
@@ -125,6 +125,8 @@ Therefore, we propose that the \emph{arithmetic intensity of a stencil computati
 
 This is consistent with the measure under spatial tiling, since a spatially tiled loop is similar a time-tiled version of the loop under a (legal) interchange of the time and spatial tile loops.
 Note that the previous argument on spatial tiling shows that this measure will also overestimate the arithmetic intensity, again exacerbated if the space order is large.
+Also note that the same computation as seen previously to bound this overestimate will work, considering time as another dimension with order as the time order.
+However, the bounds will be correspondingly wider.\footnote{Observe that the addition of another tiled dimension is likely to shrink the tile volume (i.e.~the product of tile sizes in all dimensions) in the other dimensions, widening the bound. This applies equally to the previous calculation.}
 
 
 \section{Testing methodology}

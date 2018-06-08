@@ -462,12 +462,18 @@ ytick distance=10,
 \label{fig:awe-roofline}
 \end{figure}
 
+
 \section{Effect of the skewing factor}
-We observe that in almost every case, time-tiling with a smaller skewing factor produces a lower runtime than a larger one, and that there is a progressive increase in runtime as the skewing factor increases.
+\paragraph{Arithmetic intensity}
+We do not propose changing the measure of arithmetic intensity of a stencil computation when skewing, as the same data is required for each computation, and the ordering of computations has not changed.\footnote{For a more concrete understanding of this, one may appeal to the polyhedral model which is beyond the scope of this work.}
+Nevertheless, due to data non-alignment with odd skewing factors, skewing \emph{may} have the impact of reducing the effective arithmetic intensity, especially if there is a memory bandwidth bottleneck.
+We believe that this is overwhelmingly offset by the increase due to time-tiling.\footnote{The reader observes that time-tiling is intended to increase (minimally double) the arithmetic intensity, and a data alignment issue will not reduce the arithmetic intensity by more than half.}
 
-\wip{Discuss odd skewing factors, e.g. k=3}
+Empirically, observe that in all but one case time-tiling with a smaller skewing factor produces a lower runtime than a larger skewing factor, and that there is a progressive increase in runtime as the skewing factor increases.
+This held for our test machine even if the skewing factor was not a power of two, such as 3 or 6, which were compared against skewing factors of 4 and 8 respectively.
 
-However, we would be wary of drawing this conclusion for stencils under Devito in general, until more stencils have been sampled.
+However, it is important to note that this may be architecture-dependent, and should be tested on other architectures rather than assumed.
+Further, we have only tested against 10 members across two families of stencils, which may not be fully representative of stencils in general.
 
 
 \section{Limitations of performance evaluation}

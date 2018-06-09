@@ -329,30 +329,6 @@ Two grid sizes were chosen to comply with our memory limit.
 
 Immediately evident is that the benefit from time-tiling rapidly tapers as the space-order increases, with stencils with larger radii.
 There are two likely (related) explanations for this: an increase in the amount of data needed to compute any one tile, and an increase in arithmetic intensity, slowing the rate of data consumption, making memory bandwidth less relevant.
-Table~\ref{tab:laplace-gflops} shows a calculation achieved memory transfer rates.
-
-\begin{table}[!ht]
-\centering
-\begin{tabular}{rcccc}
-\toprule
-Space-order & Tiling & Arith. intensity & Ach. GFlops & Memory transfer \\
-\midrule
-2 & Space & 4.69 & 39.49 & 8.42 GB/s \\
-2 & Time & 75.05 & 50.80 & 10.8 GB/s \\
-\midrule
-4 & Space & 6.31 & 54.91 & 8.70 GB/s \\
-4 & Time & 50.5 & 66.44 & 10.5 GB/s \\
-\midrule
-8 & Space & 9.29 & 74.06 & 7.97 GB/s \\
-8 & Time & 149 & 82.97 & 8.93 GB/s \\
-\midrule
-16 & Space & 15.81 & 93.24 & 5.90 GB/s \\
-16 & Time & 15.81 & 94.19 & 5.96 GB/s \\
-\bottomrule
-\end{tabular}
-\caption{Memory transfer rates for different space-orders under spatial and time-tiling, grid size \(16 \times 600^3\). Arithmetic intensity is the number of floating-point operations performed per byte of data used. Achieved GFlops reported by Devito. Memory transfer rate obtained by dividing the latter by the former.}
-\label{tab:laplace-gflops}
-\end{table}
 
 \begin{figure}[!ht]
 \centering
@@ -416,26 +392,6 @@ T & \footnotesize runtime (s) & 2.492 & 2.688 & 2.941 & 3.660 & 4.468 \\
 \end{tabular}
 \caption{Runtimes (minimum of 10 trials) from using the acoustic wave equation operator. N, S, T represent minimum runtimes without tiling, with spatial tiling, and with time-tiling respectively. (t,\(k\)) indicates results for time-tiling with a skewing factor of \(k\); T indicates the minimum of these. `-' and `*' denote invalid skewing factor and not tested respectively. Decrease is from spatial tiling to time-tiling.}
 \label{tab:awe-results}
-\end{table}
-
-\begin{table}[!ht]
-\centering
-\begin{tabular}{rcccc}
-\toprule
-Space-order & Tiling & Arith. intensity & Ach. GFlops & Memory transfer \\
-\midrule
-4 & Space & 2.10 & 27.57 & 13.1 GB/s \\
-4 & Time & 2.10 & 50.44 & 24.0 GB/s \\
-\midrule
-8 & Space & 2.89 & 37.12 & 12.8 GB/s \\
-8 & Time & 2.89 & 58.76 & 20.3 GB/s \\
-\midrule
-16 & Space & 4.42 & 47.10 & 10.7 GB/s \\
-16 & Time & 4.42 & 5.911 & 13.4 GB/s \\
-\bottomrule
-\end{tabular}
-\caption{Memory transfer rates for different space-orders under spatial and time-tiling, grid size \(512^3\). Arithmetic intensity is the number of floating-point operations performed per byte of data used. Achieved GFlops reported by Devito. Memory transfer rate obtained by dividing the latter by the former.}
-\label{tab:awe-gflops}
 \end{table}
 
 \wip{Text analysing the results}

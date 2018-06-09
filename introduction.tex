@@ -51,25 +51,26 @@ The principal objective of this project was to implement tiling over the time di
 In summary, our contributions are:
 
 \wip{Results change; check this late}
-
-\clar{More detail in this list?}
 \begin{itemize}
-	\item An implementation of time-tiling in Devito, including a simplification of the generated loop structure.
+	\item An implementation of time-tiling in Devito, including a simplification of the generated loop structure, with accompanying test cases and auto-tuner enhancements.
 	An analysis of its legality and the necessary checks to guarantee this.
-	We also include test cases to supplement the existing test suite for the skewing and tiling transformations which we apply.
 
 	\item An evaluation of correctness and performance of the time-tiling transformation and any actions end-users may need to take to realise performance gains.
 
-	\item Demonstration of a runtime decrease of up to 25\% due to the application of time-tiling in Devito.
-	An evaluation on the conditions for maximising the performance increase.
+	\item Demonstration of a runtime decrease of up to 25\% compared to Devito's existing optimisations under real-world applications, in particular the stencils from the family of acoustic wave equation operators, widely used in Devito's target domain, seismic imaging.
+	A model to understand and maximise the runtime reductions arising from time-tiling these stencils.
 
-	\item A discussion on further implementation work and integration with other optimisations.
+	\item A novel estimator for \emph{arithmetic intensity under time-tiling} that is consistent with existing estimators for arithmetic intensity under spatial tiling.
+	Bounds for both estimators and an evaluation of their accuracy.
+
+	\item A discussion on further implementation work, considering their importance and consistency with the transformation we have implemented.
 \end{itemize}
 
 
 \section{Report structure}
 This report is divided into 6 chapters, describing the above contributions and the context from which they arise.
 
+\wip{Rewriting this: noted Paul on possible further gains}
 \begin{description}
 	\item[Chapter~\ref{ch:background}]
 	A review of the fundamentals needed for time-tiling in general, including its motivation and consequences.

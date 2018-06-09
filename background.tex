@@ -22,21 +22,24 @@ Nevertheless, it is challenging to implement correctly in sufficient generality 
 % Project: optimise memory usage
 % Why exciting: one step to proving the idea
 
-\wip{Mention that we are considering hypercube-like iteration spaces + time}
-
 
 \section{Terminology}
 In addition the terms defined in the sections that follow, we use the following definitions widely in the context of this work:
 
-\wip{Defns}
-
 \paragraph{Iteration space}
-
+The \emph{iteration space} is the discretised problem domain that we iterate over.
+In general, Devito handles hyperrectangular iteration spaces, but in this work it is sufficient to consider three or fewer spatial dimensions and a time dimension.
+All remarks in this work can be considered to generalise to higher spatial dimensions unless otherwise stated.
 
 \paragraph{Stencil}
-A \emph{stencil} is ...
+A \emph{stencil} defines a computation on an iteration space.
+In particular, note that a stencil will define the value of a point in terms of its spatial neighbours in previous time iterations.
+It may be helpful to recall that we are employing finite-difference methods, and Taylor's theorem in higher dimensions.
 
 \paragraph{Space order}
+The \emph{space order of a stencil} defines the precision of the resulting computation.
+A stencil with higher space order will use data from, hence have a dependence on, more distant spatial neighbours.
+The \emph{radius} of a stencil refers to the distance of the furthest spatial dependency.
 
 \paragraph{Arithmetic intensity}
 The \emph{arithmetic intensity of a stencil} is the number of floating point operations performed per byte of data required, given in Flops/Byte.

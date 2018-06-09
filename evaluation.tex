@@ -16,21 +16,21 @@ It is organised into a number of sections:
 \end{itemize}
 
 
-\section{Motivation}
+\section{Objective}
 \label{sec:eval-objs}
 
 The motivation for this project is to reduce computational runtime by exploiting data locality through time-tiling.
 We have described the motivation and investigated tools which have achieve performance gains from the technique.
-It had previously been shown that Devito benefits from reductions in runtime of up to 27.5\% with time-tiling using CLooG.
+It had previously been shown that Devito benefits from reductions in runtime of up to 27.5\% with time-tiling using CLooG~\cite{dylan}.
 
 Chapter~\ref{ch:implementation} described our implementation of time-tiling in Devito.
 The objectives of this evaluation are as follows:
 
 \begin{itemize}
-	\item Measure the performance gain against spatially-tiled computation;
+	\item Measure the performance gain against non-tiled and spatially-tiled computations;
 	\item Verify any requirements to perform time-tiling effectively;
 	\item Determine procedures and heuristics to identify the best-performing parameters for time-tiling;
-	\item Additional verification of correctness, and margin of error introduced against non-tiled code\footnote{For example, due to non-associativity of floating-point arithmetic.}, if any.
+	\item Additional verification of correctness, and margin of error introduced against non-tiled code\footnote{For example, due to non-associativity of floating-point arithmetic.} if any.
 \end{itemize}
 
 
@@ -67,14 +67,14 @@ Therefore, we only need storage for \(n+1\) time iterations of data: the current
 To allow for rigorous correctness checks (Section~\ref{sec:eval-func-corr}), we have \emph{not} used time-buffering during the evaluation.
 Nevertheless, it is straightforward to establish bounds on the size of a time buffer.
 It is clear that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.
-\footnote{From a synchronisation perspective, this would needlessly challenging. It is a fairly simple exercise to show that time-tiling needs at most \(n+t\) time iterations of storage, where \(t\) is the size of a time tile. We would recommend this approach.
+\footnote{From a synchronisation perspective, this would be needlessly challenging. It is a fairly simple exercise to show that time-tiling needs at most \(n+t\) time iterations of storage, where \(t\) is the size of a time tile. We would recommend this approach.
 \clar{Should this be in a footnote? Need diagram/proof?}}
 
 
 \subsection{Auto-tuner iterations}
 % Further prereqs to use the AT
 Previously covered in Section~\ref{sec:autotune}, the Devito auto-tuner experimentally searches for tile sizes achieving the lowest runtime.
-To do this, it needs to store some time iterations of computations: this value is governed by a parameter.\footnote{The \texttt{at\_squeezer} parameter is the number of iterations that are computed, therefore requiring \(n + \texttt{at\_squeezer}\) time iterations of storage.}
+To do this, it needs to store some time iterations of computations: this value is governed by a parameter.\footnote{\wip{var naming is hard} The \texttt{at\_squeezer} parameter is the number of iterations that are computed, therefore requiring \(n + \texttt{at\_squeezer}\) time iterations of storage.}
 
 For its results to be meaningful, we need to compute enough time iterations to distinguish between large time tile sizes.
 Without time-tiling, a fairly small number of time iterations (4) sufficed for auto-tuning.
@@ -174,7 +174,7 @@ An exhaustive search was performed, as the space was relatively small, and the e
 \wip{For Laplace only}
 As a matter of expedience, the auto-tuner was run for at least 3 trials.
 If these produced the same combination of tile sizes, this combination would be chosen as optimal, and run repeatedly to determine its runtime.
-This obviated the need to run the (rather lengthy) auto-tuning for each data point.
+This obviated the need to run auto-tuning for each data point, reducing the time needed to obtain a data point by 65\%.
 
 \subsection{Functional correctness}
 \label{sec:eval-func-corr}

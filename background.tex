@@ -15,12 +15,14 @@ This forms the basis and context for the entire report, and specifically informs
 This project extends a well-established idea from compiler theory, \emph{tiling}, to another dimension (time) in Devito.
 When tiling, particular attention need be paid to data dependences, locality, and parallelism of the resultant code.
 Despite the confluence of factors, tiling is a remarkably simple concept.
-Nevertheless, it can be difficult to employ optimally.
+Nevertheless, it is challenging to implement correctly in sufficient generality for Devito; in particular, we implement \emph{parametrised} time-tiling, which allows tile sizes to be changed at runtime.
 
 % We have a tradeoff between computation and memory usage
 % Big IDEA: can use more memory, less computation ("this really should be true")
 % Project: optimise memory usage
 % Why exciting: one step to proving the idea
+
+\wip{Mention that we are considering hypercube-like iteration spaces + time}
 
 
 \section{Terminology}
@@ -43,9 +45,7 @@ The \emph{arithmetic intensity of a stencil} is the number of floating point ope
 \section{Loop tiling}
 \label{sec:bg-loop-tiling}
 
-\wip{Mention that we are considering hypercube-like iteration spaces}
-
-\subsubsection{Optimisations on loop nests}
+\subsection{Motivation}
 The bulk of computation lies in loops~\cite{aho-cptt}.
 Finite-difference methods are no exception, and in such computations, nested loops (`loop nests') are frequently encountered.
 Loop nest optimisations seek to transform a loop, possibly changing its execution order to use data locality, parallelism, or otherwise avoid unnecessary operations.
@@ -154,6 +154,9 @@ However, it is possible to reduce the operation count by exploiting the structur
 We are therefore interested to perform time-tiling in addition to the existing spatial tiling to alleviate the increased memory pressure and realise significant performance gains, possibly 27.5\% in Devito alone~\cite{dylan}.
 This improvement is significant over the optimisation from tiling in all dimensions apart from time~\cite{pluto}.
 
+In spatial tiling, we exploited data locality within the computation of a single time iteration.
+In contrast, time-tiling exploits data locality between time iterations.
+
 \subsection{Skewing}
 \label{sec:bg-skewing}
 In Section~\ref{sec:interchange} we stated that interchange is valid when data dependences do not cross boundaries between tiles.
@@ -163,7 +166,7 @@ This is clear, as if there are no inter-tile dependences, the tiles can be execu
 \emph{Data dependences} occur when two statements reference a datum, at least one of which change it.
 To preserve the dependence, we must preserve the order in which these statements are executed.
 Figure~\ref{fig:dependence} illustrates how dependences may look in a (1-dimensional) iteration space similar to the problems we discuss later.
-\wip{Verify that these problems were indeed discussed later}
+Failure to preserve this dependence, is known as \emph{dependency violation}, which occurs when we are unable to complete a calculation, as it would either overwrite data still required, or require data that has not been calculated yet.
 
 \begin{figure}[ht]
 	\centering

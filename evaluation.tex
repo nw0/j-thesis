@@ -145,36 +145,30 @@ Accepting the premise that arithmetic intensity can be reduced sufficiently, tim
 Therefore, the most relevant test cases to time-tiling are those which are bound by memory throughput.
 
 \subsection{Hardware and software environment}
-Evaluation was performed on a machine equipped with a single Intel Xeon\textregistered E5-2470 operating at 2.30 GHz, with 8 cores and 16 threads, and 64 GB of DRAM.
+Evaluation was performed on a machine equipped with a single Intel Xeon\textregistered E5-2470 operating at 2.30 GHz, with 8 cores and 16 threads, 20MB of L3 cache, and 64 GB of DRAM.
 It ran Ubuntu 16.04 LTS, with all running services required either for the operating system or our evaluation, to minimise external effects on runtime.
 
-\clar{Discuss cache?}
+OpenMP is a standard API used for compilers to implement parallelism~\cite{openmp-spec}.
 
 To ensure a realistic testing environment and utilise all the available resources, the following hold throughout the experiments:
-
-\clar{Assume reader knows about OpenMP?}
 
 \wip{Explicit variables, check definitions in references}
 \begin{itemize}
 	\item OpenMP directives enabled in Devito. Indicates that a loop should be computed in parallel (typically the body of the inner time loop).
 	\item OpenMP environment variable to utilise all 16 available threads.
-	\item OpenMP environment variable not to migrate threads (``thread pinning''), as well as allocate threads to different cores. Thread migration incurs a significant performance overhead, and parallelism would not help if all threads executed in serial on one core. \clar{Too brief?}
+	\item OpenMP environment variable not to migrate threads (``thread pinning''), as well as allocate threads to different cores. Thread migration incurs a significant performance overhead, and parallelism would not help if all threads executed in serial on one core.
 	\item Usage of the Intel C Compiler, \texttt{icc}.
 	\item Devito enables the highest level of compiler optimisation and parallelism in the compiler by default.
 \end{itemize}
 
 \subsection{Use of auto-tuner}
 % Usage of AT -- parameters (skewing factor, time and space tile sizes)
-We were wary of assuming which tile sizes might be optimal for time-tiling, as they are not easily predicted from those optimal for spatial tiling or cache size~\cite{lam91}.
+We wanted to experiment with tile sizes optimal under time-tiling, as they are not easily predicted from those optimal for spatial tiling or cache size~\cite{lam91}.
 Therefore, the extended Devito auto-tuner (Section~\ref{sec:autotune}) was used to explore as many plausible tile sizes combinations as possible.
 
 As detailed above, experimentation on the skewing factor was done manually.
-An exhaustive search was performed, as the space was relatively small, and the effect on our stencils not well studied.
-
-\wip{For Laplace only}
-As a matter of expedience, the auto-tuner was run for at least 3 trials.
-If these produced the same combination of tile sizes, this combination would be chosen as optimal, and run repeatedly to determine its runtime.
-This obviated the need to run auto-tuning for each data point, reducing the time needed to obtain a data point by 65\%.
+An exhaustive search was performed, as the space was relatively small.
+Further, finding a heuristic for optimal skewing factors is an objective of our evaluation.
 
 \subsection{Functional correctness}
 \label{sec:eval-func-corr}
@@ -187,9 +181,16 @@ In all experiments, the results were discovered to be equal.\footnote{We refer t
 Since floating-point arithmetic is non-associative, the natural implication is that the resulting value in each field was reached through the same expressions, although the computations had been re-ordered.
 Additional checks were used to determine that the results were not merely zeroes, or diverging to infinity.
 
-\subsection{Reporting of runtimes}
+\subsection{Experimentation and reporting of runtimes}
 Wherever runtimes have been collected in this evaluation, the reported figure will be the \emph{minimum} of the runtimes collected in trials.
 This is taken as most representative, as any noise on the testing machine is minimised, since outside factors can only increase the runtime of our computations.
+
+Using the Laplace stencils, the auto-tuner was run for at least three trials.
+The most tile size combination with the overall lowest runtime was selected, and run for a further seven trials, thus we report the minimum of 10 trials.
+This obviated the need to run auto-tuning for each data point, reducing the time needed to obtain a data point by 65\%.
+
+For the acoustic wave equation stencils, we used the auto-tuner for each of the 10 trials run for each data point.
+Thus the reported figure is the minimum of 10 auto-tuned trials.
 
 
 \section{Roofline model}

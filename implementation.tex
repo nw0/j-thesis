@@ -360,7 +360,7 @@ These are an important use case for Devito, as it targets the domain of seismic 
 However, these are added as source and receiver loops performed during each time iteration, making the time loop an imperfect loop nest.
 Our implementation of time-tiling is unable to deal with imperfect loop nests, although this is possible with a few more transformations~\cite{ahmed-imperfect}.
 We considered this to be beyond the scope of the project, as the transformations, while only marginally more difficult than skewing conceptually, presented an equally large software engineering burden.
-Further, this might present a version of Devito that diverged too far from the original, causing the basis for evaluation to be too vague.
+Further, this might present a version of Devito that diverged too far from the original, causing the basis for evaluation to be too tenuous.
 
 We will address source and receiver loops in considerable detail later, and demonstrate that the problem is not insurmountable.
 
@@ -377,7 +377,7 @@ The following are fairly straightforward to comprehend, and appear accordingly s
 \begin{description}
 	\item[Skewing factor legality detection] In Section~\ref{sec:bg-skewing}, we stated the minimum legal skewing factor for time-tiling.
 	Currently, the skewing factor is a user-defined parameter.
-	Regardless of its source, its legality should be checked, as Devito possesses the stencil space order and can determine this as a safety check.
+	Regardless of its source, its legality should be checked, as Devito possesses the stencil space order and can implement a safety check.
 	For our evaluation, this was not necessary as we were aware of the constraints and performed extensive numerical verification.
 
 	\item[Time buffering] Time buffering is a space-saving optimisation discussed in our evaluation, based on the observation that some data will not be required.
@@ -387,12 +387,12 @@ The following are fairly straightforward to comprehend, and appear accordingly s
 	\item[Tiling the innermost dimension] A specific issue to be addressed with time-tiling; in our implementation, if the innermost dimension is tiled, we obtain a slower runtime by about 10\% when chosen tile size is the full extent of the dimension.
 	This does not occur with our implementation under spatial tiling.
 	We suggest that the combination of the floating-point \texttt{fmin} function for bounding and vectorisation could cause this unexpected behaviour, but have not investigated it in detail.
-	This does not affect evaluation as in our trials, the auto-tuned tile sizes always use the full extent of the innermost dimension, so we have merely chosen to explicitly vectorise the innermost dimension, with the complementary benefit of saving weeks of machine-time in auto-tuner trials.
+	This does not affect evaluation as in our experimentation, the auto-tuned tile sizes always use the full extent of the innermost dimension, so we have always explicitly vectorised the innermost dimension, with the complementary benefit of saving weeks of machine-time in auto-tuner trials.
 
-	\item[Supplementary Test cases] We have already included test cases adapted from spatial tiling and ones that specifically test skewing.
+	\item[Supplementary test cases] We have already included test cases adapted from spatial tiling and ones that specifically test skewing.
 	Additional test cases should be added to test the integration of time-tiling with other transformations, beyond the existing skewing and tiling tests.
 	In particular, Devito could benefit from more skewing integration tests.
-	This was not an issue in our evaluation each application of time-tiling was numerically verified to be correct.
+	This was not an issue for our evaluation, where each application of time-tiling was numerically verified to be correct.
 	Finally, there are two obsolete test cases which exist to test the structure of remainder loops, which have been superseded by our loop bounding strategy.
 	These should be deprecated and eventually removed.
 

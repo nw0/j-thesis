@@ -6,6 +6,7 @@
 This chapter is devoted to the performance evaluation of our implementation of time-tiling in Devito.
 It is organised into a number of sections:
 
+\wip{Update this when done}
 \begin{itemize}
 	\item First, we recall the motivation of this project, and the objectives of our evaluation (Section~\ref{sec:eval-objs}).
 	\item We then discuss the restrictions that time-tiling imposes on our use of Devito, and the considerations that it warrants (Section~\ref{sec:time-tiling-details}).
@@ -19,7 +20,7 @@ It is organised into a number of sections:
 \section{Objective}
 \label{sec:eval-objs}
 
-The motivation for this project is to reduce computational runtime by exploiting data locality through time-tiling.
+The motivation for this project is to reduce computational runtime by exploiting data locality between time iterations through time-tiling.
 We have described the motivation and investigated tools which have achieve performance gains from the technique.
 It had previously been shown that Devito benefits from reductions in runtime of up to 27.5\% with time-tiling using CLooG~\cite{dylan}.
 
@@ -66,15 +67,13 @@ Therefore, we only need storage for \(n+1\) time iterations of data: the current
 \wip{Using time buffering for AWE}
 To allow for rigorous correctness checks (Section~\ref{sec:eval-func-corr}), we have \emph{not} used time-buffering during the evaluation.
 Nevertheless, it is straightforward to establish bounds on the size of a time buffer.
-It is clear that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.
-\footnote{From a synchronisation perspective, this would be needlessly challenging. It is a fairly simple exercise to show that time-tiling needs at most \(n+t\) time iterations of storage, where \(t\) is the size of a time tile. We would recommend this approach.
-\clar{Should this be in a footnote? Need diagram/proof?}}
+It is clear that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.\footnote{From a synchronisation perspective, this would be needlessly challenging. It is a simple exercise that time-tiling needs at most \(n+t\) time iterations of storage, where \(t\) is the size of a time tile. We recommend this approach.}
 
 
 \subsection{Auto-tuner iterations}
 % Further prereqs to use the AT
 Previously covered in Section~\ref{sec:autotune}, the Devito auto-tuner experimentally searches for tile sizes achieving the lowest runtime.
-To do this, it needs to store some time iterations of computations: this value is governed by a parameter.\footnote{\wip{var naming is hard} The \texttt{at\_squeezer} parameter is the number of iterations that are computed, therefore requiring \(n + \texttt{at\_squeezer}\) time iterations of storage.}
+To do this, it needs to store some time iterations of computations: this value is governed by a parameter.
 
 For its results to be meaningful, we need to compute enough time iterations to distinguish between large time tile sizes.
 Without time-tiling, a fairly small number of time iterations (4) sufficed for auto-tuning.
@@ -93,28 +92,28 @@ We have found that that the data alignment argument holds for the experiments th
 \label{sec:arithmetic-intensity}
 
 Recall that \emph{arithmetic intensity} is defined to be the number of floating point operations performed per byte.
-Time-tiling is an optimisation to improve the re-use of cached data, effectively increasing the arithmetic intensity of a stencil, as it needs to be fetched from memory less frequently.
+Time-tiling is an optimisation to improve the reuse of cached data, effectively increasing the arithmetic intensity of a stencil, as data needs to be fetched from memory less frequently.
 
 Suppose a stencil requires data from the last \(n\) time iterations.
 Devito reports arithmetic intensity as `operational intensity', and calculates it as follows:
 
 \begin{description}
-	\item[Non-tiled code] Arithmetic intensity is calculated from the definition, assuming that data that has been loaded into the cache would \emph{not} need to be re-loaded in that time iteration.
+	\item[Non-tiled code] Arithmetic intensity is calculated from the definition, assuming that data that has been loaded into the cache would \emph{not} need to be re-loaded in the same time iteration.
 	In reality, with a sufficiently large iteration space, each byte would have to be loaded into cache more than once for each time iteration.
 	The measure therefore \emph{overestimates} the number of floating point operations per byte loaded from memory and hence true arithmetic intensity.
-	In the graphs later in this chapter, this would result in a \emph{right shift} of a data point from its true location.
+	In the graphs later in this chapter, an overestimate results in a \emph{right shift} of a data point from its true location.
 
-	\item[Space-tiled code] Again, Devito assumes data need only be loaded into the cache once per time iteration, and that it would be used fully before being evicted, calling this scheme `compulsory memory traffic'.
+	\item[Space-tiled code] Again, Devito assumes data need only be loaded into the cache once per time iteration, hence would be used fully before being evicted, calling this scheme `compulsory memory traffic'.
 	For each time iteration, this requires the previous \(n\) time iterations of data to be loaded from memory.
-	This produces the same figure for arithmetic intensity as the measure for non-tiled code above, if the stencil only requires data from the previous time iteration, as data needs to be loaded into the cache again for each time iteration.
+	This produces the same figure for arithmetic intensity as the measure for non-tiled code above.
 	Since the dependencies of tiles overlap in previous time iterations, with a sufficiently large iteration space, some dependencies will need to be loaded into cache more than once (assuming at least two spatial dimensions with non-zero space order).\footnote{This is fairly simple to see. Ignore all but two spatial dimensions with non-zero space order, and suppose otherwise for a contradiction. Arbitrarily choose a finite cache size of \(\Omega\) floating-point numbers, and call our spatial dimensions \texttt{x}, \texttt{y} with dimension extents \(x, y\) respectively. W.l.o.g.~\(x \le y\) and that the stencil has space order \(d>0\) in both dimensions (take the minimum). Now we need \(xd \le \Omega\), since minimising dependency overlap along the \texttt{x} dimension demands that we calculate the first \texttt{x} `row' before any other \texttt{x}-tiles. But we can choose \(x > \Omega / d\).}
-	Thus this measure also \emph{overestimates} arithmetic intensity, but to a smaller extent that can be estimated.\footnote{To see that the bound is realistic, consider `row-by-row' tile scheduling as in the previous proof, and spatial dimensions \texttt{x1}, ..., \texttt{xn}, with extents \(x_1, ..., x_n\), space orders \(d_1, ..., d_n\), and chosen tile sizes \(b_1, ..., b_n\). Can be shown that the data the \(x_i d_i\) points from each \texttt{xi}-row need be loaded into cache at most twice. Since an \texttt{xi}-row spans \(b_i\) iterations, at most \(d_i / b_i\) points are loaded into cache twice for the \texttt{xi}-dimension. An easy addition exercise gives an overall bound for the iteration space, and the measure under spatial tiling is clearly a tighter estimate than the measure under non-tiled computation.}
+	Thus this measure also \emph{overestimates} arithmetic intensity, but to a smaller extent that can be bounded.\footnote{To see that the bound is realistic, consider `row-by-row' tile scheduling as in the previous proof, and spatial dimensions \texttt{x1}, ..., \texttt{xn}, with extents \(x_1, ..., x_n\), space orders \(d_1, ..., d_n\), and chosen tile sizes \(b_1, ..., b_n\). Can be shown that the data the \(x_i d_i\) points from each \texttt{xi}-row need be loaded into cache at most twice. Since an \texttt{xi}-row spans \(b_i\) iterations, at most \(d_i / b_i\) points are loaded into cache twice for the \texttt{xi}-dimension. An easy addition exercise gives an overall bound for the iteration space, and the measure under spatial tiling is clearly a tighter estimate than the measure under non-tiled computation.}
 \end{description}
 
-Remark: later, we will see that it is preferable to overestimate the arithmetic intensity of a stencil computation than underestimate it, and we provides arguments for why the measures stated in this section are useful and fairly realistic.
+Remark: later, we will see that it is preferable to overestimate the arithmetic intensity of a stencil computation than underestimate it, and we provide arguments for why the measures stated in this section are useful and fairly realistic.
 This will be explained in detail when studying the roofline model in Section~\ref{sec:roofline-intro}, as it requires other ideas that have yet to be introduced.
 
-We need to establish a new measure of arithmetic intensity under time-tiling, preferably one compatible with the measure under spatial tiling.
+We need to establish a new measure for arithmetic intensity under time-tiling, preferably one compatible with the existing measure under spatial tiling.
 We consider the following statements to follow naturally from Devito's calculation of arithmetic intensity under spatial tiling.
 
 \begin{itemize}
@@ -129,14 +128,14 @@ Therefore, we propose that the \emph{arithmetic intensity of a stencil computati
 
 This is consistent with the measure under spatial tiling, since a spatially tiled loop is similar a time-tiled version of the loop under a (legal) interchange of the time and spatial tile loops.
 Note that the previous argument on spatial tiling shows that this measure will also overestimate the arithmetic intensity, again exacerbated if the space order is large.
-Also note that the same computation as seen previously to bound this overestimate will work, considering time as another dimension with order as the time order.
+Note that the extent of the overestimation can be bounded with the same method as in spatial tiling.
 However, the bounds will be correspondingly wider.\footnote{Observe that the addition of another tiled dimension is likely to shrink the tile volume (i.e.~the product of tile sizes in all dimensions) in the other dimensions, widening the bound. This applies equally to the previous calculation.}
 
 
 \section{Testing methodology}
 \label{sec:test-method}
 
-Realistic test cases vary from those that are more memory-intensive to those that are more computationally intensive on a given hardware configuration.
+Realistic test cases vary from those that are more memory intensive to those that are more computationally intensive on a given hardware configuration.
 Under the former regime, computational (arithmetic) intensity is fairly low, and the CPU uses data faster than it can be transferred from memory; in the latter case, data can be transferred more rapidly than it can be utilised.
 
 A key premise of Devito is that arithmetic intensity can be decreased at the cost of higher memory pressure, by manipulating expressions~\cite{fabio-memory}.
@@ -148,13 +147,10 @@ Therefore, the most relevant test cases to time-tiling are those which are bound
 Evaluation was performed on a machine equipped with a single Intel Xeon\textregistered E5-2470 operating at 2.30 GHz, with 8 cores and 16 threads, 20MB of L3 cache, and 64 GB of DRAM.
 It ran Ubuntu 16.04 LTS, with all running services required either for the operating system or our evaluation, to minimise external effects on runtime.
 
-OpenMP is a standard API used for compilers to implement parallelism~\cite{openmp-spec}.
-
 To ensure a realistic testing environment and utilise all the available resources, the following hold throughout the experiments:
 
-\wip{Explicit variables, check definitions in references}
 \begin{itemize}
-	\item OpenMP directives enabled in Devito. Indicates that a loop should be computed in parallel (typically the body of the inner time loop).
+	\item OpenMP\footnote{OpenMP is a standard API used for compilers to implement parallelism~\cite{openmp-spec}.} directives enabled in Devito. Indicates that a loop should be computed in parallel (typically the body of the inner time loop).
 	\item OpenMP environment variable to utilise all 16 available threads.
 	\item OpenMP environment variable not to migrate threads (``thread pinning''), as well as allocate threads to different cores. Thread migration incurs a significant performance overhead, and parallelism would not help if all threads executed in serial on one core.
 	\item Usage of the Intel C Compiler, \texttt{icc}.
@@ -187,7 +183,7 @@ This is taken as most representative, as any noise on the testing machine is min
 
 Using the Laplace stencils, the auto-tuner was run for at least three trials.
 The most tile size combination with the overall lowest runtime was selected, and run for a further seven trials, thus we report the minimum of 10 trials.
-This obviated the need to run auto-tuning for each data point, reducing the time needed to obtain a data point by 65\%.
+This obviated the need to run auto-tuning for each data point, reducing the time needed to obtain a data point by 65\%, or about a week of machine time.
 
 For the acoustic wave equation stencils, we used the auto-tuner for each of the 10 trials run for each data point.
 Thus the reported figure is the minimum of 10 auto-tuned trials.
@@ -200,12 +196,11 @@ The roofline model describes how arithmetic (or \emph{operational}) intensity ke
 In particular, it gives upper bounds for performance based on memory bandwidth and CPU performance, and describes the bottlenecks that a program would encounter based on its arithmetic intensity~\cite{roofline}.
 The model states that as arithmetic intensity increases, performance increases at a rate determined by the memory bandwidth, until it reaches the performance limit (in Flops, floating-point operations per second) of the processor.
 
-As a primitive, since a stencil computation on a grid of a particular size requires a fixed number of floating-point operations, we want to maximise this number.
-
 \subsection{Bounds of the test machine}
 The Sandy Bridge architecture supports execution of up to 16 single-precision floating point operations per cycle, giving a theoretical maximum of 294.4 GFlops.\footnote{Calculated as 16 floating-point operations/cycle \(\times 2.3 \times 10^9\) cycles/sec/core \(\times\) 8 cores (on a single-node machine) \(= 294.4\) GFlops.
 \\\wip{Fabio: 2.3GHz is the `processor base frequency', which I suspect is still not what you mean? Pl. confirm.}}
 The \emph{LINPACK} benchmark~\cite{linpack}, highly optimised and likely to perform faster than any stencil we evaluate, achieves a maximum of 131 GFlops on this machine; it is standard practice to double this figure to obtain the maximum for single-precision floating-point operations, giving a practical bound of 262 GFlops in our test scenarios.
+In practice, few programs begin to approach the performance achieved by the \emph{LINPACK} benchmark.
 The \emph{STREAM} benchmark~\cite{stream} indicates that the peak memory bandwidth of the machine is 17.3 GB/s.
 
 \subsection{Arithmetic intensity and cache reuse}
@@ -236,7 +231,7 @@ ytick distance=25,
 \end{figure}
 
 We previously suggested that it was preferable to overestimate arithmetic intensity than underestimate it.
-As we can see from the graph, if we permit ourselves to underestimate arithmetic intensity, a point could lie \emph{above} the roofline, contradicting the model.
+As we can see from the figure, if we permit ourselves to underestimate arithmetic intensity, a point could lie \emph{above} the roofline, contradicting the model.
 Therefore, we must not underestimate arithmetic intensity.
 
 Recall that the objective of time-tiling is to maximise cache reuse by exploiting data locality between time iterations.
@@ -244,7 +239,7 @@ As previously argued, if a computation is bounded by memory throughput (hence in
 From the previous discussion (Section~\ref{sec:arithmetic-intensity}), we established that tiling transformations effectively increase the arithmetic intensity of a stencil computation, resulting in a rightward shift of a data point on this graph.
 
 We see from the diagram that such a rightward shift starting from any point in the shaded region increases the performance bound under the roofline.
-Therefore, we seek to demonstrate that this is accompanied by an upward shift (combined, a diagonal shift) of the performance of a memory-bounded stencil computation.
+Therefore, we seek to demonstrate that this is accompanied by an upward shift (together a diagonal shift) of the performance of a memory-bounded stencil computation.
 In particular, we hypothesise that the performance increase of stencils that are more memory bounded (lower arithmetic intensity) will yield the greatest benefit from time-tiling.
 
 
@@ -257,15 +252,14 @@ In particular, we wished to determine if the minimum legal skewing factor would 
 
 \paragraph{Space order}
 The space order of the computation determines the precision of the result.
-In solving differential equations, is the order of the approximation, beyond which smaller terms are discarded.
-A higher space order means each cell is computed using more of its neighbours, resulting in greater precision.
-This would require a larger stencil, and hence a larger skewing factor.
+In solving differential equations, this is the order of the approximation, beyond which smaller terms are ignored.
+A higher space order results greater precision, stencil radius, and minimum skewing factor.
 
 \paragraph{Domain size}
 The size of the domain is the product of all four dimensions in the simulation.
-As memory was limited to 64GB needed to store both time-tiled results and non-tiled results for numerical verification, we decided to use shorter time dimensions, maximising the spatial dimension size for realism.
-We justify this choice, reasoning that runtime should be proportional to the number of time tiles executed.\footnote{This was verified using smaller spatial dimensions.}
-Therefore, we chose time dimensions 16 or 32, as these would be small multiples of the time tile size.
+As memory was limited to 64GB needed to store both time-tiled and non-tiled results for numerical verification, we decided to use shorter time dimensions, maximising the spatial dimension size for realism.
+We justify this choice reasoning that runtime should be proportional to the number of time tiles executed.\footnote{This was verified using smaller spatial dimensions.}
+Therefore, we chose time dimensions 16 or 32, as these are small multiples of the time tile size.
 
 
 \section{Performance of the Laplace operator}
@@ -308,7 +302,7 @@ T & \footnotesize runtime (s) & 2.939 & 2.957 & 3.762 & 5.718 & 2.712 & 2.790 & 
 % & & 16,32,64 & & & & 16,32,32 & & & \\
 \bottomrule
 \end{tabular}
-\caption{Runtimes from using the Laplace operator. N, S, T represent minimum runtimes without tiling, with spatial tiling, and with time-tiling respectively. (t,\(k\)) indicates results for time-tiling with a skewing factor of \(k\); T indicates the minimum of these. Decrease is from spatial tiling to time-tiling. Only valid skewing factors used.}
+\caption{Runtimes (minimum of 10 trials) from using the Laplace operator. N, S, T represent minimum runtimes without tiling, with spatial tiling, and with time-tiling respectively. (t,\(k\)) indicates results for time-tiling with a skewing factor of \(k\); T indicates the minimum of these. Decrease is from spatial tiling to time-tiling. Only valid skewing factors used.}
 \label{tab:laplace-results}
 \end{table}
 
@@ -331,9 +325,9 @@ ytick distance=0.5,
 \end{figure}
 
 Table~\ref{tab:laplace-results} shows the runtimes arising from running time-tiling compared to spatial tiling under the Laplace operator.
-Two grid sizes were chosen in accordance with our discussion on domain size above.
+Two grid sizes were chosen to comply with our memory limit.
 
-Immediately evident is that the benefit from time-tiling rapidly tapers as the space-order increases, with usage of broader stencils.
+Immediately evident is that the benefit from time-tiling rapidly tapers as the space-order increases, with stencils with larger radii.
 There are two likely (related) explanations for this: an increase in the amount of data needed to compute any one tile, and an increase in arithmetic intensity, slowing the rate of data consumption, making memory bandwidth less relevant.
 Table~\ref{tab:laplace-gflops} shows a calculation achieved memory transfer rates.
 
@@ -381,9 +375,8 @@ ytick distance=25,
 \label{fig:laplace-roofline}
 \end{figure}
 
-It is fairly clear that the achieved memory transfer rates decreases progressively as the space-order increases.
-We also note that arithmetic intensity increases significantly from a space-order of 2 to 16.
-At the same time, reported GFlops increase from under half of the 130 GFlops achieved by the \emph{LINPACK} benchmark, to nearly 75\%.
+We note that arithmetic intensity increases significantly from a space-order of 2 to 16.
+At the same time, reported GFlops of spatially tiled code increase dramatically from 15\% of that achieved by the \emph{LINPACK} benchmark, to over 35\%.
 Therefore, we expect that we are nearing the computational bound of our test machine, and in accordance with the roofline model, would expect little improvement from memory bandwidth improvements such as time-tiling.
 
 % Discuss peak memory bandwidth, benchmarked bandwidth, and how much Devito used

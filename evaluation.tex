@@ -324,6 +324,30 @@ ytick distance=0.5,
 \label{fig:laplace-graph}
 \end{figure}
 
+\begin{table}[!ht]
+\centering
+\begin{tabular}{cr|c|c|ccccc}
+\toprule
+& & N & S & \multicolumn{5}{c}{T; time tile size} \\
+Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
+\midrule
+16 & \footnotesize GFlops & 31.22 & 93.24 & 94.19 & & & &  \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 15.81 & 15.81 & 15.81 &  &  &  &  \\
+\midrule
+8 & \footnotesize GFlops & 30.22 & 74.06 & & & & & 82.97 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 9.29 & 9.29 & 9.29 &  &  &  & 149 \\
+\midrule
+4 & \footnotesize GFlops & 28.96 & 54.91 & & & & 66.44 & \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 6.31 & 6.31 & 6.31 &  &  & 50.5 & \\
+\midrule
+2 & \footnotesize GFlops & 26.55 & 39.49 & & & & & 50.80 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 4.69 & 4.69 & 4.69 &  &  &  & 75.0 \\
+\bottomrule
+\end{tabular}
+\caption{Performance and arithmetic intensity of stencils with non-tiled, spatially tiled, and time-tiled computations and time tile sizes 1, 2, 4, 8, 16.}
+\label{tab:laplace-roofline}
+\end{table}
+
 Table~\ref{tab:laplace-results} shows the runtimes arising from running time-tiling compared to spatial tiling under the Laplace operator.
 Two grid sizes were chosen to comply with our memory limit.
 
@@ -396,6 +420,33 @@ T & \footnotesize runtime (s) & 2.492 & 2.688 & 2.941 & 3.660 & 4.468 \\
 \end{table}
 
 \wip{Text analysing the results}
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{cr|c|c|ccccc}
+\toprule
+			& & N & S & \multicolumn{5}{c}{T; time tile size} \\
+Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
+\midrule
+16 & \footnotesize GFlops & 16.07 & 47.10 & & & & & 59.11 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 4.42 & 4.42 & 4.42 & 8.84 & 17.7 & 35.4 & 70.7 \\
+\midrule
+12 & \footnotesize GFlops & 16.86 & 44.75 & & & & & 59.82 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 3.36 & 3.36 & 3.36 & 6.72 & 13.4 & 16.9 & 53.8 \\
+\midrule
+8 & \footnotesize GFlops & 17.46 & 37.12 & & & & & 58.76 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.89 & 2.89 & 2.89 & 5.78 & 11.56 & 23.1 & 46.2 \\
+\midrule
+6 & \footnotesize GFlops & 17.45 & 32.51 & & & & & 55.57 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.50 & 2.50 & 2.50 & 5.00 & 10.0 & 20.0 & 40.0 \\
+\midrule
+4 & \footnotesize GFlops & 17.44 & 27.57 & & & & & 50.44 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.10 & 2.10 & 2.10 & 4.20 & 8.40 & 16.8 & 33.6 \\
+\bottomrule
+\end{tabular}
+\caption{Performance and arithmetic intensity of stencils with non-tiled, spatially tiled, and time-tiled computations and time tile sizes 1, 2, 4, 8, 16. Data from the minimum runtime trials as in Table~\ref{tab:awe-results}.}
+\label{tab:awe-roofline}
+\end{table}
 
 Significant benefit, especially at lower arithmetic intensity, as predicted by the roofline model.
 Note that the achieved GFlops seem to taper off quickly. \clar{Why?}

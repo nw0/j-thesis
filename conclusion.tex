@@ -79,3 +79,31 @@ Manipulating a loop nest involves additional transformations.
 It is clear from the literature that these are semantically compatible with tiling.
 For skewing, consider that no change has been made to the execution order; loop index offsets are balanced by an equal and opposite change in loop variables.
 Therefore, the necessary code transformations are not affected by skewing.
+
+
+\subsection{Advanced manipulation of symbolic expressions}
+\label{sec:future-aggressive}
+
+The Devito symbolic engine (DSE) has additional modes which we have not discussed in detail in this report.
+These enable it to perform more advanced transformations on the symbolic expressions that make up a differential equation.
+In particular, they search for sub-expressions that should be assigned to temporaries, to avoid needless re-computation.
+
+Our implementation separates skewing into a separate DSE mode, so that it will not occur alongside these advanced transformations.
+
+\subsubsection{Consistency with time-tiling}
+First, observe that these transformations were compatible with spatial tiling which was previously implemented using the remainder loop strategy.
+Since it is legal permute the spatial tiles within a single time iteration, our bounding strategy is guaranteed to be valid under spatial tiling.
+
+For time-tiling, consider that our implementation does not parallelise the time dimension.\footnote{This is a consequence of our skewing factor being \emph{equal} to the largest spatial dependence distance. Increasing this by one would allow interchange of the incremental time loop with any increment spatial loop, however at least one incremental loop must not be parallelised.}
+Thus the extraction will be valid, as all extracted code will be placed within the incremental time loop.
+
+\subsubsection{Possible pitfalls in implementation}
+This transformation extracts sub-expressions from \emph{SymPy} expressions, potentially changing the order of floating-point operations.
+An obvious solution would be to perform skewing after this transformation, as we established in this work that skewing does not change the execution order.
+A caveat is that skewing affects the behaviour of common sub-expression elimination (Section~\ref{sec:impl-cse}), which \emph{does} result in an execution order change in Devito.
+
+This should be overcome with using a test case with suitable bounds; as Devito does not guarantee an order of operations on floats (due to optimisation), differences in values due to re-ordering are acceptable in principle.
+
+A final remark is that skewing manifests in two parts: loop indices are skewed in the DSE, but the loop variable is not skewed, as the loop structure has not been generated yet.
+Instead, the skewing factor is maintained as an attribute of the stencil until it is transformed into a loop.
+This fact may explain how skewing and the other optimisations change the execution order, and it might even be possible to surmount this change.

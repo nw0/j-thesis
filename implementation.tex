@@ -370,8 +370,11 @@ We will address source and receiver loops in considerable detail later, and demo
 DSE aggressive mode is used to performed advanced manipulation of symbolic expressions and extract loop invariants.
 Loop hoisting is a technique used in general-purpose optimising compilers to eliminate redundant computation, and this is a specific situation in which hoisting is used.
 
-While important, we felt that supporting this feature would be time-consuming and would not add significant value to our evaluation.
-It would be time consuming as the most obvious issue is that it attempts to use our computed loop bounds just one line before they are defined, but since the hoist occurs long after tiling has been completed, it might require extensive changes to the visitor that it uses to hoist expressions.
+While important, we felt that supporting this feature would potentially be time-consuming and would not add significant value to our evaluation.
+A specific concern is that this manipulation can change the order of floating-point operations.
+Combining this with our transformations would mean that the results may no longer be numerically identical, which would hinder our evaluation, as establishing acceptable bounds on error is highly problem-dependent.
+Further, it would introduce another variable to be evaluated; however, the variable of advanced expression manipulation is not immediately relevant to our time-tiling transformation.
+In Section~\ref{sec:future-aggressive} we argue its consistency with our transformation, and outline a strategy for verifying and integrating the two transformations.
 
 \subsection{Minor extensions}
 The following are fairly straightforward to comprehend, and appear accordingly straightforward to implement. We elected not to implement them in order to devote more time to a rigorous evaluation of the transformation.

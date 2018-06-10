@@ -51,7 +51,9 @@ A summary of the contributions of this project.
 \section{Future work}
 \label{sec:future-work}
 
-Non-implementation-related: further evaluation, particularly the skewing factor
+Apart from work in evaluation and extensions to time-tiling discussed below, we also like to highlight Section~\ref{sec:impl-minor} (`Minor extensions to time-tiling').
+
+\wip{eval}
 
 \subsection{Tiling imperfectly-nested loops}
 In this work, we implemented the time-tiling transformation for perfect loop nests in Devito.
@@ -92,7 +94,7 @@ Our implementation separates skewing into a separate DSE mode, so that it will n
 
 \subsubsection{Consistency with time-tiling}
 First, observe that these transformations were compatible with spatial tiling which was previously implemented using the remainder loop strategy.
-Since it is legal permute the spatial tiles within a single time iteration, our bounding strategy is guaranteed to be valid under spatial tiling.
+Since it is legal to permute the spatial tiles within a single time iteration, our bounding strategy is guaranteed to be valid under spatial tiling.
 
 For time-tiling, consider that our implementation does not parallelise the time dimension.\footnote{This is a consequence of our skewing factor being \emph{equal} to the largest spatial dependence distance. Increasing this by one would allow interchange of the incremental time loop with any increment spatial loop, however at least one incremental loop must not be parallelised.}
 Thus the extraction will be valid, as all extracted code will be placed within the incremental time loop.

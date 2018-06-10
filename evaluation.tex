@@ -150,7 +150,7 @@ It ran Ubuntu 16.04 LTS, with all running services required either for the opera
 To ensure a realistic testing environment and utilise all the available resources, the following hold throughout the experiments:
 
 \begin{itemize}
-	\item OpenMP\footnote{OpenMP is a standard API used for compilers to implement parallelism~\cite{openmp-spec}.} directives enabled in Devito. Indicates that a loop should be computed in parallel (typically the body of the inner time loop).
+	\item OpenMP\footnote{OpenMP is a standard API used for compilers to implement parallelism~\cite{openmp-spec}.} directives enabled in Devito. Indicates that a loop should be computed in parallel (typically the body of the incremental time loop).
 	\item OpenMP environment variable to utilise all 16 available threads.
 	\item OpenMP environment variable not to migrate threads (``thread pinning''), as well as allocate threads to different cores. Thread migration incurs a significant performance overhead, and parallelism would not help if all threads executed in serial on one core.
 	\item Usage of the Intel C Compiler, \texttt{icc}.
@@ -452,7 +452,6 @@ Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 \label{tab:awe-roofline}
 \end{table}
 
-Significant benefit, especially at lower arithmetic intensity, as predicted by the roofline model.
 Note that the achieved GFlops seem to taper off quickly. \clar{Why?}
 
 \begin{figure}[!ht]

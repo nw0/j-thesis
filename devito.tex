@@ -130,7 +130,7 @@ Therefore, skewing is not required.
 \subsection{Parametrisation}
 A challenge when tiling general loops as required in Devito parametrisation of loop bounds, and the correct propagation of these bounds.
 As seen in the examples of Section~\ref{sec:bg-loop-tiling}, the tile size for each dimension is a variable such as \texttt{x\_blk\_size}.
-This means that tile sizes can be changed at runtime, which enables features such as auto-tuning, which is discussed later.
+This is a \emph{parametrised} tile, means that tile sizes can be changed at runtime, which enables features such as auto-tuning, which is discussed later.
 Therefore, there is no need to re-optimise and re-compile a stencil from a change in domain size; resulting in considerable time savings.
 
 \subsection{Auto-tuner}

@@ -102,6 +102,10 @@ for (int x_blk = x_start ; x_blk < x_end; x_blk += x_blk_size) {
 Named after the mining practice, strip-mining involves dividing a dimension of the iteration space into strips (Figure~\ref{lst:stripmine-basic}).\footnote{However, you cannot divide a dimension into lateral strips, only sequential ones.}
 By itself, strip-mining does not change the execution order; it is a gateway to further transformations.
 
+\begin{framed}
+	Throughout this work, we will refer to the outer loop (variable \texttt{x\_blk} in Figure~\ref{lst:stripmine}) as the \emph{tile} loop, and the inner loop (variable \texttt{x} in the same figure) as the \emph{incremental} loop.
+\end{framed}
+
 We will need more loops to perform an interchange.
 Figure~\ref{lst:stripmine} illustrates a loop that has been strip-mined in two dimensions.
 
@@ -165,11 +169,14 @@ In contrast, time-tiling exploits data locality between time iterations.
 In Section~\ref{sec:interchange} we stated that interchange is valid when data dependences do not cross boundaries between tiles.
 This is clear, as if there are no inter-tile dependences, the tiles can be executed in any order.
 
-\wip{Definition here could be clearer}
-\emph{Data dependences} occur when two statements reference a datum, at least one of which change it.
+\begin{framed}
+	A \emph{data dependence} occurs when two statements reference a datum, and at least one statement changes it.
+	Failure to preserve the execution order of the statements is known as \emph{dependency violation}.
+\end{framed}
+
 To preserve the dependence, we must preserve the order in which these statements are executed.
 Figure~\ref{fig:dependence} illustrates how dependences may look in a (1-dimensional) iteration space similar to the problems we discuss later.
-Failure to preserve this dependence, is known as \emph{dependency violation}, which occurs when we are unable to complete a calculation, as it would either overwrite data still required, or require data that has not been calculated yet.
+Dependency violation occurs with an invalid ordering which overwrites data yet to be read, or requires data that has not been calculated yet.
 
 \begin{figure}[ht]
 	\centering

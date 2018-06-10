@@ -15,7 +15,7 @@ Finally, we consider the implications on sparse loops, one of Devito's raisons d
 \label{sec:skewing}
 A loop nest comprises several nested loops, each with its own loop variable.
 We may assume the outermost loop holds the time variable without loss of generality.\footnote{Otherwise, ignore any outer loops.}
-In our implementation, inner loop variables are increased by a factor of time, and the index accesses of that variable are decreased by the same factor in the loop body (Figures~\ref{lst:skewing-simple} and~\ref{fig:skewed-loops-skewed-space}).
+In our implementation, incremental loop variables are increased by a factor of time, and the index accesses of that variable are decreased by the same factor in the loop body (Figures~\ref{lst:skewing-simple} and~\ref{fig:skewed-loops-skewed-space}).
 In this way, all accesses refer to the same data as before the transformation, ensuring its validity.
 
 \begin{figure}[!ht]
@@ -76,7 +76,7 @@ CSE does not remove the skew, as it is partially applied in the loop header, and
 
 \subsection{Implementation}
 This was a straightforward substitution in the Devito symbolic engine, exactly as described above.
-We iterate over the dimensions, first identifying the time dimension, then adding the offset to each inner space dimension.
+We iterate over the dimensions, first identifying the time dimension, then adding the offset to each incremental spatial loop variable.
 We then replace every reference to the space dimension variable with a similar reference, subtracting the offset.
 
 If there is no time dimension, no skewing is applied, as time-tiling would not be relevant.
@@ -144,7 +144,7 @@ for (int t_blk = t_s; t_blk < t_e; t_blk += t_blk_size)
 
 \subsection{Min/max bounds for valid array accesses}
 Since a skewed iteration space is not rectangular (or in general, not a hypercube), valid array accesses over a space variable will not be valid for the same values between time iterations (as seen the previous section).
-As it is not feasible to generate a remainder loop for each time iteration and choice of space dimension,\footnote{This would require at least \(\sum_{m=1}^{n} \binom{n}{m} = 2^n \) remainder loop nests, where there are \(n\) spatial dimensions -- one for each choice of dimensions.} we bound the inner loops using the \texttt{min} and \texttt{max} functions.
+As it is not feasible to generate a remainder loop for each time iteration and choice of space dimension,\footnote{This would require at least \(\sum_{m=1}^{n} \binom{n}{m} = 2^n \) remainder loop nests, where there are \(n\) spatial dimensions -- one for each choice of dimensions.} we bound the incremental loops using the \texttt{min} and \texttt{max} functions.
 
 \begin{figure}[!ht]
 \begin{lstlisting}
@@ -156,7 +156,7 @@ for (int t_blk = t_s; t_blk < t_e; t_blk += t_blk_size)
                x < min(x_e + t, x_blk + x_blk_size); x++)
         A[t][(x-t)] = A[t-1][(x-t)-1] + A[t-1][(x-t)+1];
 \end{lstlisting}
-	\caption{We add lower bounds for each of the inner (e.g. \texttt{x}, not \texttt{x\_blk}) variables, and we change the upper bounds for the spatial dimensions to be bounded by \texttt{x\_e + t}, instead of \texttt{x\_e + t\_e}. This prevents out of bounds accesses in the lower and upper triangular regions of Figure~\ref{fig:skewing-bounded} respectively.}
+	\caption{We add lower bounds for each of the incremental loop variables, and we change the upper bounds for the spatial dimensions to be bounded by \texttt{x\_e + t}, instead of \texttt{x\_e + t\_e}. This prevents out of bounds accesses in the lower and upper triangular regions of Figure~\ref{fig:skewing-bounded} respectively.}
 	\label{lst:skewing-bounded}
 \end{figure}
 
@@ -231,7 +231,7 @@ for (int t_blk = t_s; t_blk < t_e; t_blk += t_blk_size)
 
 At the same time, it makes sense for this approach to supersede the remainder loops detailed in Section~\ref{sec:remainder-loops} which generate remainder iterations.
 This is valid because every array access is valid under the new bounds.
-We can therefore extend the iteration space of the outermost (tiling) loop to the full extent of the skewed iteration space.
+We can therefore extend the iteration space of the tile loop to the full extent of the skewed iteration space.
 This would have previously resulted in out-of-bounds accesses as bounding did not occur.
 
 Figures~\ref{lst:skewing-bounded} and~\ref{fig:skewing-bounded} combine skewing and min/max bounding.
@@ -253,7 +253,7 @@ for (int t = t_s, t < t_e; t++)
 	\label{lst:parallel-space}
 \end{figure}
 
-One may hope that we can parallelise the same outer space tile loops under time-tiling, but this is not the case.
+One may hope that we can parallelise the same space tile loops under time-tiling, but this is not the case.
 Consider a time tile size at least as large as the extent of the time dimension, so that the time dimension forms a single tile.
 The time tile loop will only execute once, so we can ignore it (Figure~\ref{lst:parallel-time}).
 
@@ -263,12 +263,12 @@ The time tile loop will only execute once, so we can ignore it (Figure~\ref{lst:
 for (int x_blk = x_s; x_blk < x_e + t_e; x_blk += x_blk_size)
   // parallelising the time loop is never valid
   for (int t = t_s; t < t_e; t++)
-    // finally, parallelise the inner space loops
+    // finally, parallelise the incremental space loops
     for (int x = max(x_s + t, x_blk);
              x < min(x_e + t, x_blk + x_blk_size); x++)
       A[t][(x-t)] = A[t-1][(x-t)-1] + A[t-1][(x-t)+1];
 \end{lstlisting}
-	\caption{Time-tiled loop nest (including interchange), with the outermost loop removed and bounds on the inner time loop adjusted accordingly. The resultant loop structure is identical to spatial tiling, except with the time loop interchanged to appear within space tile loops.}
+	\caption{Time-tiled loop nest (including interchange), with the outermost loop removed and bounds on the incremental time loop adjusted accordingly. The resultant loop structure is identical to spatial tiling, except with the time loop interchanged to appear within space tile loops.}
 	\label{lst:parallel-time}
 \end{figure}
 
@@ -288,7 +288,7 @@ However, it is known that we are unable to use \texttt{fmax} in a loop header wh
 In particular, the call to \texttt{fmax} although invariant, returns a \texttt{float} rather than an integer, and is therefore not a valid \emph{controlling predicate}~\cite{openmp-spec}.
 
 \paragraph{Loop nest structure}
-Each tiled loop would be tiled into two loops: an inner \texttt{x} loop, and an outer \texttt{x\_blk} loop, for the tiles.
+Each tiled loop would be tiled into two loops: an incremental \texttt{x} loop, and a tile \texttt{x\_blk} loop, for the tiles.
 Substitution would be tricky, as the body of each loop would have to be copied and substituted in turn.
 Only then could the loops be interchanged.
 
@@ -316,7 +316,7 @@ As this did not resemble a perfect loop nest,\footnote{Note that the control-flo
 
 \subsubsection{Visitor pattern}
 Given the above constraints, we found that the visitor pattern would be the most practical solution to constructing a new tiled loop nest.
-This allowed for easy propagation of loop properties, offsets to the upper and lower bounds, and a clear distinction between the parallelisable inner loops, and the sequential outer tile loops.
+This allowed for easy propagation of loop properties, offsets to the upper and lower bounds, and a clear distinction between the parallelisable incremental loops, and the sequential tile loops.
 
 
 \section{Test suite}

@@ -354,11 +354,13 @@ Below, we discuss further implementation work in time-tiling that Devito will be
 In Section~\ref{sec:future-work}, we will elaborate on their significance, challenges, and present some approaches to solving them.
 
 \subsection{Source and receiver loops}
+\label{sec:impl-imperfect}
+
 Sources and receivers are commonly used with the acoustic wave equation, so that it can model not only wave propagation, but also the addition of ongoing waves or generated waves; consider sonar or tremors, to take an example from geology.
 These are an important use case for Devito, as it targets the domain of seismic imaging.
 
 However, these are added as source and receiver loops performed during each time iteration, making the time loop an imperfect loop nest.
-Our implementation of time-tiling is unable to deal with imperfect loop nests, although this is possible with a few more transformations~\cite{ahmed-imperfect}.
+Our implementation of time-tiling is unable to handle imperfect loop nests, although this is possible with a few more transformations~\cite{ahmed-imperfect}.
 We considered this to be beyond the scope of the project, as the transformations, while only marginally more difficult than skewing conceptually, presented an equally large software engineering burden.
 Further, this might present a version of Devito that diverged too far from the original, causing the basis for evaluation to be too tenuous.
 

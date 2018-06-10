@@ -38,7 +38,7 @@ While the literature surrounding the polyhedral model, from which time-tiling de
 Time-tiling was been studied in the form this work considers since Griebl in 2004~\cite{griebl-tt}, using \emph{space-time mapping}, analogous to the skewed tiling which we discuss in this work, but expressed as affine conditions specifying hyperplane partitions of the problem domain.
 
 Time-tiling has since been studied extensively, and long implemented in polyhedral compilers such as CLooG, providing a strong theoretical foundation.
-However, the actual application of the technique beyond theoretical study has, until this work, been limited to the OPS (Oxford Parallel Structured software) project, whose investigations into time-tiling commenced just 4 years ago, in 2014~\cite{ops-main}.
+However, the actual application of the technique beyond theoretical study has, until this work, been limited to the OPS (Oxford Parallel library for Structured mesh solvers) project~\cite{ops-main}, who presented their implementation of time-tiling in 2017~\cite{ops-tiling}.
 Even so, OPS is a source-to-source compiler, operating from the stencil kernel level down to code generation; Devito includes all these plus layers of abstraction up to the differential equations themselves.
 
 Therefore, we extend tiling to the time dimension natively in Devito to realise this performance gain and evaluate its efficacy.

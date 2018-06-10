@@ -419,7 +419,11 @@ T & \footnotesize runtime (s) & 2.492 & 2.688 & 2.941 & 3.660 & 4.468 \\
 \label{tab:awe-results}
 \end{table}
 
-\wip{Text analysing the results}
+In Table~\ref{tab:awe-results}, we again observe the greatest decrease in runtime (45\%) at the lowest space orders, tapering off as the space order increases, although a minimal gain of 20\% is still had for the largest space order tested.
+There is a large step in runtime decrease (41.5\% to 26.8\%) between space orders 6 and 8, whereas the steps between each of the other space orders are less than 5\%.
+
+In all cases, the minimum runtime was produced with the smallest valid skewing factor, even if it was not a power of two.
+Additionally, all of the minimum runtimes occurred with the auto-tuner choosing a time tile size of 16.
 
 \begin{table}[!ht]
 \centering

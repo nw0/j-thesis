@@ -87,7 +87,7 @@ Arguments on data alignment give that the minimum valid skewing factor would pro
 It was decided to try skewing factors by hand, as their validity would depend on the stencil (Section~\ref{sec:bg-skewing}).
 We have found that that the data alignment argument holds for the experiments that we have performed (see Appendix TODO for the complete results).
 
-\subsection{Arithmetic intensity under time-tiling}
+\section{Arithmetic intensity under time-tiling}
 \label{sec:arithmetic-intensity}
 
 Recall that \emph{arithmetic intensity} is defined to be the number of floating point operations performed per byte.
@@ -543,24 +543,13 @@ However, it is important to note that this may be architecture-dependent, and sh
 Further, we have only tested against 10 members across two families of stencils, which may not be fully representative of stencils in general.
 
 
-\section{Limitations of performance evaluation}
-\label{sec:perf-limitations}
+\section{Limitations and further evaluation}
+\label{sec:further-eval}
 % "Why I could be wrong/this isn't representative of real world problems"
 
-\begin{itemize}
-	\item No time buffering (Laplace) -- not the same memory accesses?
-	\item Limited, small (?) grids, few time iterations
-	\item Didn't collect data on cache misses...
-	\item \clar{What else?}
-\end{itemize}
+Limitations of this evaluation fall into a few categories, each of which gives rise to further exploration of the time-tiling transformation.
 
-
-\section{Further evaluation}
-\label{sec:further-eval}
-
-\wip{Consider moving to Conclusion}
-
-For a more in depth analysis, we would consider memory analyses measuring cache misses and memory traffic, to ensure that improvements are indeed gleaned from time-tiling rather than other factors.
+\subsection{Realism of test problems}
 
 \begin{itemize}
 	\item More stencils + sizes, everything else covered above
@@ -568,6 +557,14 @@ For a more in depth analysis, we would consider memory analyses measuring cache 
 	\item \clar{More?}
 \end{itemize}
 
+\subsection{Test architecture}
 
-\section{Conclusion}
+\subsection{Memory analyses}
+
+For a more in depth analysis, we would consider memory analyses measuring cache misses and memory traffic, to ensure that improvements are indeed gleaned from time-tiling rather than other factors.
+
+\subsection{Bounding the arithmetic intensity estimator}
+
+
+\section{Summary}
 \label{sec:eval-conclusion}

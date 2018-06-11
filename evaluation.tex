@@ -352,14 +352,18 @@ Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 \label{tab:laplace-roofline}
 \end{table}
 
-\begin{figure}[!ht]
+\begin{figure}[p]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
+width=0.7\textwidth,
 legend style={at={(0.05,0.95)},anchor=north west},
 xlabel={Arithmetic intensity},
 ylabel={GFlops achieved},
 ytick distance=25,
+xmode=log,
+log basis x={2},
+log ticks with fixed point,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-sp600.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-tm600.csv};
@@ -423,7 +427,7 @@ T & \footnotesize runtime (s) & 2.492 & 2.688 & 2.941 & 3.660 & 4.468 \\
 \label{tab:awe-results}
 \end{table}
 
-\begin{table}[!ht]
+\begin{table}[p]
 \centering
 \begin{tabular}{cr|c|c|ccccc}
 \toprule
@@ -452,14 +456,18 @@ Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 
 Note that the achieved GFlops seem to taper off quickly. \clar{Why?}
 
-\begin{figure}[!ht]
+\begin{figure}[p]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
-legend style={at={(0.95,0.05)},anchor=south east},
+width=0.7\textwidth,
+legend style={at={(0.95,0.95)},anchor=north east},
 xlabel={Arithmetic intensity},
 ylabel={GFlops achieved},
 ytick distance=10,
+xmode=log,
+log basis x={2},
+log ticks with fixed point,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-sp512.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-tm512.csv};

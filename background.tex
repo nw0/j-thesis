@@ -83,6 +83,9 @@ However, as we note later, arithmetic intensity can be decreased (at the expense
 Further, tiling may also enable other transformations, such as loop-invariant code motion, which again reduces redundant computation.
 
 \subsection{Strip-mining}
+Named after the mining practice, strip-mining involves dividing a dimension of the iteration space into strips (Figure~\ref{lst:stripmine-basic}).\footnote{However, you cannot divide a dimension into lateral strips, only sequential ones.}
+By itself, strip-mining does not change the execution order; it is a gateway to further transformations.
+
 \begin{figure}[ht]
 \begin{lstlisting}
 for (int x = x_start; x < x_end; x++) {
@@ -98,9 +101,6 @@ for (int x_blk = x_start ; x_blk < x_end; x_blk += x_blk_size) {
 	\caption{A regular loop, and the same loop strip-mined over the variable \texttt{x}. \texttt{x\_start} and \texttt{x\_end} are chosen to prevent out-of-bounds accesses. In case the tile (block) size does not evenly divide the extent of the iteration, the \texttt{min} function avoids the need for remainder loops (discussed in Section~\ref{sec:remainder-loops}). We will abbreviate the variable names in subsequent examples.}
 	\label{lst:stripmine-basic}
 \end{figure}
-
-Named after the mining practice, strip-mining involves dividing a dimension of the iteration space into strips (Figure~\ref{lst:stripmine-basic}).\footnote{However, you cannot divide a dimension into lateral strips, only sequential ones.}
-By itself, strip-mining does not change the execution order; it is a gateway to further transformations.
 
 \begin{framed}
 	Throughout this work, we will refer to the outer loop (variable \texttt{x\_blk} in Figure~\ref{lst:stripmine}) as the \emph{tile} loop, and the inner loop (variable \texttt{x} in the same figure) as the \emph{incremental} loop.

@@ -581,10 +581,30 @@ Additionally, such analyses would reveal more information on the true arithmetic
 This would allow us to determine how the bottlenecks have changed after time-tiling, how far the performance is from theoretical limits, and reveal further areas of optimisation.
 
 
+\subsection{Comparison to spatial tiling}
+In our analysis, we have compared time-tiling to spatial tiling code, both of which used our new tiling algorithm which utilised min/max bounding.
+It is possible that this is slower for spatial tiling than the previous remainder loop tiling algorithm in Devito.
+
+We have decided to accept this possibility, as any difference is unlikely to be significant; remainder loops incur a synchronisation penalty, whereas min/max bounding requires a few additional arithmetic operations.
+Neither of these should take up a significant amount of time compared to the time for the stencil computation.
+
+As a note, it may be possible to reduce the bounding overhead slightly by avoiding the floating-point \texttt{fmin} and \texttt{fmax} functions in bounding, as only integer comparisons are needed.
+This is documented in Section~\ref{sec:impl-minor}.
+
+
 \subsection{Bounding the arithmetic intensity estimator}
 
 
 \section{Summary}
 \label{sec:eval-conclusion}
 
-Compare 36\% to CLooG.
+\wip{check this late}
+
+In this chapter we presented a robust testing methodology and model to understand the performance increase from time-tiling, and when the decrease in runtime is maximal.
+Through our investigation, we discovered a runtime decrease of up to 45\% in an extreme case and at least 20\% in other cases using multiple real-world stencils from the family of acoustic wave equation operators.
+
+We additionally presented a simple estimator for arithmetic intensity under time-tiling, establishing its bounds and limitations, and use it to successfully model the performance benefit of our time-tiling transformation.
+
+\paragraph{A final remark}
+Previous analysis of the stencil of space order 8 with the acoustic wave equation operator yielded a decrease in runtime of 27.5\%, when passing non-tiled code from Devito to the polyhedral compiler CLooG~\cite{dylan}.
+We surpassed this, demonstrating a 36.8\% decrease in runtime for the same stencil with our native time-tiling algorithm in Devito, albeit with the power of Devito auto-tuner and a larger time tile size.

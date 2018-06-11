@@ -395,6 +395,8 @@ The following are fairly straightforward to comprehend, and appear accordingly s
 	We suggest that the combination of the floating-point \texttt{fmin} function for bounding and vectorisation could cause this unexpected behaviour, but have not investigated it in detail.
 	This does not affect evaluation as in our experimentation, the auto-tuned tile sizes always use the full extent of the innermost dimension, so we have always explicitly vectorised the innermost dimension, with the complementary benefit of saving weeks of machine-time in auto-tuner trials.
 
+	\item[Removal of the floating point \texttt{fmin} operations] Since the bounds are guaranteed to be integers, the floating-point \texttt{fmin} and \texttt{fmax} functions should be replaced with simpler comparisons that work on integers, to reduce the tile bounding overhead.
+
 	\item[Supplementary test cases] We have already included test cases adapted from spatial tiling and ones that specifically test skewing.
 	Additional test cases should be added to test the integration of time-tiling with other transformations, beyond the existing skewing and tiling tests.
 	In particular, Devito could benefit from more skewing integration tests.

@@ -1,0 +1,568 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{tikz}
+\usepackage{tikzsymbols}
+\usepackage{pgfplots}
+\usepgfplotslibrary{fillbetween}
+\usetikzlibrary{patterns}
+
+
+
+\AtBeginSection[]{
+	\begin{frame}
+	\vfill
+	\centering
+	\begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+		\usebeamerfont{title}\insertsectionhead\par%
+	\end{beamercolorbox}
+	\vfill
+\end{frame}
+}
+
+
+\begin{document}
+
+\title{Optimising finite-difference approximation of PDEs through parametrised time-tiling in Devito}
+\subtitle{BEng JMC Individual Project}
+
+\author{Nicholas Sim\\
+~\\
+{\normalsize Supervisors:}\\
+Prof. Paul H. J. Kelly\\
+Dr. Fabio Luporini}
+
+\date{\today}
+
+\frame{\titlepage}
+
+
+
+\begin{frame}
+\frametitle{Target loops to optimise computation}
+
+\begin{itemize}
+	\item Large problem sets: weeks spent in loops
+	\item Devito: translate PDEs to optimised code
+	\item Faster is better
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Time-tiling is a loop (nest) optimisation}
+
+\begin{itemize}
+	\item Finite difference methods use structured grids (picture)
+	\item Loop nests: stepping through time, over 3 spatial dimensions
+	\item \emph{Parametrisation} for auto-tuned optimisation
+	\item Previous work: up to 27.5\% reduction (cite)
+	\item We get 36.8\% speedup for the \textbf{same} stencil
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Contributions}
+
+\begin{itemize}
+	\item Implemented time-tiling in Devito
+	\item Model to understand performance gains
+	\item Consistency with tiling more advanced stencils
+	\item Decrease runtime by 20--45\%!
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{This presentation}
+\tableofcontents
+\end{frame}
+
+
+
+\section{Time-tiling in 5 minutes}
+
+\begin{frame}
+\frametitle{Non-problem: iteration space \(<\) cache size}
+
+\begin{itemize}
+	\item (pictures)
+	\item If iteration space \(<\) cache, no need to reload rows
+	\item Everything loaded once \Smiley
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Problem: iteration space \(>\) cache size}
+
+\begin{itemize}
+	\item (use another slide to explain stencils?)
+	\item (Pictures: x-y plane, t=0,1)
+	\item Load neighbours (t=0) into cache, some reuse in t=1 row
+	\item Evicted by the time we reach end of row
+	\item But we need to reload the rows again
+	\item Everything loaded 3 times \Sadey
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Solution: pretend iteration space \(<\) cache size}
+
+\begin{itemize}
+	\item Insight: x,y can be calculated in any order (parallel!)
+	\item Partition into \emph{tiles}
+	\item Internal tile volume only loaded once
+	\item Tile boundary loaded twice (picture)
+	\item Less waiting for memory!
+	\item `Exploiting data locality'
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{When tiling (doesn't) work}
+
+\begin{itemize}
+	\item If compute bounded, optimising cache doesn't help much...
+	\item If memory bounded, less data transfer \(\rightarrow\) faster
+	\item Devito: we can make compute bounded stencils more memory bounded (cite)
+	\item We needed to be able to permute x and y
+	\item But can only take 1 time step at a time
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Can't interchange these loops}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7]
+\draw[thick,->] (-1,-.5) -- (13,-.5) node[right]{$t$};
+\draw[thick,->] (-1,-.5) -- (-1,5.5) node[above]{$x$};
+
+\foreach \t in {0,1,2,3,4,5,6}
+\foreach \x in {0,1,2,3,4,5}
+\fill[darkgray] (\t*2,\x) circle (0.1);
+
+\foreach \t in {0,1,2,3,4,5}
+\foreach \x in {1,2,3,4,5}
+\draw[thick,->,darkgray!60] (\t*2+.2,\x-.1) -- (\t*2+1.8,\x-.9);
+
+\foreach \t in {0,1,2,3,4,5}
+\foreach \x in {0,1,2,3,4}
+\draw[thick,->,darkgray!60] (\t*2+.2,\x+.1) -- (\t*2+1.8,\x+.9);
+
+\foreach \t in {0,1,2,3,4,5,6}
+\foreach \x in {0,3}
+\fill[green,opacity=0.3] (\t*2-.6,\x-.3) rectangle (\t*2+.6,\x+2.3);
+
+\foreach \t in {0,1,2,3,4,5,6}
+\draw (\t*2,1pt-.5cm) -- (\t*2,-1pt-.5cm) node[anchor=north] {$\t$};
+\foreach \x in {0,1,2,3,4,5}
+\draw (1pt-1cm,\x) -- (-1pt-1cm,\x) node[anchor=east] {$\x$};
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+	\item Dependencies between rows flow two ways
+	\item (Highlight the offending arrows)
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Idea: skewed tiling for interchange}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7]
+\draw[thick,->] (-1,-.5) -- (13,-.5) node[right]{$t$};
+\draw[thick,->] (-1,-.5) -- (-1,5.8) node[above]{$x$};
+
+\foreach \t in {0,1,2,3,4,5,6}
+\foreach \x in {0,1,2,3,4,5}
+\fill[darkgray] (\t*2,\x/2+\t/2) circle (0.1);
+
+\foreach \t in {0,1,2,3,4,5}
+\foreach \x in {1,2,3,4,5}
+\draw[thick,->,darkgray!60] (\t*2+.2,\x/2+\t/2) -- (\t*2+1.8,\x/2+\t/2);
+
+\foreach \t in {0,1,2,3,4,5}
+\foreach \x in {0,1,2,3,4}
+\draw[thick,->,darkgray!60] (\t*2+.2,\x/2+\t/2+.05) -- (\t*2+1.8,\x/2+\t/2+.9);
+
+\foreach \t in {0,1,2,3,4,5,6}
+\foreach \x in {0,3,6,9}
+\fill[green,opacity=0.3] (\t*2-.6,\x/2-.15) rectangle (\t*2+.6,\x/2+1.15);
+
+\foreach \t in {0,1,2,3,4,5,6}
+\draw (\t*2,1pt-.5cm) -- (\t*2,-1pt-.5cm) node[anchor=north] {$\t$};
+\foreach \x in {0,1,2,3,4,5,6,7,8,9,10,11}
+\draw (1pt-1cm,\x/2) -- (-1pt-1cm,\x/2) node[anchor=east] {$\x$};
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+	\item Less transfer: if a tile fits in cache, can calculate subsequent tiles in that row from cache \Smiley
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Time-tiling: some important details}
+
+\begin{itemize}
+	\item Minimum skew: the distance of the spatial dependence
+	\item Out of bounds accesses
+	\item Only works for perfect loop nests (show imperfect)
+	\item Parallelism?? (will discuss, ?? for rhetorical effect)
+\end{itemize}
+\end{frame}
+
+
+
+\section{Implementing time-tiling in Devito}
+
+\begin{frame}
+\frametitle{Implemented time-tiling transformation}
+
+\begin{itemize}
+	\item Bounding using min/max functions
+	\item Reasoning about tile boundaries is tricky! (example)
+	\item Only works on perfect loop nests \Sadey
+	\item Test cases
+	\item Numerically exact (on floats!) in evaluation
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Auto-tuning tile sizes}
+
+\begin{itemize}
+	\item Parametrisation: can change tile sizes at runtime for tuning
+	\item Extended auto-tuner
+	\item Test only tile sizes, not skew factor
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{TODOs}
+
+\begin{itemize}
+	\item Tile imperfectly-nested loops (sources and receivers) -- hard
+	\item Advanced stencil optimisations -- not too hard, but maybe uses associativity of floats \Sadey
+	\item Skew factor detection
+	\item Time dimension buffering
+\end{itemize}
+\end{frame}
+
+
+
+\section{Evaluation methodology}
+
+\begin{frame}
+\frametitle{Objectives of evaluation}
+
+\begin{itemize}
+	\item Measure speedup
+	\item Find conditions for speedup
+	\item Determine which stencils benefit the most
+	\item Error checking
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Arithmetic intensity: how much does a stencil use data?}
+
+\begin{itemize}
+	\item Floating point operations per byte transferred from memory
+	\item More operations \(\rightarrow\) more computational resources needed
+	\item Fewer operations \(\rightarrow\) more memory bandwidth needed
+	\item Time-tiling: most effective with low arithmetic intensity
+	\item (Discuss estimator?)
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Time-tiling increases arithmetic intensity}
+
+\begin{itemize}
+	\item Time-tiling: improve cache reuse
+	\item More reuse \(\rightarrow\) more operations per byte
+	\item Effectively increases the arithmetic intensity of a stencil
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Testing framework}
+
+\begin{itemize}
+	\item CSG Intel Xeon E5-2470; 8 cores, 16 threads, 20MB L3 cache
+	\item 64GB DRAM
+	\item OpenMP: parallelism, use all threads, prevent migration
+	\item Intel C Compiler, all optimisations enabled
+	\item Devito auto-tuner to ensure best runtime
+	\item Always verify functional correctness
+	\item Minimum runtime reported
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Performance bounds}
+
+\begin{itemize}
+	\item Limits that cannot be exceeded
+	\item 294.4 = something
+	\item LINPACK: 262 GFlops (cite...)
+	\item STREAM: 17.3 GB/s
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Roofline (cite)}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+\begin{axis}[
+legend style={at={(0.95,0.05)},anchor=south east},
+xlabel={Arithmetic intensity},
+ylabel={GFlops achieved},
+ytick distance=25,
+]
+% roofline
+\addplot [domain=4:15.15,name path=A] {17.3*x};
+\addplot [domain=15.15:25] {262.01};
+% boundary
+\path[name path=X] (4, 0) -- (200, 0);
+\addplot[gray, pattern=north west lines] fill between[of=A and X, soft clip={domain=4:15.15}];
+\addplot +[mark=none,dashed] coordinates {(15.15, 69.2) (15.15, 259.5)};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+	\item Memory bounded (shaded), then CPU bounded
+	\item Can't exceed roofline!
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Verification}
+
+\begin{itemize}
+	\item All results numerically exact \Smiley
+	\item They aren't all (or even mostly) zeroes
+	\item They aren't infinity or NaN
+	\item Error bound: zero
+\end{itemize}
+\end{frame}
+
+
+
+\section{Results}
+
+\begin{frame}
+\frametitle{Laplace operator}
+
+\begin{itemize}
+	\item 4 stencils from the Laplace operator
+	\item Generated by Devito, varying space orders
+	\item Experimented on 2 grids, but only presenting 1 as results are similar
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Laplace: runtime against space order}
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+width=0.7\textwidth,
+legend style={at={(0.05,0.95)},anchor=north west},
+xlabel={Space order},
+ylabel={Runtime(s)},
+ytick distance=2,
+]
+\addplot table [x=sp,y=run,col sep=comma] {../data/laplace-nt600.csv};
+\addplot table [x=sp,y=run,col sep=comma] {../data/laplace-sp600.csv};
+\addplot table [x=sp,y=run,col sep=comma] {../data/laplace-tm600.csv};
+\legend{Non-tiled,Space-tiling,Time-tiling}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\begin{itemize}
+	\item 25\% decrease to 1\% decrease with higher arith. intensity
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Laplace: roofline}
+
+\begin{itemize}
+	\item (Reserved a slide)
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Acoustic wave equation operator}
+
+\begin{itemize}
+	\item 5 stencils from AWE operator
+	\item Generated by Devito, varying space orders
+	\item Experimented on a \(512^3\) + time grid
+	\item `More realistic': AWE is very important in Devito's target domain, seismic imaging
+	\item Lower arithmetic intensity
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{AWE: runtime against space order}
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+width=0.7\textwidth,
+legend style={at={(0.05,0.95)},anchor=north west},
+xlabel={Space order},
+ylabel={Runtime(s)},
+ytick distance=2,
+]
+\addplot table [x=sp,y=run,col sep=comma] {../data/awe-nt512.csv};
+\addplot table [x=sp,y=run,col sep=comma] {../data/awe-sp512.csv};
+\addplot table [x=sp,y=run,col sep=comma] {../data/awe-tm512.csv};
+\legend{Non-tiled,Space-tiling,Time-tiling}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\begin{itemize}
+\item 45\% to 20\% decrease!
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{AWE: roofline}
+
+\begin{itemize}
+\item (Reserved a slide)
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Effect of time tile size}
+
+\begin{itemize}
+	\item Low space order: big time tiles
+	\item High space order: not much benefit after tile sizes 4, 8
+	\item Non-trivial tile boundary overlap and finite cache \(\rightarrow\) arithmetic intensity overestimated
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Effect of skewing factor}
+
+\begin{itemize}
+	\item No change to arith. intensity
+	\item (I didn't include the tables: should I?)
+	\item Smallest valid skewing factor is fastest: even 3, 6
+	\item Possibly because we need to load the neighbours anyway, so misalignment not an issue
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Further evaluation work}
+
+\begin{itemize}
+	\item Implementation -- only perfect loops
+	\item Test more architectures
+	\item Analyse memory to check cache misses, new bottlenecks
+\end{itemize}
+\end{frame}
+
+
+
+\section{Conclusion}
+
+\begin{frame}
+\frametitle{}
+
+\begin{itemize}
+	\item Contributions?
+	\item What else?
+	\item 
+	\item 
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Things to ask Paul}
+
+\begin{itemize}
+	\item Related work in presentation?
+	\item Talk about the individual transformation? (e.g. code for skewing \Sadey)
+	\item 
+	\item 
+\end{itemize}
+\end{frame}
+
+
+
+%\begin{frame}
+%\frametitle{}
+%
+%\begin{itemize}
+%	\item 
+%	\item 
+%	\item 
+%	\item 
+%\end{itemize}
+%\end{frame}
+
+
+\end{document}

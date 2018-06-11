@@ -252,13 +252,17 @@ In particular, we wished to determine if the minimum legal skewing factor would 
 \paragraph{Space order}
 The space order of the computation determines the precision of the result.
 In solving differential equations, this is the order of the approximation, beyond which smaller terms are ignored.
-A higher space order results greater precision, stencil radius, and minimum skewing factor.
+A higher space order results greater precision, stencil radius, and minimum skewing factor, and results in a higher arithmetic intensity, which we study.
+
+\paragraph{Time tile size}
+For each operator, we report two sets of figures: a set of auto-tuned results with any time tile size and varying skewing factors; and a set with varying time tile sizes, to inform separate analyses on skewing factors and time tile sizes.
 
 \paragraph{Domain size}
 The size of the domain is the product of all four dimensions in the simulation.
 As memory was limited to 64GB needed to store both time-tiled and non-tiled results for numerical verification, we decided to use shorter time dimensions, maximising the spatial dimension size for realism.
 We justify this choice reasoning that runtime should be proportional to the number of time tiles executed.\footnote{This was verified using smaller spatial dimensions.}
 Therefore, we chose time dimensions 16 or 32, as these are small multiples of the time tile size.
+To ensure the results are valid, we need to ensure that a single time iteration well exceeds the size of the cache
 
 
 \section{Performance of the Laplace operator}

@@ -335,20 +335,19 @@ We extended the test suite, verifying the following:
 \section{Auto-tuning}
 \label{sec:autotune}
 
-\wip{Rewrite section}
 Time-tiling introduces two parameters that can be tuned: the skewing factor, and time tile size.
 
 Since time-tiling had not been implemented in Devito before, it was decided that the auto-tuner should try all reasonable time tile sizes.
 It was modified for this behaviour, as well as minor changes to try additional specific combinations, such as trying the maximum block size for the innermost dimension.
 
-We have not extended the auto-tuner to try different skewing factors as we hope to include it in the evaluation.
-Therefore, auto-tuning will be performed for the relevant skewing factors.
+We have not extended the auto-tuner to try different skewing factors as we hope to draw conclusions about the skewing factors that would produce the best runtime, thus removing the need for auto-tuning in future.
+Therefore, auto-tuning will be performed for the relevant manually-specified skewing factors.
 Manually varying the skewing factor is not an undue burden, as there are very few plausible skewing factors.
 
 \section{Summary and further implementation work}
 \label{sec:impl-further}
 
-In this work, we have provided an implementation of time-tiling for Devito, which handles perfect loop nests, the primary and best-studied scenario in time-tiling.
+In this chapter, we have provided an implementation of time-tiling for Devito, which handles perfect loop nests, the primary and best-studied scenario in time-tiling.
 
 Below, we discuss further implementation work in time-tiling that Devito will benefit from, summarising their motivation and why we have chosen not to implement them in this project.
 In Section~\ref{sec:future-work}, we will elaborate on their significance, challenges, and present some approaches to solving them.

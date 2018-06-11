@@ -64,8 +64,7 @@ It is clear that whenever \(t > n\), data from the 0-th time iteration is no lon
 When space-tiling in Devito, each time iteration only begins once the previous iteration has finished.
 Therefore, we only need storage for \(n+1\) time iterations of data: the current iteration being computed; and the previous \(n\) iterations, its dependencies.
 
-\wip{Using time buffering for AWE}
-To allow for rigorous correctness checks (Section~\ref{sec:eval-func-corr}), we have \emph{not} used time-buffering during the evaluation.
+As we have not implemented the calculation for a correct time buffer size in Devito, we did not use time buffering for the Laplace operator stencils, and manually specified a buffer size for the acoustic wave equation operator stencils.
 Nevertheless, it is straightforward to establish bounds on the size of a time buffer.
 It is clear that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.\footnote{From a synchronisation perspective, this would be needlessly challenging. It is a simple exercise that time-tiling needs at most \(n+t\) time iterations of storage, where \(t\) is the size of a time tile. We recommend this approach.}
 
@@ -419,7 +418,7 @@ N & \footnotesize runtime (s) & 7.205 & 8.560 & 9.898 & 12.981 & 16.433 \\
 % & \footnotesize GFlops      & 17.44 & 17.45 & 17.46 & 16.86 & 16.07 \\
 S & \footnotesize runtime (s) & 4.558 & 4.595 & 4.655 & 4.892 & 5.608 \\
 T & \footnotesize runtime (s) & 2.492 & 2.688 & 2.941 & 3.660 & 4.468 \\
-& \footnotesize decrease (\%) & 45.3\% & 41.5\% & 26.8\% & 25.2\% & 20.3\% \\
+& \footnotesize decrease (\%) & 45.3\% & 41.5\% & 36.8\% & 25.2\% & 20.3\% \\
 \midrule
 (t,8) & \footnotesize runtime (s) & * & * & 3.601 & 3.939 & 4.468 \\
 (t,6) & \footnotesize runtime (s) & * & * & 3.348 & 3.660 & - \\
@@ -453,7 +452,7 @@ ytick distance=2,
 \end{figure}
 
 In Table~\ref{tab:awe-results}, we again observe the greatest decrease in runtime (45\%) at the lowest space orders, tapering off as the space order increases, although a minimal gain of 20\% is still had for the largest space order tested.
-There is a large step in runtime decrease (41.5\% to 26.8\%) between space orders 6 and 8, whereas the steps between each of the other space orders are less than 5\%.
+There is a large step in runtime decrease (36.8\% to 25.2\%) between space orders 8 and 12, whereas the steps between each of the other space orders are less than 5\%.
 Note that we have excluded some combinations from testing based on observations from the Laplace operator and the other combinations with this operator, which we discuss in Section~\ref{sec:eval-skewing-effect}.
 
 Figure~\ref{fig:awe-runtime} gives the corresponding graph; we are able to make the same observations as for the Laplace stencils.

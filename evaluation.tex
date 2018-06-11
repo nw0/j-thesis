@@ -547,24 +547,44 @@ Further, we have only tested against 10 members across two families of stencils,
 \label{sec:further-eval}
 % "Why I could be wrong/this isn't representative of real world problems"
 
-Limitations of this evaluation fall into a few categories, each of which gives rise to further exploration of the time-tiling transformation.
+We were careful to guarantee the validity of our specific results, as documented in our testing methodology; this section illustrates how stronger conclusions may be drawn if the limitations were surmounted.
+
 
 \subsection{Realism of test problems}
 
-\begin{itemize}
-	\item More stencils + sizes, everything else covered above
-	\item Source and receiver loops
-	\item \clar{More?}
-\end{itemize}
+\subsubsection{Source and receiver loops}
+Previously seen in Section~\ref{sec:impl-imperfect}, our implementation of time-tiling is unable to handle imperfectly-nested loops, source and receiver loops in particular.
+As these are an important case for Devito to optimise, it is necessary to implement support for source and receiver loops and validate the results from our performance testing without these loops.
+
+\subsubsection{Operators}
+We have analysed stencils from two families of operators; one family, the acoustic wave equation, is extremely important in Devito's original target domain,
+making it especially relevant.
+However, there are other closely-related families of stencils from wave equations that are also highly relevant to Devito's use cases, and it would be beneficial to perform a comparative evaluation between them.
+
+\subsubsection{Problem sizes}
+We were limited to 64GB of memory on our test machine.
+As we had to choose large enough spatial dimensions that each time iteration would dwarf the processor's cache, we were restricted to spatial dimensions of \(500 \times 500 \times 500 \) and larger.
+This in turn restricted the number of time iterations we could store, even using time-buffering.
+Indeed, the auto-tuner required at least 17 iterations to test time tile sizes up to 16, we were effectively prevented from testing time tile sizes of 32 (requiring 33 iterations of storage), as additional space was required for numerical verification.
+
+Therefore, we were unable to perform analysis with both larger problem domains, or larger time tile sizes, which would have enabled a more complete evaluation.
+
 
 \subsection{Test architecture}
+Our testing was completed on a single-socket machine with one 8-core Sandy Bridge Xeon processor, and all tests were run with 16 threads, which it supports.
+This provides a limited perspective on how time-tiling may perform on other systems and architectures, particularly those with more cores, cache, or distributed memory.
+
 
 \subsection{Memory analyses}
+For a more in depth study, memory analyses measuring cache misses and memory traffic should be performed, to investigate how time-tiling has improved these.
+Additionally, such analyses would reveal more information on the true arithmetic intensity of the computation.
+This would allow us to determine how the bottlenecks have changed after time-tiling, how far the performance is from theoretical limits, and reveal further areas of optimisation.
 
-For a more in depth analysis, we would consider memory analyses measuring cache misses and memory traffic, to ensure that improvements are indeed gleaned from time-tiling rather than other factors.
 
 \subsection{Bounding the arithmetic intensity estimator}
 
 
 \section{Summary}
 \label{sec:eval-conclusion}
+
+Compare 36\% to CLooG.

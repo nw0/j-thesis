@@ -472,19 +472,19 @@ Additionally, all of the minimum runtimes occurred with the auto-tuner choosing 
 			& & N & S & \multicolumn{5}{c}{T; time tile size} \\
 Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 \midrule
-16 & \footnotesize GFlops & 16.07 & 47.10 & & & & & 59.11 \\
+16 & \footnotesize GFlops & 16.07 & 47.10 & & 54.38 & 58.06 & 57.75 & 59.11 \\
 \multicolumn{2}{r|}{\footnotesize arith. intensity} & 4.42 & 4.42 & 4.42 & 8.84 & 17.7 & 35.4 & 70.7 \\
 \midrule
-12 & \footnotesize GFlops & 16.86 & 44.75 & & & & & 59.82 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 3.36 & 3.36 & 3.36 & 6.72 & 13.4 & 16.9 & 53.8 \\
+12 & \footnotesize GFlops & 16.86 & 44.75 & & 52.43 & 57.99 & 57.98 & 59.82 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 3.36 & 3.36 & 3.36 & 6.72 & 13.4 & 26.9 & 53.8 \\
 \midrule
-8 & \footnotesize GFlops & 17.46 & 37.12 & & & & & 58.76 \\
+8 & \footnotesize GFlops & 17.46 & 37.12 & & 47.21 & 54.46 & 55.74 & 58.76 \\
 \multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.89 & 2.89 & 2.89 & 5.78 & 11.56 & 23.1 & 46.2 \\
 \midrule
-6 & \footnotesize GFlops & 17.45 & 32.51 & & & & & 55.57 \\
+6 & \footnotesize GFlops & 17.45 & 32.51 & & 42.65 & 50.40 & 53.11 & 55.57 \\
 \multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.50 & 2.50 & 2.50 & 5.00 & 10.0 & 20.0 & 40.0 \\
 \midrule
-4 & \footnotesize GFlops & 17.44 & 27.57 & & & & & 50.44 \\
+4 & \footnotesize GFlops & 17.44 & 27.57 & & 37.52 & 45.12 & 48.17 & 50.44 \\
 \multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.10 & 2.10 & 2.10 & 4.20 & 8.40 & 16.8 & 33.6 \\
 \bottomrule
 \end{tabular}
@@ -506,12 +506,17 @@ log basis x={2},
 log ticks with fixed point,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-sp512.csv};
-\addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-tm512.csv};
-\addplot [domain=2:5] {17.3*x};
-\legend{Space-tiling,Time-tiling}
+\addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so16.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so12.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so8.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so6.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so4.csv};
+
+\addplot [domain=2:6] {17.3*x};
+\legend{Space-tiling,Time-tiling so16,Time-tiling so12, Time-tiling so8,Time-tiling so6, Time-tiling so4}
 \end{axis}
 \end{tikzpicture}
-\caption{Graph of performance against arithmetic intensity for the acoustic wave equation operator, grid size \(512^3\). As predicted by the roofline model, GFlops achieved increases for stencils of lower arithmetic intensity, but tapers off as arithmetic increases. The solid line is the theoretical maximum predicted by the roofline model.}
+\caption{\wip{roof} Graph of performance against arithmetic intensity for the acoustic wave equation operator, grid size \(512^3\). As predicted by the roofline model, GFlops achieved increases for stencils of lower arithmetic intensity, but tapers off as arithmetic increases. The solid line is the theoretical maximum predicted by the roofline model.}
 \label{fig:awe-roofline}
 \end{figure}
 
@@ -526,6 +531,14 @@ A possible reason for this is the lower inherent arithmetic intensity of the aco
 
 
 \section{Effect of the time tile size}
+\label{sec:tt-size-effect}
+
+Note that time-tiling with a time tile size of 1 is an analogue of spatial tiling, as each time iteration occurs with a new iteration of the time tile loop, and the incremental time loop is of no use.
+
+With the acoustic wave equation operator (Figure~\ref{fig:awe-roofline}), we notice that stencils with low space order benefit from increases in tile size up to 16 and possibly beyond, while those with higher space orders have little performance gains after a time tile size of 4 or 8.
+
+\wip{critique in section}
+In order to explain this, we consider the arithmetic intensity estimator which we introduced in Section~\ref{sec:arithmetic-intensity}.
 
 
 \section{Effect of the skewing factor}

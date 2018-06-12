@@ -295,8 +295,6 @@ Further, finding a heuristic for optimal skewing factors is an objective of our 
 
 In addition to new test cases, to build confidence in correctness of the newly-implemented skewing and tiling transformations, each application of time-tiling was numerically verified against a non-tiled computation.
 
-\wip{Keep this box until results finalised: result equality claim}
-
 In all experiments, the results were discovered to be equal.\footnote{We refer to equality under floating-point comparison; this is \emph{bitwise equality}.}
 Since floating-point arithmetic is non-associative, the natural implication is that the resulting value in each field was reached through the same expressions, although the computations had been re-ordered.
 Additional checks were used to determine that the results were not merely zeroes, or diverging to infinity.
@@ -339,18 +337,23 @@ Clearly, these are strict bounds on the performance of a stencil.
 legend style={at={(0.95,0.05)},anchor=south east},
 xlabel={Arithmetic intensity},
 ylabel={GFlops achieved},
-ytick distance=25,
+domain=0.4:96,
+xmode=log,
+log basis x={2},
+ymode=log,
+log basis y={2},
+log ticks with fixed point,
 ]
 % roofline
-\addplot [domain=4:15.15,name path=A] {17.3*x};
-\addplot [domain=15.15:25] {262.01};
+\addplot [domain=0.46:15.15,name path=A] {17.3*x};
+\addplot [domain=15.15:80] {262.01};
 % boundary
-\path[name path=X] (4, 0) -- (200, 0);
-\addplot[gray, pattern=north west lines] fill between[of=A and X, soft clip={domain=4:15.15}];
-\addplot +[mark=none,dashed] coordinates {(15.15, 69.2) (15.15, 259.5)};
+%\path[name path=X] (axis cs:15.5,8) -- (axis cs:15.5,262.01);
+\addplot +[mark=none,dashed,thick,name path=X] coordinates {(15.15, 8) (15.15, 262.01)};
+\addplot[gray, pattern=north west lines] fill between [of=A and X];
 \end{axis}
 \end{tikzpicture}
-\caption{Roofline graph for the test machine. Performance of any stencil (GFlops) of given arithmetic intensity cannot exceed the solid lines plotted. A stencil falling into the shaded region (arithmetic intensity < 15.15) will be bounded by memory bandwidth indicated by the sloped line, and those in unshaded region (arithmetic intensity > 15.15) are bounded by processor performance, the horizontal line. These two solid lines are the \emph{roofline}.}
+\caption{Roofline graph for the test machine. Performance of any stencil (GFlops) of given arithmetic intensity cannot exceed the solid lines plotted. A stencil falling into the hatched region (arithmetic intensity < 15.15) will be bounded by memory bandwidth indicated by the sloped line, and those in blank region (arithmetic intensity > 15.15) are bounded by processor performance, the horizontal line. These two solid lines are the \emph{roofline}.}
 \label{fig:roofline-benchmark}
 \end{figure}
 

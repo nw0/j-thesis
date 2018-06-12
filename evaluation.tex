@@ -91,8 +91,14 @@ We have found that the minimum skewing factor produces the lowest runtime (Secti
 Recall that \emph{arithmetic intensity} is defined to be the number of floating point operations performed per byte.
 Time-tiling is an optimisation to improve the reuse of cached data, effectively increasing the arithmetic intensity of a stencil, as data needs to be fetched from memory less frequently.
 
+In this section, \(d_t\) represents the time dimension and \(d_i (i=1,2,\cdots)\) represent a spatial dimension;
+\(D_i\) represents the extent of dimension \(d_i\), or \(D_t\) the extent of the time dimension;
+\(r_i\) the spatial radius of the stencil in dimension \(d_i\), \(r_t\) the distance of the time dependence;
+\(t_i\) the chosen tile size in dimension \(d_i\), \(t_t\) for the time tile size;
+and \(\Omega\) represents the size of the cache.
+
 \subsection{Arithmetic intensity estimator in Devito}
-Suppose a stencil requires data from the last \(n\) time iterations.
+Suppose a stencil requires data from the last \(r_t\) time iterations.
 Devito reports arithmetic intensity as `operational intensity', and calculates it as follows:
 
 \begin{description}
@@ -102,7 +108,7 @@ Devito reports arithmetic intensity as `operational intensity', and calculates i
 	In the graphs later in this chapter, an overestimate results in a \emph{right shift} of a data point from its true location.
 
 	\item[Space-tiled code] Again, Devito assumes data need only be loaded into the cache once per time iteration, hence would be used fully before being evicted, calling this scheme `compulsory memory traffic'.
-	For each time iteration, this requires the previous \(n\) time iterations of data to be loaded from memory.
+	For each time iteration, this requires the previous \(r_t\) time iterations of data to be loaded from memory.
 	This produces the same figure for arithmetic intensity as the measure for non-tiled code above.
 	Since the dependencies of tiles overlap in previous time iterations, with a sufficiently large iteration space, some dependencies will need to be loaded into cache more than once (assuming at least two spatial dimensions with non-zero space order).\footnote{This is fairly simple to see. Ignore all but two spatial dimensions with non-zero space order, and suppose otherwise for a contradiction. Arbitrarily choose a finite cache size of \(\Omega\) floating-point numbers, and call our spatial dimensions \texttt{x}, \texttt{y} with dimension extents \(x, y\) respectively. W.l.o.g.~\(x \le y\) and that the stencil has space order \(d>0\) in both dimensions (take the minimum). Now we need \(xd \le \Omega\), since minimising dependency overlap along the \texttt{x} dimension demands that we calculate the first \texttt{x} `row' before any other \texttt{x}-tiles. But we can choose \(x > \Omega / d\).}
 	Thus this measure also \emph{overestimates} arithmetic intensity, but to a smaller extent than with non-tiled code.
@@ -128,18 +134,9 @@ This is consistent with the measure under spatial tiling, since a spatially tile
 This would also result in an overestimate; the next section explores the magnitude of this overestimate under spatial and time-tiling.
 
 We will refer to this estimator as the \emph{naive estimator}, which only requires information about the stencil.
+Now we will explore tighter bounds; later we will demonstrate why they are necessary.
 
-\subsection{A more accurate estimator for arithmetic intensity}
-We previously observed that the measures above overestimate arithmetic intensity, as they underestimate the minimum memory transfer.
-This section explores a tighter bound based on a fixed cache size.
-
-In this section, \(d_t\) represents the time dimension and \(d_i (i=1,2,\cdots)\) represent a spatial dimension;
-\(D_i\) represents the extent of dimension \(d_i\), or \(D_t\) the extent of the time dimension;
-\(r_i\) the spatial radius of the stencil in dimension \(d_i\), \(r_t\) the distance of the time dependence;
-\(t_i\) the chosen tile size in dimension \(d_i\), \(t_t\) for the time tile size;
-and \(\Omega\) represents the size of the cache.
-
-\subsubsection{A better bound for minimum traffic under spatial tiling}
+\subsection{Tile boundaries determine cache reuse}
 Recall that in spatial tiling, we contrive small iteration spaces (`tiles') such that the data dependencies from the previous time iteration could fit within the cache.
 Therefore, the internal volume of a tile need only be transferred from memory once (Figure~\ref{fig:tile-reload}).
 However, there is no such guarantee for the boundary region of a tile.
@@ -168,34 +165,63 @@ However, there is no such guarantee for the boundary region of a tile.
 
 Consider a (2-dimensional) tiling in which we iterate over the \(d_1\)-tiles, then the \(d_2\)-tiles, or as the order indicated in Figure~\ref{fig:tile-reload}.
 In this situation, the tile boundaries between \(d_2\)-tiles such as 1, 2 may fit within the cache; if so it is clear that none of these boundaries will need to be loaded twice (apart from the intersections with the \(d_1\)-boundaries).
-Likewise, if the boundary between \(d_1\)-rows fits within the cache, such as the boundary between tiles 1--4 and 5--8, then it is a possibility that the data within these boundaries need not be loaded twice.
-If these hold, the over-estimate of arithmetic intensity may be minimal.
-
-Since it is reasonable to expect that the \(d_2\)-tile boundaries fit within the cache,\footnote{Otherwise, a smaller value for \(t_i\) should be chosen to ensure that the internal tile contents benefit from cache reuse.} we focus on the case of \(d_1\)-row boundaries not fitting within the cache.
-Note that these boundaries are the vertical lines of the hatched region.
-
-The \(d_1\)-row boundary will not fit into the cache if:
-
-\[ 2 r_1 D_2 > \Omega \]
+Call this, the common boundary between two iterations of a \(d_2\)-tile loop, a \(d_2\)-face.
+Similarly, if the boundary between \(d_1\)-rows fits within the cache, such as the boundary between tiles 1--4 and 5--8, then it is a possibility that the data within these boundaries need not be loaded twice.
+Likewise, call this boundary a \(d_1\)-face, and in general call the common boundary between two iterations of the \(d_i\)-tile loop a \(d_i\)-face, with size \(F_i\).
 
 Now consider the \(n\) dimensional case, first iterating over the \(d_1\)-tiles, then the \(d_2\)-tiles, and so on.
-Following the logic above, we would expect that the \(d_n\)-tile boundaries fit within the cache.
-Now, the \(d_i\)-row boundary (\(i < n\)) will not fit into the cache if:
+We make the following claim:
 
-\[ B_i = 2 \left(\prod_{j=1}^{i-1} t_j \right) r_i \left(\prod_{k=i+1}^{n} D_k \right) > \Omega \]
+\begin{framed}
+	If \(i \le n\) and \(F_{i} > \Omega\), then data of equivalent size to the contents of \emph{every} \(d_j\)-face must be loaded into the cache at least twice, for \(1 \le j < i\).
+\end{framed}
 
-since we need to account for the full extent of each lower dimension in the loop structure, the width of overlap in the \(i\)-th dimension (\(2 r_i\)), and the tile sizes in the higher dimensions.
-It is now clear that if \(B_i < \Omega\), then \(B_i-\Omega\) elements will not fit into the cache for each \(d_i\)-row boundary, and \(d_i\) boundaries form at least \( \left(\sfrac{r_i}{t_i} - 1 \right) \) of the iteration space.
-So the proportion of the entire space that needs to be reloaded from dimension \(d_i\) is at least:
+For proof, we demonstrate the fact for the \(d_{i-1}\)-faces over the \(d_{i-1} d_i\)-plane; the rest by backwards induction.
 
-\[ P_i = \frac{B_i - \Omega}{B_i} \times \left(\frac{r_i}{t_i} - 1\right) \]
+\begin{figure}[ht]
+	\centering
+	\begin{tikzpicture}
+	\draw[xstep=3cm,ystep=1.5cm,black,thick] (0,0) grid (15,6);
 
-Assume that \(B_{i-1} > {B_i}\), i.e. \( r_{i-1} D_i > t_{i-1} r_i \); this always holds in our evaluation,\footnote{Our stencils always have \(r_i = r_j\) and \(D_i > t_j\) for any dimensions \(d_i, d_j\).} and in non-perverse examples.
-Applying the principle of inclusion-exclusion and choosing the maximum overlapping area gives that the minimum proportion of the iteration space that needs to be loaded twice is at least:
+	\fill[pattern=north east lines,pattern color=black] (0,4.3) rectangle (3,4.7);
+	\node at (1.5,5) {(A)};
 
-\[ P_1 \oplus P_2 \oplus \cdots \oplus P_m \]
+	\fill[pattern=north west lines,pattern color=black] (5.8,1.7) -- (5.8,6) -- (6.2,6) -- (6.2,1.3);
+	\node at (6.5,3.75) {(B)};
+	
+	\fill[pattern=north east lines,pattern color=black] (2.8,1.7) -- (5.8,1.7) -- (6.2,1.3) -- (3.2,1.3);
+	\node at (4.5,2) {(C)};
 
-where \(B_m > \Omega \) and \(m = n\) or \(B_{m+1} \le \Omega \), and \(P \oplus Q = P + Q - PQ\) which is associative.
+	\fill[pattern=north west lines,pattern color=black] (2.8,0) -- (2.8,1.7) -- (3.2,1.3) -- (3.2,0);
+	\node at (2.45,0.75) {(D)};
+
+	\draw[thick,->] (0,0) -- (15.2,0) node[right]{\(d_{i-1}\)};
+	\draw[thick,->] (0,0) -- (0,6.2) node[above]{\(d_i\)};
+	\end{tikzpicture}
+	\caption{Tiles in the \(d_{i-1} d_i\)-plane.}
+	\label{fig:tile-zigzag}
+\end{figure}
+
+Suppose that a \(d_i\)-face (region A in Figure~\ref{fig:tile-zigzag}) cannot fit into the cache, i.e.~\(F_i > \Omega \).
+Observe that region C (opposing hatch pattern to B, D) has the same size as region A, \(F_i\), and suppose some of the contents of a \(d_{i-1}\)-face (equal to regions B + D) do not need to be loaded into cache, and that we are evaluating the \(d_i\) tile across the C-boundary.
+But region C is larger than the cache, so we cannot accommodate C alongside any points from B, D.
+Thus data equivalent to the combined areas of B, D must be loaded from memory at least twice, and the claim follows.
+
+\subsection{Establishing a tighter bound}
+Let \(B_i\) be the union of \(d_i\)-faces.
+It is a fact that the \(d_i\)-faces are distributed proportionally across the \(d_i d_j\)-plane whenever \(i \ne j\); in particular:
+
+\[ \frac{\left| B_i \cup B_j \right|}{\prod_{k=1}^n D_k} = \frac{\left| B_i \right| + \left| B_j \right|}{\prod_{k=1}^n D_k} - \frac{\left| B_i \right| \times \left| B_j \right|}{\left(\prod_{k=1}^n D_k\right)^2} \]
+
+All that remains is to find expressions for \(F_i, \left|B_i\right|\). Have:
+
+\[ F_i = 2 \left(\prod_{j=1}^{i-1} t_j \right) r_i \left(\prod_{k=i+1}^{n} D_k \right) \]
+
+since we need to account for the full extent of each lower dimension in the loop structure, the width of overlap in the \(i\)-th dimension (\(2 r_i\)), and the tile sizes in the higher dimensions; and
+
+\[ \left|B_i\right| = 2 \frac{r_i}{D_i} \times \floor*{\frac{D_i}{t_i}} \]
+
+as \(2\sfrac{r_i}{D_i}\) is the proportion of each \(d_i\)-face to \(D_i\), and \(\floor*{\sfrac{D_i}{t_i}}\) is the number of \(d_i\)-faces.
 
 
 \section{Testing methodology}

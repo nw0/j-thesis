@@ -293,11 +293,11 @@ Figure~\ref{fig:laplace-graph} provides the corresponding graph for the \(16 \ti
 N & \footnotesize runtime (s) & 6.121 & 7.572 & 10.65  & 16.941 & 5.189 & 6.402 & 9.026 & 14.87 \\
 S & \footnotesize runtime (s) & 3.964 & 3.760 & 4.060 & 5.778 & 3.489 & 3.376 & 3.684 & 4.980 \\
 % & tile size & 32,64 & 128,8 & 128,8 & 16,16 & 32,40 & 32,32 & 8,64 & 16,16 \\
-T & \footnotesize runtime (s) & 2.939 & 2.957 & 3.762 & 5.718 & 2.712 & 2.790 & 3.288 & 4.929 \\
-& \footnotesize decrease (\%) & 25.9\% & 21.4\% & 7.34\% & 1.04\% & 22.3\% & 17.4\% & 10.8\% & 1.02\% \\
+T & \footnotesize runtime (s) & 2.939 & 2.957 & 3.762 & 5.718 & 2.712 & 2.790 & 3.288 & 4.870 \\
+& \footnotesize decrease (\%) & 25.9\% & 21.4\% & 7.34\% & 1.04\% & 22.3\% & 17.4\% & 10.8\% & 2.21\% \\
 
 \midrule
-(t,8) & \footnotesize runtime (s) & 3.348 & 3.257 & 3.762 & 5.718 & 3.089 & 2.966 & 3.341 & 4.929 \\
+(t,8) & \footnotesize runtime (s) & 3.348 & 3.257 & 3.762 & 5.718 & 3.089 & 2.966 & 3.341 & 4.814 \\
 % & tile size & 16,32,64 & 16,32,64 & 16,32,64 & 1,16,16 & 16,64,24 & 16,32,64 & 16,16,128 & 1,16,32 \\
 (t,4) & \footnotesize runtime (s) & 3.114 & 3.090 & 3.764 & - & 2.844 & 2.811 & 3.288 & - \\
 % & tile size & 16,32,64 & 16,32,64 & 8,16,16 & & 16,48,24 & 8,16,16 & 16,32,64 & \\
@@ -344,17 +344,17 @@ There are two likely (related) explanations for this: an increase in the amount 
 & & N & S & \multicolumn{5}{c}{T; time tile size} \\
 Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 \midrule
-16 & \footnotesize GFlops & 31.22 & 93.24 & 94.19 & & & &  \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 15.81 & 15.81 & 15.81 &  &  &  &  \\
+16 & \footnotesize GFlops & 31.22 & 93.24 & 94.19 & 95.34 & 96.44 & &  \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 15.8 & 15.8 & 15.8 & 31.6 & 63.2 & 126 & 253 \\
 \midrule
-8 & \footnotesize GFlops & 30.22 & 74.06 & & & & & 82.97 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 9.29 & 9.29 & 9.29 &  &  &  & 149 \\
+8 & \footnotesize GFlops & 30.22 & 74.06 & & 78.88 & 81.40 & & 82.97 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 9.29 & 9.29 & 9.29 & 18.6 & 37.2 & 74.3 & 149 \\
 \midrule
-4 & \footnotesize GFlops & 28.96 & 54.91 & & & & 66.44 & \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 6.31 & 6.31 & 6.31 &  &  & 50.5 & \\
+4 & \footnotesize GFlops & 28.96 & 54.91 & & 61.92 & 65.53 & 66.44 & \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 6.31 & 6.31 & 6.31 & 12.6 & 25.2 & 50.5 & 101 \\
 \midrule
-2 & \footnotesize GFlops & 26.55 & 39.49 & & & & & 50.80 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 4.69 & 4.69 & 4.69 &  &  &  & 75.0 \\
+2 & \footnotesize GFlops & 26.55 & 39.49 & & 44.54 & 47.60 & & 50.80 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 4.69 & 4.69 & 4.69 & 9.38 & 18.8 & 37.5 & 75.0 \\
 \bottomrule
 \end{tabular}
 \caption{Performance and arithmetic intensity of stencils with non-tiled, spatially tiled, and time-tiled computations and time tile sizes 1, 2, 4, 8, 16.}
@@ -366,20 +366,23 @@ Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 \begin{tikzpicture}
 \begin{axis}[
 width=0.7\textwidth,
-legend style={at={(0.05,0.95)},anchor=north west},
+legend style={at={(1.05,0.95)},anchor=north west},
 xlabel={Arithmetic intensity},
 ylabel={GFlops achieved},
-ytick distance=25,
+%ytick distance=25,
 xmode=log,
 log basis x={2},
 log ticks with fixed point,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-sp600.csv};
-\addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-tm600.csv};
-\legend{Space-tiling,Time-tiling}
+\addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-so16.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-so8.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-so4.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-so2.csv};
+\legend{Space-tiling,Time-tiling so16,Time-tiling so8,Time-tiling so4,Time-tiling so2}
 % roofline
-\addplot [domain=2:15.15,name path=A] {17.3*x};
-\addplot [domain=15.15:152] {262.01};
+\addplot [domain=2:6,name path=A] {17.3*x};
+%\addplot [domain=15.15:152] {262.01};
 \end{axis}
 \end{tikzpicture}
 \caption{Graph of performance against arithmetic intensity for the Laplace operator, grid size \(16 \times 600^3\). As predicted by the roofline model, GFlops achieved increases for stencils of lower arithmetic intensity, but tapers off as arithmetic increases. The solid line is the theoretical maximum predicted by the roofline model.}

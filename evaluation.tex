@@ -122,14 +122,80 @@ We consider the following statements to follow naturally from Devito's calculati
 	\item Thus we have performed \(t\) times as many floating-point operations on it.
 \end{itemize}
 
-\begin{framed}
-Therefore, we propose that the \emph{arithmetic intensity of a stencil computation under time-tiling} be defined to be the \textbf{arithmetic intensity of the same computation under spatial tiling multiplied by the size of the time tile used.}
-\end{framed}
+A natural estimator for the arithmetic intensity of a stencil computation under time-tiling might be the arithmetic intensity of the same computation under spatial tiling multiplied by the size of the time tile used.
 
 This is consistent with the measure under spatial tiling, since a spatially tiled loop is similar a time-tiled version of the loop under a (legal) interchange of the time and spatial tile loops.
-Note that the previous argument on spatial tiling shows that this measure will also overestimate the arithmetic intensity, again exacerbated if the space order is large.
-Note that the extent of the overestimation can be bounded with the same method as in spatial tiling.
-However, the bounds will be correspondingly wider.\footnote{Observe that the addition of another tiled dimension is likely to shrink the tile volume (i.e.~the product of tile sizes in all dimensions) in the other dimensions, widening the bound. This applies equally to the previous calculation.}
+This would also result in an overestimate; the next section explores the magnitude of this overestimate under spatial and time-tiling.
+
+We will refer to this estimator as the \emph{naive estimator}, which only requires information about the stencil.
+
+\subsection{A more accurate estimator for arithmetic intensity}
+We previously observed that the measures above overestimate arithmetic intensity, as they underestimate the minimum memory transfer.
+This section explores a tighter bound based on a fixed cache size.
+
+In this section, \(d_t\) represents the time dimension and \(d_i (i=1,2,\cdots)\) represent a spatial dimension;
+\(D_i\) represents the extent of dimension \(d_i\), or \(D_t\) the extent of the time dimension;
+\(r_i\) the spatial radius of the stencil in dimension \(d_i\), \(r_t\) the distance of the time dependence;
+\(t_i\) the chosen tile size in dimension \(d_i\), \(t_t\) for the time tile size;
+and \(\Omega\) represents the size of the cache.
+
+\subsubsection{A better bound for minimum traffic under spatial tiling}
+Recall that in spatial tiling, we contrive small iteration spaces (`tiles') such that the data dependencies from the previous time iteration could fit within the cache.
+Therefore, the internal volume of a tile need only be transferred from memory once (Figure~\ref{fig:tile-reload}).
+However, there is no such guarantee for the boundary region of a tile.
+
+\begin{figure}[ht]
+	\centering
+	\begin{tikzpicture}
+	\draw[xstep=3cm,ystep=1.5cm,black,thick] (0,0) grid (15,6);
+
+	\foreach \x in {1,2,3,4}
+		\fill[pattern=north west lines,pattern color=black] (\x*3-.2,0) rectangle (\x*3+.2,6);
+	\foreach \y in {1,2,3}
+		\fill[pattern=north west lines,pattern color=black] (0,\y*1.5-.2) rectangle (15,\y*1.5+.2);
+	
+	\foreach \x in {0,1,2,3,4}
+	\foreach \y in {1,2,3,4}
+		\pgfmathsetmacro\seq{\x * 4 + \y}
+		\node at (3*\x+1.5,1.5*\y - 0.75) {\pgfmathprintnumber{\seq}};
+
+	\draw[thick,->] (0,0) -- (15.2,0) node[right]{\(d_1\)};
+	\draw[thick,->] (0,0) -- (0,6.2) node[above]{\(d_2\)};
+	\end{tikzpicture}
+	\caption{Tiles over a 2D iteration space. The clear regions need only be loaded once, but data in the hatched regions may need to be loaded multiple times, depending on the cache size. We will call the hatched region the \emph{tile boundaries}.}
+	\label{fig:tile-reload}
+\end{figure}
+
+Consider a (2-dimensional) tiling in which we iterate over the \(d_1\)-tiles, then the \(d_2\)-tiles, or as the order indicated in Figure~\ref{fig:tile-reload}.
+In this situation, the tile boundaries between \(d_2\)-tiles such as 1, 2 may fit within the cache; if so it is clear that none of these boundaries will need to be loaded twice (apart from the intersections with the \(d_1\)-boundaries).
+Likewise, if the boundary between \(d_1\)-rows fits within the cache, such as the boundary between tiles 1--4 and 5--8, then it is a possibility that the data within these boundaries need not be loaded twice.
+If these hold, the over-estimate of arithmetic intensity may be minimal.
+
+Since it is reasonable to expect that the \(d_2\)-tile boundaries fit within the cache,\footnote{Otherwise, a smaller value for \(t_i\) should be chosen to ensure that the internal tile contents benefit from cache reuse.} we focus on the case of \(d_1\)-row boundaries not fitting within the cache.
+Note that these boundaries are the vertical lines of the hatched region.
+
+The \(d_1\)-row boundary will not fit into the cache if:
+
+\[ 2 r_1 D_2 > \Omega \]
+
+Now consider the \(n\) dimensional case, first iterating over the \(d_1\)-tiles, then the \(d_2\)-tiles, and so on.
+Following the logic above, we would expect that the \(d_n\)-tile boundaries fit within the cache.
+Now, the \(d_i\)-row boundary (\(i < n\)) will not fit into the cache if:
+
+\[ B_i = 2 \left(\prod_{j=1}^{i-1} t_j \right) r_i \left(\prod_{k=i+1}^{n} D_k \right) > \Omega \]
+
+since we need to account for the full extent of each lower dimension in the loop structure, the width of overlap in the \(i\)-th dimension (\(2 r_i\)), and the tile sizes in the higher dimensions.
+It is now clear that if \(B_i < \Omega\), then \(B_i-\Omega\) elements will not fit into the cache for each \(d_i\)-row boundary, and \(d_i\) boundaries form at least \( \left(\sfrac{r_i}{t_i} - 1 \right) \) of the iteration space.
+So the proportion of the entire space that needs to be reloaded from dimension \(d_i\) is at least:
+
+\[ P_i = \frac{B_i - \Omega}{B_i} \times \left(\frac{r_i}{t_i} - 1\right) \]
+
+Assume that \(B_{i-1} > {B_i}\), i.e. \( r_{i-1} D_i > t_{i-1} r_i \); this always holds in our evaluation,\footnote{Our stencils always have \(r_i = r_j\) and \(D_i > t_j\) for any dimensions \(d_i, d_j\).} and in non-perverse examples.
+Applying the principle of inclusion-exclusion and choosing the maximum overlapping area gives that the minimum proportion of the iteration space that needs to be loaded twice is at least:
+
+\[ P_1 \oplus P_2 \oplus \cdots \oplus P_m \]
+
+where \(B_m > \Omega \) and \(m = n\) or \(B_{m+1} \le \Omega \), and \(P \oplus Q = P + Q - PQ\) which is associative.
 
 
 \section{Testing methodology}

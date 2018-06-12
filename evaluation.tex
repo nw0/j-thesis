@@ -133,8 +133,9 @@ A natural estimator for the arithmetic intensity of a stencil computation under 
 This is consistent with the measure under spatial tiling, since a spatially tiled loop is similar a time-tiled version of the loop under a (legal) interchange of the time and spatial tile loops.
 This would also result in an overestimate; the next section explores the magnitude of this overestimate under spatial and time-tiling.
 
+\wip{Section TODO}
 We will refer to this estimator as the \emph{naive estimator}, which only requires information about the stencil.
-Now we will explore tighter bounds; later we will demonstrate why they are necessary.
+Now we will explore tighter bounds assuming ideal scheduling; later in our analysis (Section TODO) we will demonstrate why they are necessary.
 
 \subsection{Tile boundaries determine cache reuse}
 Recall that in spatial tiling, we contrive small iteration spaces (`tiles') such that the data dependencies from the previous time iteration could fit within the cache.
@@ -198,7 +199,7 @@ For proof, we demonstrate the fact for the \(d_{i-1}\)-faces over the \(d_{i-1} 
 	\draw[thick,->] (0,0) -- (15.2,0) node[right]{\(d_{i-1}\)};
 	\draw[thick,->] (0,0) -- (0,6.2) node[above]{\(d_i\)};
 	\end{tikzpicture}
-	\caption{Tiles in the \(d_{i-1} d_i\)-plane.}
+	\caption{Tiles in the \(d_{i-1} d_i\)-plane. We consider iterations crossing the \(d_2\)-faces corresponding to regions A and C.}
 	\label{fig:tile-zigzag}
 \end{figure}
 
@@ -236,7 +237,23 @@ Then consolidating these points we use:
 \[\left|B\right| = \left(F_1 - \Omega\right) \times \floor*{\frac{D_i}{t_i}} \]
 
 \subsection{Generalisation to time-tiling}
-\wip{}
+As a summary, the previous sections gave an algorithm to find additional memory transfer on tile boundaries within a single time iteration, under spatial tiling.
+This tile boundary excess transfer is of the same magnitude in each time iteration of a time tile.
+Hence we only multiply the figure by the time tile size.
+Therefore, use:
+
+\[ 1 + \frac{|B| \times t_t}{\prod_{k=1}^n D_k} \]
+
+\subsection{Improving the bounds further}
+Note that the spatial tiling bound given can be improved further, as we did not consider need to partially re-load data from the \(d_i\)-faces.
+This would have a corresponding effect on the time-tiling bound.
+However, we felt this would add significant complication for meagre benefit.
+
+Additionally, note that the cache would (at times) need to not only contain a \(d_i\)-face, but also \(d_{i+1}, \cdots d_{n}\)-faces, by a similar argument to the one presented with Figure~\ref{fig:tile-zigzag}.
+Therefore it may be sufficient to fulfil \(F_i + F_{i+1} + \cdots + F_n > \Omega\).
+
+However, since the extent of any dimension is likely to dwarf any tile size, this is unlikely to be relevant; in practice with 3 spatial dimensions, the auto-tuned tile sizes mean that only the \(F_1 > \Omega \) case is relevant.
+The method is nevertheless crucial for the generalisation to time-tiling.
 
 
 \section{Testing methodology}

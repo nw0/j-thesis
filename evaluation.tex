@@ -173,7 +173,7 @@ Now consider the \(n\) dimensional case, first iterating over the \(d_1\)-tiles,
 We make the following claim:
 
 \begin{framed}
-	If \(i \le n\) and \(F_{i} > \Omega\), then data of equivalent size to the contents of \emph{every} \(d_j\)-face must be loaded into the cache at least twice, for \(1 \le j < i\).
+	If \(i \le n\) and \(F_{i} \ge \Omega\), then data of equivalent size to the contents of \emph{every} \(d_j\)-face must be loaded into the cache at least twice, for \(1 \le j < i\).
 \end{framed}
 
 For proof, we demonstrate the fact for the \(d_{i-1}\)-faces over the \(d_{i-1} d_i\)-plane; the rest by backwards induction.
@@ -222,6 +222,21 @@ since we need to account for the full extent of each lower dimension in the loop
 \[ \left|B_i\right| = 2 \frac{r_i}{D_i} \times \floor*{\frac{D_i}{t_i}} \]
 
 as \(2\sfrac{r_i}{D_i}\) is the proportion of each \(d_i\)-face to \(D_i\), and \(\floor*{\sfrac{D_i}{t_i}}\) is the number of \(d_i\)-faces.
+
+Finally, let \(B = B_1 \cup B_2 \cup \cdots \cup B_{i-1}\) for \(F_i \ge \Omega > F_{i-1} \) whenever \(1 < i < n\); if there is no such \(i\), then let \(B = \varnothing \).
+Then divide the original arithmetic intensity estimate by the following to get a tighter bound:
+
+\[ 1 + \frac{|B|}{\prod_{k=1}^n D_k} \]
+
+Note that this method will only yield a tighter bound if \(F_i \ge \Omega\) when \(i > 1\).
+If only \(F_1 > \Omega \), we can use a variation of this algorithm.
+We have that for every \(d_1\)-face, \(F_1 - \Omega\) points do not fit into the cache, and have \(\floor*{\sfrac{D_1}{t_1}}\) \(d_1\)-faces.
+Then consolidating these points we use:
+
+\[\left|B\right| = \left(F_1 - \Omega\right) \times \floor*{\frac{D_i}{t_i}} \]
+
+\subsection{Generalisation to time-tiling}
+\wip{}
 
 
 \section{Testing methodology}

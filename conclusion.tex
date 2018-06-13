@@ -11,9 +11,7 @@ The different perspectives of the fields provided immense insight into the compl
 These insights culminated in a transformation yielding significant performance gains in Devito's target domain: seismic imaging.
 Though time-tiling is a well-established optimisation, this implementation is a necessary and important step for Devito.
 
-\wip{Rewrite; move?}
-
-During our evaluation in Chapter~\ref{ch:evaluation}, we used this abstraction to effortlessly generate entire families of stencils by varying the space order; producing these stencils from the equations is decidedly non-trivial, and would have otherwise been extremely time-consuming.
+During our evaluation in Chapter~\ref{ch:evaluation}, we used Devito abstraction to effortlessly generate entire families of stencils by varying the space order of a differential equation; producing these stencils from the equations is decidedly non-trivial, and would have otherwise been extremely time-consuming.
 As a consequence, this project includes the broadest survey of stencils under time-tiling to date.
 
 While the concept of time-tiling is superficially straightforward, its implementation was decidedly not so: unlike interfacing with a `back-end' polyhedral compiler, such as CLooG or Pochoir (Section~\ref{sec:pochoir}) with all its attendant integration problems, implementation within Devito meant understanding the numerous stages of internal representation used to transform a differential equation into code.
@@ -37,7 +35,7 @@ A summary of the contributions of this project.
 	\item We presented and critiqued our testing methodology and models, which we used for the performance evaluation of our implemented time-tiling transformation.
 	In particular, we devoted attention to numerical verification, the set-up of the test environment, and the modelling of performance.
 
-	\item We demonstrated a runtime decrease of 25\% with the transformation compared to Devito's existing optimisations under real-world applications, particularly the stencils of varying space orders arising from the acoustic wave equation, of great importance to Devito's target domain, seismic imaging.
+	\item We demonstrated a runtime decrease of up to 45\%, and in general more than 20\%, with the transformation compared to Devito's existing optimisations under real-world applications, particularly the stencils of varying space orders arising from the acoustic wave equation, of great importance to Devito's target domain, seismic imaging.
 	In so doing, we validated previous work which demonstrated a runtime reduction of up to 27.5\%~\cite{dylan}.
 
 	\item We proposed an estimator for \emph{arithmetic intensity under time-tiling} which extends Devito's existing estimator, including a proof that it is consistent with the widely-cited roofline model.
@@ -52,8 +50,6 @@ A summary of the contributions of this project.
 \label{sec:future-work}
 
 Apart from work in evaluation and extensions to time-tiling discussed below, we also like to highlight Section~\ref{sec:impl-minor} (`Minor extensions to time-tiling').
-
-\wip{eval}
 
 \subsection{Tiling imperfectly-nested loops}
 In this work, we implemented the time-tiling transformation for perfect loop nests in Devito.
@@ -108,4 +104,37 @@ This should be overcome with using a test case with suitable bounds; as Devito d
 
 A final remark is that skewing manifests in two parts: loop indices are skewed in the DSE, but the loop variable is not skewed, as the loop structure has not been generated yet.
 Instead, the skewing factor is maintained as an attribute of the stencil until it is transformed into a loop.
-This fact may explain how skewing and the other optimisations change the execution order, and it might even be possible to surmount this change.
+This fact may explain how skewing and the other optimisations change the execution order, and it might be possible to surmount this change.
+
+
+\subsection{Memory analyses to determine further areas for optimisation}
+Due to time constraints, we did not perform memory analyses to determine cache misses and precise measures of memory traffic, instead focusing on bounding using arithmetic intensity.
+While this has the advantage of being easily extended to other platforms and architectures, it would be useful to perform detailed analyses on our specific stencils.
+
+This would reveal how bottlenecks have changed after time-tiling, particularly in the intermediate time tile sizes, for which our arithmetic intensity estimator was less effective.
+
+Of special interest is how tiling and other transformations could increase the arithmetic intensity further, to bring stencils out of the memory-bound regime.
+Additionally, validation and analysis of our techniques and models could lead to understanding of how similar techniques could be developed to study time-tiling on other architectures.
+
+
+\subsection{Improvement of the arithmetic intensity estimator bounds, and uses thereof}
+In connection with the previous section, memory analyses would be helpful to assess our assumptions regarding cache usage when constructing our arithmetic intensity estimator.
+This would enable a more realistic model, although some sacrifices may be necessary with regards to overestimation.
+
+As mentioned in Section~\ref{sec:further-eval}, an accurate arithmetic intensity estimator could be used to improve the optimisation process, such as by providing an auto-tuner heuristic which is easily extensible to other architectures.
+This would enable detailed performance analysis without needing to resort to memory analyses, which are again not portable between architectures.
+
+The main issue with the arithmetic intensity estimator stated in this work is its large bounds with moderate time tile sizes.
+If a slightly more intricate estimator could be devised to deal with this scenario, its applicability would increase dramatically.
+
+
+\subsection{Evaluation on more stencils and architectures}
+Applying time-tiling to more families of stencils and other architectures is necessary to understand the transformation in greater depth.
+A natural starting point would be other wave equations relevant to Devito, or distributed computing architectures, as evaluated by the OPS project.
+
+In Section~\ref{sec:further-eval}, we discussed the relevance of multi-step linear methods to improve the accuracy of approximations, such as the Adams-Bashforth method.
+These also apply to Devito's target domain, and should be considered in future evaluation work.
+We proposed in the referenced section that time-tiling may yield greater reductions in runtime when using such methods.
+
+Finally, with the implementation of time-tiling for imperfectly-nested loops as proposed above, it would be possible to evaluate the transformation in more generality, as it would support the tiling of source and receiver loops in the acoustic wave equation stencils, for example.
+As this is an important use case for Devito, an implementation and evaluation of this functionality would certainly be an ambitious objective of considerable utility.

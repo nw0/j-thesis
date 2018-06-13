@@ -3,14 +3,12 @@
 \begin{abstract}
 \setcounter{page}{3}
 
-\wip{Work}
-
 Finite-difference methods are widely used in approximating partial differential equations.
-In a large problem set, approximations can takes days or weeks to evaluate, yet the bulk of the computation may occur in just one loop nest.
-The modelling process for researchers is not straightforward either, requiring models with differential equations to be translated into stencil kernels without errors then optimised separately.
+In a large problem set, approximations can take days or weeks to evaluate, yet the bulk the computation may occur within a single loop nest.
+The modelling process for researchers is not straightforward either, requiring models with differential equations to be translated into stencil kernels, then optimised separately.
 One tool that seeks to speed up and eliminate mistakes from this tedious procedure is Devito, used to efficiently employ finite-difference methods.
 
-In this work, we implement \emph{time-tiling}, a loop nest optimisation, in Devito yielding a decrease in runtime of up to 45\% in the extreme case and 20\% across stencils from the acoustic wave equation family, widely used in Devito's target domain of seismic imaging.
+In this work, we implement \emph{time-tiling}, a loop nest optimisation, in Devito yielding a decrease in runtime of up to 45\%, and at least 20\% across stencils from the acoustic wave equation family, widely used in Devito's target domain of seismic imaging.
 We present an estimator for \emph{arithmetic intensity under time-tiling} and a model to predict runtime improvements in stencil computations. We also consider generalisation of time-tiling to imperfect loop nests, a less widely studied problem.
 
 \wip{Don't forget to uncomment the acknowledgement page!}

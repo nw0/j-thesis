@@ -6,9 +6,9 @@
 Having previously discussed the goal of time-tiling, i.e.~to improve cache reuse by exploiting data locality between time iterations, this chapter presents our implementation of time-tiling in Devito, with reference to the design choices made.
 For the most part, the implementation follows naturally from the previous chapters, although great care was required for the details, particularly the correct propagation of loop bounds under the transformations.
 
-\wip{Rewrite para}
 As outlined in Section~\ref{sec:bg-time-tiling}, we implement time-tiling in two stages: skewing in the DSE (Section~\ref{sec:skewing}), and tiling in the DLE (Section~\ref{sec:time-tiling}).
-Finally, we consider the implications on sparse loops, one of Devito's raisons d'\^etre.
+In addition to this, we have supplemented Devito test suite (Section~\ref{sec:impl-tests}) and auto-tuner (Section~\ref{sec:autotune}) for time-tiling.
+Finally, we discuss outstanding implementation work for time-tiling in Devito (Section~\ref{sec:impl-further}).
 
 
 \section{Skewing}
@@ -320,6 +320,7 @@ This allowed for easy propagation of loop properties, offsets to the upper and l
 
 
 \section{Test suite}
+\label{sec:impl-tests}
 Devito has an extensive test suite, which we endeavoured not to break while implementing time-tiling.
 In particular, the existing tests used for spatial tiling were helpful, as they provided a benchmark for the correct tiling behaviour.
 

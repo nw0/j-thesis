@@ -32,8 +32,6 @@ Some of these stencil compilers are able to apply the \emph{time-tiling} optimis
 It has been previously demonstrated that time-tiling has the potential to reduce the run time of `some Devito stencil loops by up to 27.5\%'~\cite{dylan} when performing time-tiling against the existing spatial tiling which the tool is able to perform.
 In this case another tool, CLooG~\cite{cloog-isl}, was used to add time-tiling to Devito-generated code.
 
-\clar{Too much detail?}
-
 While the literature surrounding the polyhedral model, from which time-tiling derives, dates from the last century, it was viewed as complicated and time-consuming to use in optimising compilers as recently as 2004 when Bastoul proposed extensions~\cite{cloog-isl} to the original Quiller\'e et al.~algorithm to eliminate redundant (generated) code~\cite{quillere}.
 Time-tiling was been studied in the form this work considers since Griebl in 2004~\cite{griebl-tt}, using \emph{space-time mapping}, analogous to the skewed tiling which we discuss in this work, but expressed as affine conditions specifying hyperplane partitions of the problem domain.
 
@@ -50,14 +48,13 @@ The principal objective of this project was to implement tiling over the time di
 
 In summary, our contributions are:
 
-\wip{Results change; check this late}
 \begin{itemize}
 	\item An implementation of time-tiling in Devito, including a simplification of the generated loop structure, with accompanying test cases and auto-tuner enhancements.
 	An analysis of its legality and the necessary conditions to guarantee this.
 
 	\item An evaluation of the correctness and performance of the time-tiling transformation and any actions end-users may need to take to realise performance gains.
 
-	\item Demonstration of a runtime decrease of up to 25\% compared to Devito's existing optimisations under real-world applications, in particular the stencils from the family of acoustic wave equation operators, widely used in Devito's target domain, seismic imaging.
+	\item Demonstration of a runtime decrease of up to 45\%, and otherwise more than 20\%, compared to Devito's existing optimisations under real-world applications, in particular the stencils from the family of acoustic wave equation operators, widely used in Devito's target domain, seismic imaging.
 
 	\item A novel estimator for \emph{arithmetic intensity under time-tiling} that extends the existing estimator for arithmetic intensity under spatial tiling in Devito.
 	An evaluation of the utility of this estimator compared to a generalised version of the existing estimator, and an analysis of the shortcomings of both.
@@ -70,7 +67,6 @@ In summary, our contributions are:
 \section{Report structure}
 This report is divided into 6 chapters, describing the above contributions and the context from which they arise.
 
-\wip{Rewriting this: noted Paul on possible further gains}
 \begin{description}
 	\item[Chapter~\ref{ch:background}]
 	A review of the fundamentals needed for time-tiling in general, including its motivation and consequences.
@@ -82,12 +78,14 @@ This report is divided into 6 chapters, describing the above contributions and t
 	\item[Chapter~\ref{ch:implementation}]
 	The implemented time-tiling transformation.
 	Explanations of the design choices made, and modifications to the auto-tuner to ensure time-tiling is used effectively.
-	Proposals for further improvement arising from time-tiling.
+	Proposals for further implementation work arising from time-tiling.
 
 	\item[Chapter~\ref{ch:evaluation}]
 	An analysis of the effectiveness of the implemented transformation.
-	Evidence of performance gains, and the conditions under which they are most significant.
+	Evidence of large performance improvements, and the conditions under which they are most and least significant.
+	The aforementioned estimator for arithmetic intensity under time-tiling and its evaluation.
+	Finally, areas for improvement in identifying and realising greater decreases in runtime.
 
 	\item[Chapter~\ref{ch:conclusion}]
-	The conclusion of the work, a discussion of future work to be done, and the streamlining of this optimisation process.
+	The conclusion of the work, and a discussion of future work to be done alongside the streamlining of this optimisation process.
 \end{description}

@@ -220,7 +220,7 @@ All that remains is to find expressions for \(F_i, \left|B_i\right|\). Have:
 
 since we need to account for the full extent of each lower dimension in the loop structure, the width of overlap in the \(i\)-th dimension (\(2 r_i\)), and the tile sizes in the higher dimensions; and
 
-\[ \left|B_i\right| = 2 \frac{r_i}{D_i} \times \floor*{\frac{D_i}{t_i}} \]
+\[ \frac{\left|B_i\right|}{\prod_{k=1}^n D_k} = 2 \frac{r_i}{D_i} \times \floor*{\frac{D_i}{t_i}} \]
 
 as \(2\sfrac{r_i}{D_i}\) is the proportion of each \(d_i\)-face to \(D_i\), and \(\floor*{\sfrac{D_i}{t_i}}\) is the number of \(d_i\)-faces.
 
@@ -238,12 +238,11 @@ Then consolidating these points we use:
 
 \subsection{Generalisation to time-tiling}
 As a summary, the previous sections gave an algorithm to find additional memory transfer on tile boundaries within a single time iteration, under spatial tiling.
-This tile boundary excess transfer is of the same magnitude in each time iteration of a time tile.
-Hence we only multiply the figure by the time tile size.
-Do note that the naive spatial tiling estimator is first multiplied by the time tile size to establish the naive time-tiling estimator.
-Then divide by:
+However, within a time tile, \(t_t\) time iterations are first completed.
+This increases the required storage for any spatial \(d_i\) face by \(t_t\) times.
+Therefore, proceed as above, except multiplying each \(F_i\) by \(t_t\).
 
-\[ 1 + \frac{|B| \times t_t}{\prod_{k=1}^n D_k} \]
+Do note that the naive spatial tiling estimator is first multiplied by the time tile size to establish the naive time-tiling estimator.
 
 We will use the above estimators for arithmetic intensity under both spatial and time-tiling.
 While this has the disadvantage of potentially decreasing the arithmetic intensity of a stencil under spatial tiling from non-tiled code, we will not be analysing the performance of non-tiled code in relation to the roofline model detailed in Section~\ref{sec:roofline-intro}.
@@ -485,17 +484,20 @@ There are two likely (related) explanations for this: an increase in the amount 
 Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 \midrule
 16 & \footnotesize GFlops & 31.22 & 93.24 & 94.19 & 95.34 & 96.44 & 93.63 & 94.14 \\
-%\multicolumn{2}{r|}{\footnotesize arith. intensity} & 15.8 & 14.0 & 14.0 & 31.6 & 63.2 & 126 & 253 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 15.8 & 14.0 & 14.0 & 25.1 & 41.6 & 62.0 & 82.1 \\
+%\multicolumn{2}{r|}{\footnotesize tile size} & - & 16,16 & 1,16,32 & 2,16,16 & 4,16,16 & 8,16,600 & 16,16,600 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 15.8 & 14.0 & 14.0 & 14.9 & 15.5 & 15.7 & 15.9 \\
 \midrule
 8 & \footnotesize GFlops & 30.22 & 74.06 & 75.89 & 78.88 & 81.40 & 82.84 & 82.97 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 9.29 & 9.29 & 9.29 & 18.6 & 37.2 & 74.3 & 149 \\
+%\multicolumn{2}{r|}{\footnotesize tile size} & - & 8,64 & 1,16,600 & 2,32,32 & 4,32,16 & 8,16,16 & 16,32,64 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 9.29 & 9.29 & 9.29 & 17.5 & 24.1 & 18.2 & 33.6 \\
 \midrule
 4 & \footnotesize GFlops & 28.96 & 54.91 & 55.98 & 61.92 & 65.35 & 66.44 & 70.85 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 6.31 & 6.31 & 6.31 & 12.6 & 25.2 & 50.5 & 101 \\
+%\multicolumn{2}{r|}{\footnotesize tile size} & - & 32,32 & 1,64,32 & 2,48,24 & 4,32,32 & 8,16,16 & 16,16,64 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 6.31 & 6.31 & 6.31 & 12.6 & 23.7 & 23.8 & 24.7 \\
 \midrule
 2 & \footnotesize GFlops & 26.55 & 39.49 & 40.18 & 44.54 & 47.60 & 50.84 & 50.80 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 4.69 & 4.69 & 4.69 & 9.38 & 18.8 & 37.5 & 75.0 \\
+%\multicolumn{2}{r|}{\footnotesize tile size} & - & 32,40 & 1,48,24 & 2,48,24 & 4,48,24 & 8,16,40 & 16,32,32 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 4.69 & 4.69 & 4.69 & 9.38 & 18.8 & 33.2 & 48.6 \\
 \bottomrule
 \end{tabular}
 \caption{Performance and arithmetic intensity of stencils with non-tiled, spatially tiled, and time-tiled computations and time tile sizes 1, 2, 4, 8, 16. Tile sizes used to calculate arithmetic intensity available in project archive.}
@@ -526,7 +528,7 @@ log ticks with fixed point,
 \addplot [domain=15.15:150] {262.01};
 \end{axis}
 \end{tikzpicture}
-\caption{Graph of performance against arithmetic intensity for the Laplace operator, grid size \(16 \times 600^3\). As predicted by the roofline model, GFlops achieved increases more for stencils of lower arithmetic intensity; observe that for space order 16, GFlops achieved is nearly constant. The solid line is the theoretical maximum predicted by the roofline model.}
+\caption{Graph of performance against arithmetic intensity for the Laplace operator, grid size \(16 \times 600^3\). Points left-to-right represent increasing time tile sizes (as in table above) corresponding to increasing arithmetic intensity. The solid line is the theoretical maximum predicted by the roofline model.}
 \label{fig:laplace-roofline}
 \end{figure}
 
@@ -537,6 +539,7 @@ Therefore, we expect that we are nearing the computational bound of our test mac
 
 Figure~\ref{fig:laplace-roofline} is the corresponding plot to Table~\ref{tab:laplace-roofline}.
 Note that we have only plotted the time-tiled results, as time-tiling with a time tile size of 1 is equivalent to spatial tiling and the results are nearly indistinguishable.
+As predicted by the roofline model, GFlops achieved increases more for stencils of lower arithmetic intensity; observe that for space order 16, GFlops achieved is nearly constant, indeed decreasing for time tile sizes 8 and 16.
 
 
 \section{Performance of the acoustic wave equation operator}
@@ -613,23 +616,28 @@ Additionally, all of the minimum runtimes occurred with the auto-tuner choosing 
 \centering
 \begin{tabular}{cr|c|c|ccccc}
 \toprule
-			& & N & S & \multicolumn{5}{c}{T; time tile size} \\
+& & N & S & \multicolumn{5}{c}{T; time tile size} \\
 Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 \midrule
 16 & \footnotesize GFlops & 16.07 & 47.10 & 47.52 & 54.38 & 58.06 & 57.75 & 59.11 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 4.42 & 4.42 & 4.42 & 8.84 & 17.7 & 35.4 & 70.7 \\
+%\multicolumn{2}{r|}{\footnotesize tile size} & - & 32,16 & 1,32,24 & 2,16,32 & 4,16,16 & 8,16,64 & 16,16,64 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 4.42 & 4.42 & 4.42 & 4.89 & 4.64 & 4.53 & 4.47 \\
 \midrule
 12 & \footnotesize GFlops & 16.86 & 44.75 & 44.38 & 52.43 & 57.99 & 57.98 & 59.82 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 3.36 & 3.36 & 3.36 & 6.72 & 13.4 & 26.9 & 53.8 \\
+%\multicolumn{2}{r|}{\footnotesize tile size} & - & 32,24 & 1,32,32 & 2,32,16 & 4,16,16 & 8,16,64 & 16,16,64 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 3.36 & 3.36 & 3.36 & 5.82 & 4.79 & 4.63 & 4.55 \\
 \midrule
 8 & \footnotesize GFlops & 17.46 & 37.12 & 36.96 & 47.21 & 54.46 & 55.74 & 58.76 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.89 & 2.89 & 2.89 & 5.78 & 11.56 & 23.1 & 46.2 \\
+%\multicolumn{2}{r|}{\footnotesize tile size} & - & 48,24 & 1,48,24 & 2,32,16 & 4,32,8 & 8,16,8 & 16,16,40 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.89 & 2.89 & 2.89 & 5.78 & 8.23 & 6.07 & 5.92 \\
 \midrule
 6 & \footnotesize GFlops & 17.45 & 32.51 & 32.39 & 42.65 & 50.40 & 53.11 & 55.57 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.50 & 2.50 & 2.50 & 5.00 & 10.0 & 20.0 & 40.0 \\
+%\multicolumn{2}{r|}{\footnotesize tile size} & - & 48,24 & 1,48,24 & 2,32,16 & 4,32,8 & 8,16,16 & 16,16,40 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.50 & 2.50 & 2.50 & 5.00 & 8.67 & 7.12 & 6.89 \\
 \midrule
 4 & \footnotesize GFlops & 17.44 & 27.57 & 27.49 & 37.52 & 45.12 & 48.17 & 50.44 \\
-\multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.10 & 2.10 & 2.10 & 4.20 & 8.40 & 16.8 & 33.6 \\
+%\multicolumn{2}{r|}{\footnotesize tile size} & - & 40,40 & 1,40,40 & 2,32,16 & 4,32,16 & 8,16,16 & 16,16,40 \\
+\multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.10 & 2.10 & 2.10 & 4.20 & 8.40 & 9.29 & 8.82 \\
 \bottomrule
 \end{tabular}
 \caption{Performance and arithmetic intensity of stencils with non-tiled, spatially tiled, and time-tiled computations and time tile sizes 1, 2, 4, 8, 16. Data from minimum runtime trials for each parameter.}
@@ -641,12 +649,13 @@ Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 \begin{tikzpicture}
 \begin{axis}[
 width=0.7\textwidth,
-legend style={at={(0.95,0.95)},anchor=north east},
+legend style={at={(1.05,0.95)},anchor=north west},
 xlabel={Arithmetic intensity},
 ylabel={GFlops achieved},
-ytick distance=10,
 xmode=log,
 log basis x={2},
+ymode=log,
+log basis y={8},
 log ticks with fixed point,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so16.csv};
@@ -655,11 +664,12 @@ log ticks with fixed point,
 \addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so6.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so4.csv};
 
-\addplot [domain=2:5.5] {17.3*x};
+\addplot [domain=1.5:4] {17.3*x};
+%\addplot [domain=15.15:150] {262.01};
 \legend{Time-tiling so16,Time-tiling so12, Time-tiling so8,Time-tiling so6, Time-tiling so4}
 \end{axis}
 \end{tikzpicture}
-\caption{Graph of performance against arithmetic intensity for the acoustic wave equation operator, grid size \(512^3\). Spatial tiling omitted as results are nearly identical to time tile size 1. The solid line is the theoretical maximum predicted by the roofline model; performance limit omitted to avoid scaling.}
+\caption{Graph of performance against arithmetic intensity for the acoustic wave equation operator, grid size \(512^3\). Points left-to-right represent increasing time tile sizes (as in table above) corresponding to increasing arithmetic intensity. The solid line is the theoretical maximum predicted by the roofline model; roofline truncated to avoid scaling.}
 \label{fig:awe-roofline}
 \end{figure}
 
@@ -668,9 +678,10 @@ To gather these results, time tile size was fixed and the auto-tuner was used to
 This is to produce an analysis of the arithmetic intensity under time-tiling and performance gains.
 
 Figure~\ref{fig:awe-roofline} is the corresponding roofline plot from the table.
+We observe that at lower space orders, we experience performance gains through to time tile sizes of 16, although for space orders 12 and 16, performance stagnates after time tile size 4.
 
 Finally, we observe that the maximum achieved performance for any of these stencils is less than 60 GFlops, compared to over 90 GFlops using the Laplace operator.
-A possible reason for this is the lower inherent arithmetic intensity of the acoustic wave equation stencils.
+A possible reason for this is the lower inherent arithmetic intensity of the acoustic wave equation stencils, and that we are approaching the performance ceiling for this operator and our set of optimisations.
 
 
 \section{Effect of the time tile size}

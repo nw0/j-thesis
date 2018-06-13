@@ -541,6 +541,15 @@ Figure~\ref{fig:laplace-roofline} is the corresponding plot to Table~\ref{tab:la
 Note that we have only plotted the time-tiled results, as time-tiling with a time tile size of 1 is equivalent to spatial tiling and the results are nearly indistinguishable.
 As predicted by the roofline model, GFlops achieved increases more for stencils of lower arithmetic intensity; observe that for space order 16, GFlops achieved is nearly constant, indeed decreasing for time tile sizes 8 and 16.
 
+We can observe a quirk of the bounding scheme employed, as the arithmetic intensity does not always increase with an increase of the time tile size, which would ostensibly increase data transfer.
+Indeed, there are two factors at work here: firstly, the sizes of spatial tiles chosen are not invariant when increasing time tile size.
+Secondly, the bounding algorithm depends on a discrete condition being fulfilled, i.e.~\(F_i \ge \Omega\), but does not account for cache usage when it is close to this bound.
+
+We see that it has had the greatest effect on the samples with space order 16; here it showed that the necessary data transfer for time-tiled computation was very close to that of spatially tiled computation.
+This clearly predicts a minimal performance gain (obtained 3.3\%), as arithmetic intensity has not changed significantly.
+
+Conversely, we may hypothesise that the arithmetic intensity of the lower space order stencils (such as space order 2) has not increased by as much as the estimator gives, as the increase in arithmetic intensity (\(10.4\times\)) has not been matched by a commensurate increase in the performance (\(1.22\times\)), although note that this would be determined partially by the memory bandwidth.
+
 
 \section{Performance of the acoustic wave equation operator}
 \label{sec:perf-awe}
@@ -666,6 +675,7 @@ log ticks with fixed point,
 
 \addplot [domain=1.5:4] {17.3*x};
 %\addplot [domain=15.15:150] {262.01};
+\addplot [domain=2:5,dashed] {13*x};
 \legend{Time-tiling so16,Time-tiling so12, Time-tiling so8,Time-tiling so6, Time-tiling so4}
 \end{axis}
 \end{tikzpicture}
@@ -679,6 +689,12 @@ This is to produce an analysis of the arithmetic intensity under time-tiling and
 
 Figure~\ref{fig:awe-roofline} is the corresponding roofline plot from the table.
 We observe that at lower space orders, we experience performance gains through to time tile sizes of 16, although for space orders 12 and 16, performance stagnates after time tile size 4.
+We commented on the quirk of the bounding algorithm which gives rise to larger time tile sizes sometimes having lower arithmetic intensity, although the effect is perhaps more extreme here.
+
+An interesting observation is that the points for space orders 12 and 16 have converged for time tile sizes 4 and larger, suggesting a limit of sorts.
+We add a line (slope 13) that approximately intersects the points corresponding to tile size 1, which coincides with this cluster of points.
+This suggests that the obtained memory bandwidth is around 13 GB/s, compared to 17.3 GB/s reported by the \emph{STREAM} benchmark.
+Like the previous section, it is reasonable to expect that tighter bounds are possible for the arithmetic intensity under time-tiling.
 
 Finally, we observe that the maximum achieved performance for any of these stencils is less than 60 GFlops, compared to over 90 GFlops using the Laplace operator.
 A possible reason for this is the lower inherent arithmetic intensity of the acoustic wave equation stencils, and that we are approaching the performance ceiling for this operator and our set of optimisations.

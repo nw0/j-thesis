@@ -234,15 +234,31 @@ If only \(F_1 > \Omega \), we can use a variation of this algorithm.
 We have that for every \(d_1\)-face, \(F_1 - \Omega\) points do not fit into the cache, and have \(\floor*{\sfrac{D_1}{t_1}}\) \(d_1\)-faces.
 Then consolidating these points we use:
 
-\[\left|B\right| = \left(F_1 - \Omega\right) \times \floor*{\frac{D_i}{t_i}} \]
+\[\left|B\right| = \left(F_1 - \Omega\right) \times \floor*{\frac{D_1}{t_1}} \]
 
 \subsection{Generalisation to time-tiling}
 As a summary, the previous sections gave an algorithm to find additional memory transfer on tile boundaries within a single time iteration, under spatial tiling.
 This tile boundary excess transfer is of the same magnitude in each time iteration of a time tile.
 Hence we only multiply the figure by the time tile size.
-Therefore, use:
+Do note that the naive spatial tiling estimator is first multiplied by the time tile size to establish the naive time-tiling estimator.
+Then divide by:
 
 \[ 1 + \frac{|B| \times t_t}{\prod_{k=1}^n D_k} \]
+
+We will use the above estimators for arithmetic intensity under both spatial and time-tiling.
+While this has the disadvantage of potentially decreasing the arithmetic intensity of a stencil under spatial tiling from non-tiled code, we will not be analysing the performance of non-tiled code in relation to the roofline model detailed in Section~\ref{sec:roofline-intro}.
+
+To summarise, the required data to calculate the arithmetic intensity under time-tiling are:
+
+\begin{enumerate}
+	\item Extents of the iteration space (\(D_t, D_1, D_2, \cdots\))
+	\item Stencil spatial and time dependences (\(r_t, r_1, r_2, \cdots\))
+	\item Chosen tile sizes (\(t_t, t_1, t_2, \cdots\))
+	\item Size of the cache (\(\Omega\))
+\end{enumerate}
+
+Note that due to space constraints, we have not reported the auto-tuned tile sizes in our tables giving the arithmetic intensity data.
+This data, along with complete logs of program output and auto-tuner results, is fully available in the project archive.
 
 \subsection{Improving the bounds further}
 Note that the spatial tiling bound given can be improved further, as we did not consider need to partially re-load data from the \(d_i\)-faces.

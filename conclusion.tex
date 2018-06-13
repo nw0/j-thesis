@@ -42,8 +42,8 @@ A summary of the contributions of this project.
 
 	\item Further, we developed a model estimating runtime reductions based on the space order of a stencil generated from the family of acoustic wave equation operators.
 
-	\item We proposed an estimator for \emph{arithmetic intensity under time-tiling} that is consistent with Devito's reported arithmetic intensity under spatial tiling.
-	Just as importantly, we established bounds for both and showed that the estimators are plausibly close to the true arithmetic intensity of a stencil computation, and that they are consistent with the widely-cited roofline model.
+	\item We proposed an estimator for \emph{arithmetic intensity under time-tiling} which extends Devito's existing estimator, including a proof that it is consistent with the widely-cited roofline model.
+	We determined the performance of the estimators under various conditions, and used our estimator to demonstrate that the evaluated stencils were still bound by memory bandwidth.
 
 	\item We developed a hypothesis on how the skewing factor affects the runtime of a stencil, which holds in our test architecture, and in particular our experimentation.
 \end{itemize}

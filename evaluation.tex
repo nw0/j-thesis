@@ -700,17 +700,6 @@ Finally, we observe that the maximum achieved performance for any of these stenc
 A possible reason for this is the lower inherent arithmetic intensity of the acoustic wave equation stencils, and that we are approaching the performance ceiling for this operator and our set of optimisations.
 
 
-\section{Effect of the time tile size}
-\label{sec:tt-size-effect}
-
-Note that time-tiling with a time tile size of 1 is an analogue of spatial tiling, as each time iteration occurs with a new iteration of the time tile loop, and the incremental time loop is of no use.
-
-With the acoustic wave equation operator (Figure~\ref{fig:awe-roofline}), we notice that stencils with low space order benefit from increases in tile size up to 16 and possibly beyond, while those with higher space orders have little performance gains after a time tile size of 4 or 8.
-
-\wip{critique in section}
-In order to explain this, we consider the arithmetic intensity estimator which we introduced in Section~\ref{sec:arithmetic-intensity}.
-
-
 \section{Effect of the skewing factor}
 \label{sec:eval-skewing-effect}
 
@@ -719,11 +708,50 @@ We do not propose changing the measure of arithmetic intensity of a stencil comp
 Nevertheless, due to data non-alignment with odd skewing factors, skewing \emph{may} have the impact of reducing the effective arithmetic intensity, especially if there is a memory bandwidth bottleneck.
 We believe that this is overwhelmingly offset by the increase due to time-tiling.\footnote{The reader observes that time-tiling is intended to increase (minimally double) the arithmetic intensity, and a data alignment issue will not reduce the arithmetic intensity by more than half. Additionally, the nature of the stencil means that data neighbouring a dependency would often have to be loaded in any case, to calculate neighbouring points.}
 
-Empirically, observe that in all but one case, time-tiling with a smaller skewing factor produces a lower runtime than a larger skewing factor, and that there is a progressive increase in runtime as the skewing factor increases.
+Empirically, observe that in all but one case,\footnote{Laplace operator stencil of space order 8 with grid size \(32 \times 500^3\) needed 3.762s with skew factor 8 and 3.764s with skew factor 4. The difference appears to be minimal; for comparison see the same stencil on the \(16 \times 600^3\) grid.} time-tiling with a smaller skewing factor produces a lower runtime than a larger skewing factor, and that there is a progressive increase in runtime as the skewing factor increases.
 This held for our test machine even if the skewing factor was not a power of two, such as 3 or 6, which were compared against skewing factors of 4 and 8 respectively.
 
 However, it is important to note that this may be architecture-dependent, and should be tested on other architectures rather than assumed.
 Further, we have only tested against 10 members across two families of stencils, which may not be fully representative of stencils in general.
+
+
+\section{Effect of the time tile size}
+\label{sec:tt-size-effect}
+
+Note that time-tiling with a time tile size of 1 is an analogue of spatial tiling, as each time iteration occurs with a new iteration of the time tile loop, and the incremental time loop executes exactly once when it is encountered.
+
+With the acoustic wave equation operator (Table~\ref{tab:awe-roofline}), we notice that stencils with low space order benefit from increases in tile size up to 16 and possibly beyond, while those with higher space orders have little performance gains after a time tile size of 4 or 8.
+
+In order to explain this, we consider the arithmetic intensity estimator which we introduced in Section~\ref{sec:arithmetic-intensity}.
+We previously noted for both the Laplace and acoustic wave equation operators, bounding from our arithmetic intensity operator had a larger effect with larger time tiles.
+We know that even with such a large bounding effect, we still overestimate the true arithmetic intensity of a stencil.
+
+For the stencils with large space order, we believe that an increase in the time tile size provides no additional benefit beyond a point, as performance is once again bounded by memory bandwidth; as much of the time tile needs to be loaded from memory more than once, increasing the time tile size cannot reduce the memory bandwidth requirements.
+Hence the performance of the stencil converges, and other techniques increasing the arithmetic intensity will be needed to yield performance gains.
+
+
+\section{Evaluation of the arithmetic intensity estimator}
+\label{sec:ai-eval}
+
+\subsubsection{Conditions for most accurate estimates}
+The rather counter-intuitive quirk of the arithmetic intensity estimator, that of larger time tile sizes sometimes resulting in lower arithmetic intensity, is due to a failure to account for the effects of moderate increases in time tile size.
+The bounding effect is the greatest with large increases in time tile size, and this explains the decrease of the bound with larger time tile sizes.
+
+One may observe that the problems surveyed were all in 3 spatial dimensions.
+If this were to increase, keeping spatial dimension extents equal, we would likely observe a far tighter bound on arithmetic intensity using our method.
+This is caused by an increase in the ratio of tile-face boundary volume to cache size; our estimator is most effective when this is maximised.
+
+\subsubsection{Comparison to the naive estimator}
+Nevertheless, the estimator used clearly predicts the convergence of performance in GFlops as the time tile size increases.
+This is in contrast to the naive estimator, which scales proportionally to the arithmetic intensity, leading to extremely large figures for arithmetic intensity.
+Such a biased estimator could lead one to conclude that no more performance gain could be had from an increase in memory bandwidth, as the point would be in the computationally limited regime (arithmetic intensity \(> 15.15\) for our test machine).
+It is evident, then, that our estimator is far more useful in this regard.
+
+Note, however, that the naive estimator works adequately in the case of spatial tiling, as the cumulative tile-face boundaries tend to be smaller than or only slightly more than the cache size.
+
+\subsubsection{Constructing a better estimator}
+It should be possible to construct an estimator which accounts for gradual increases of the tile face boundaries, particularly as the boundary size just begins to exceed the cache size.
+Such an estimator would remove the `edge' encountered as some \(F_i > \Omega\) by a small amount, reducing the overestimate for smaller time tile sizes.
 
 
 \section{Limitations and further evaluation}
@@ -763,6 +791,8 @@ For a more in depth study, memory analyses measuring cache misses and memory tra
 Additionally, such analyses would reveal more information on the true arithmetic intensity of the computation.
 This would allow us to determine how the bottlenecks have changed after time-tiling, how far the performance is from theoretical limits, and reveal further areas of optimisation.
 
+Recording cache misses and precise memory traffic data would also allow for the assessment of our novel arithmetic intensity operator, and provide hints on possible improvements.
+
 
 \subsection{Comparison to spatial tiling}
 In our analysis, we have compared time-tiling to spatial tiling code, both of which used our new tiling algorithm which utilised min/max bounding.
@@ -775,7 +805,15 @@ As a note, it may be possible to reduce the bounding overhead slightly by avoidi
 This is documented in Section~\ref{sec:impl-minor}.
 
 
-\subsection{Bounding the arithmetic intensity estimator}
+\subsection{Further uses for an arithmetic intensity estimator}
+The Devito auto-tuner currently attempts a wide variety of combinations in its search space, even implausible ones with excessively large tile sizes, which do not represent significant improvement over non-tiled code.
+This is inefficient, as these auto-tuner trials take the longest time to run, potentially dominating the runtime of auto-tuning.
+
+A bound assuming perfect scheduling could be used to prune poor tile size combinations from the auto-tuner search space, decreasing auto-tuning time.
+Using a bounding approach is also easily extensible to other architectures, so this could be implemented in a straightforward manner.
+
+Finally, the algorithm used to construct the bound may provide hints as to good tile size combinations, for example that choosing \(t_1 \ge t_2\) often leads to decreased runtime.
+However, this heuristic should not be weighted too heavily, as the lower levels of cache and architectural differences will play a role in determining runtime.
 
 
 \section{Summary}

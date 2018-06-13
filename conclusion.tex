@@ -40,10 +40,10 @@ A summary of the contributions of this project.
 	\item We demonstrated a runtime decrease of 25\% with the transformation compared to Devito's existing optimisations under real-world applications, particularly the stencils of varying space orders arising from the acoustic wave equation, of great importance to Devito's target domain, seismic imaging.
 	In so doing, we validated previous work which demonstrated a runtime reduction of up to 27.5\%~\cite{dylan}.
 
-	\item Further, we developed a model estimating runtime reductions based on the space order of a stencil generated from the family of acoustic wave equation operators.
-
 	\item We proposed an estimator for \emph{arithmetic intensity under time-tiling} which extends Devito's existing estimator, including a proof that it is consistent with the widely-cited roofline model.
 	We determined the performance of the estimators under various conditions, and used our estimator to demonstrate that the evaluated stencils were still bound by memory bandwidth.
+
+	\item Further, we developed and critiqued a model estimating performance improvement based on our arithmetic intensity estimator, which is able to predict the circumstances under which minimal or no performance improvement is seen.
 
 	\item We developed a hypothesis on how the skewing factor affects the runtime of a stencil, which holds in our test architecture, and in particular our experimentation.
 \end{itemize}

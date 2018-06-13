@@ -270,6 +270,14 @@ Therefore it may be sufficient to fulfil \(F_i + F_{i+1} + \cdots + F_n > \Omega
 However, since the extent of any dimension is likely to dwarf any tile size, this is unlikely to be relevant; in practice with 3 spatial dimensions, the auto-tuned tile sizes mean that only the \(F_1 > \Omega \) case is relevant.
 The method is nevertheless crucial for the generalisation to time-tiling.
 
+\subsection{Minimising runtime based on tile size choices}
+The objective of tiling is to improve cache reuse.
+Therefore, we wish to reduce the extent to which tile-face boundaries exceed the cache, where possible.
+
+Since a stencil and problem domain will fix all values except for the \(t_t, t_i (i=1,2,\cdots)\), we are only free to choose tile sizes; in this model, tile sizes should be chosen to minimise \(|B|\).
+This could be done through linear programming, or trivially, as an extension of the Devito auto-tuner.
+Later, we assess the effectiveness of our model in predicting runtime decrease.
+
 
 \section{Testing methodology}
 \label{sec:test-method}
@@ -740,6 +748,15 @@ The bounding effect is the greatest with large increases in time tile size, and 
 One may observe that the problems surveyed were all in 3 spatial dimensions.
 If this were to increase, keeping spatial dimension extents equal, we would likely observe a far tighter bound on arithmetic intensity using our method.
 This is caused by an increase in the ratio of tile-face boundary volume to cache size; our estimator is most effective when this is maximised.
+
+\subsubsection{Modelling performance improvement with the estimator}
+Using the roofline model, one would expect the greatest performance improvement with the largest increase in estimated arithmetic intensity.
+However, we observed that our estimated arithmetic intensity peaked before the greatest runtime decreases were had, even if the increases were gradual by that point.
+
+We previously observed that our estimator fails to account for some memory traffic at smaller time tile sizes, and believe that this is the main cause of the inaccuracy.
+
+The estimator, however, provides a good insight into when an increase in time tile size will \emph{not} provide a decrease in runtime, which as the values for arithmetic intensity converge for an arbitrary stencil.
+This is nonetheless helpful in modelling performance improvement.
 
 \subsubsection{Comparison to the naive estimator}
 Nevertheless, the estimator used clearly predicts the convergence of performance in GFlops as the time tile size increases.

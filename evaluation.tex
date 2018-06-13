@@ -525,7 +525,7 @@ log ticks with fixed point,
 \legend{Time-tiling so16,Time-tiling so8,Time-tiling so4,Time-tiling so2}
 % roofline
 \addplot [domain=2:15.15,name path=A] {17.3*x};
-\addplot [domain=15.15:150] {262.01};
+\addplot [domain=15.15:50] {262.01};
 \end{axis}
 \end{tikzpicture}
 \caption{Graph of performance against arithmetic intensity for the Laplace operator, grid size \(16 \times 600^3\). Points left-to-right represent increasing time tile sizes (as in table above) corresponding to increasing arithmetic intensity. The solid line is the theoretical maximum predicted by the roofline model.}

@@ -104,12 +104,12 @@ Time-tiling is an optimisation to improve the reuse of cached data, effectively 
 
 In this section, \(d_t\) represents the time dimension and \(d_i (i=1,2,\cdots)\) represent a spatial dimension;
 \(D_i\) represents the extent of dimension \(d_i\), or \(D_t\) the extent of the time dimension;
-\(r_i\) the spatial radius of the stencil in dimension \(d_i\), \(r_t\) the distance of the time dependence;
+\(\delta_i\) the maximum spatial dependence (radius) of the stencil in dimension \(d_i\), \(\delta_t\) the distance of the time dependence;
 \(t_i\) the chosen tile size in dimension \(d_i\), \(t_t\) for the time tile size;
 and \(\Omega\) represents the size of the cache.
 
 \subsection{Arithmetic intensity estimator in Devito}
-Suppose a stencil requires data from the last \(r_t\) time iterations.
+Suppose a stencil requires data from the last \(\delta_t\) time iterations.
 Devito reports arithmetic intensity as `operational intensity', and calculates it as follows:
 
 \begin{description}
@@ -219,32 +219,32 @@ But region C is larger than the cache, so we cannot accommodate C alongside any 
 Thus data equivalent to the combined areas of B, D must be loaded from memory at least twice, and the claim follows.
 
 \subsection{Establishing a tighter bound}
-Let \(B_i\) be the union of \(d_i\)-faces.
-It is a fact that the \(d_i\)-faces are distributed proportionally across the \(d_i d_j\)-plane whenever \(i \ne j\); in particular:
+Let \(\bb_i\) be the union of \(d_i\)-faces.
+It is a fact that the \(d_i\)-faces are distributed proportionally across the \(d_i d_j\)-plane whenever \(i \ne j\); in particular they are distributed evenly across the iteration space:
 
-\[ \frac{\left| B_i \cup B_j \right|}{\prod_{k=1}^n D_k} = \frac{\left| B_i \right| + \left| B_j \right|}{\prod_{k=1}^n D_k} - \frac{\left| B_i \right| \times \left| B_j \right|}{\left(\prod_{k=1}^n D_k\right)^2} \]
+\[ \frac{\left| \bb_i \cup \bb_j \right|}{\prod_{k=1}^n D_k} = \frac{\left| \bb_i \right| + \left| \bb_j \right|}{\prod_{k=1}^n D_k} - \frac{\left| \bb_i \right| \times \left| \bb_j \right|}{\left(\prod_{k=1}^n D_k\right)^2} \]
 
-All that remains is to find expressions for \(F_i, \left|B_i\right|\). Have:
+All that remains is to find expressions for \(F_i, \left|\bb_i\right|\). Have:
 
-\[ F_i = 2 \left(\prod_{j=1}^{i-1} t_j \right) r_i \left(\prod_{k=i+1}^{n} D_k \right) \]
+\[ F_i = 2 \left(\prod_{j=1}^{i-1} t_j \right) \delta_i \left(\prod_{k=i+1}^{n} D_k \right) \]
 
-since we need to account for the full extent of each lower dimension in the loop structure, the width of overlap in the \(i\)-th dimension (\(2 r_i\)), and the tile sizes in the higher dimensions; and
+since we need to account for the full extent of each lower dimension in the loop structure, the width of overlap in the \(i\)-th dimension (\(2 \delta_i\)), and the tile sizes in the higher dimensions; and:
 
-\[ \frac{\left|B_i\right|}{\prod_{k=1}^n D_k} = 2 \frac{r_i}{D_i} \times \floor*{\frac{D_i}{t_i}} \]
+\[ \frac{\left|\bb_i\right|}{\prod_{k=1}^n D_k} = 2 \frac{\delta_i}{D_i} \times \floor*{\frac{D_i}{t_i}} \]
 
 as \(2\sfrac{r_i}{D_i}\) is the proportion of each \(d_i\)-face to \(D_i\), and \(\floor*{\sfrac{D_i}{t_i}}\) is the number of \(d_i\)-faces.
 
-Finally, let \(B = B_1 \cup B_2 \cup \cdots \cup B_{i-1}\) for \(F_i \ge \Omega > F_{i-1} \) whenever \(1 < i < n\); if there is no such \(i\), then let \(B = \varnothing \).
+Finally, let \(\bb = \bb_1 \cup \bb_2 \cup \cdots \cup \bb_{i-1}\) for \(F_i \ge \Omega > F_{i-1} \) whenever \(1 < i < n\); if there is no such \(i\), then let \(\bb = \varnothing \).
 Then divide the original arithmetic intensity estimate by the following to get a tighter bound:
 
-\[ 1 + \frac{|B|}{\prod_{k=1}^n D_k} \]
+\[ 1 + \frac{|\bb|}{\prod_{k=1}^n D_k} \]
 
 Note that this method will only yield a tighter bound if \(F_i \ge \Omega\) when \(i > 1\).
 If only \(F_1 > \Omega \), we can use a variation of this algorithm.
 We have that for every \(d_1\)-face, \(F_1 - \Omega\) points do not fit into the cache, and have \(\floor*{\sfrac{D_1}{t_1}}\) \(d_1\)-faces.
 Then consolidating these points we use:
 
-\[\left|B\right| = \left(F_1 - \Omega\right) \times \floor*{\frac{D_1}{t_1}} \]
+\[\left|\bb\right| = \left(F_1 - \Omega\right) \times \floor*{\frac{D_1}{t_1}} \]
 
 \subsection{Generalisation to time-tiling}
 As a summary, the previous sections gave an algorithm to find additional memory transfer on tile boundaries within a single time iteration, under spatial tiling.
@@ -261,7 +261,7 @@ To summarise, the required data to calculate the arithmetic intensity under time
 
 \begin{enumerate}
 	\item Extents of the iteration space (\(D_t, D_1, D_2, \cdots\))
-	\item Stencil spatial and time dependences (\(r_t, r_1, r_2, \cdots\))
+	\item Stencil spatial and time dependences (\(\delta_t, \delta_1, \delta_2, \cdots\))
 	\item Chosen tile sizes (\(t_t, t_1, t_2, \cdots\))
 	\item Size of the cache (\(\Omega\))
 \end{enumerate}
@@ -275,7 +275,7 @@ This would have a corresponding effect on the time-tiling bound.
 However, we felt this would add significant complication for meagre benefit.
 
 Additionally, note that the cache would (at times) need to not only contain a \(d_i\)-face, but also \(d_{i+1}, \cdots d_{n}\)-faces, by a similar argument to the one presented with Figure~\ref{fig:tile-zigzag}.
-Therefore it may be sufficient to fulfil \(F_i + F_{i+1} + \cdots + F_n > \Omega\).
+Therefore it is sufficient to fulfil \(F_i + F_{i+1} + \cdots + F_n > \Omega\).
 
 However, since the extent of any dimension is likely to dwarf any tile size, this is unlikely to be relevant; in practice with 3 spatial dimensions, the auto-tuned tile sizes mean that only the \(F_1 > \Omega \) case is relevant.
 The method is nevertheless crucial for the generalisation to time-tiling.
@@ -284,7 +284,7 @@ The method is nevertheless crucial for the generalisation to time-tiling.
 The objective of tiling is to improve cache reuse.
 Therefore, we wish to reduce the extent to which tile-face boundaries exceed the cache, where possible.
 
-Since a stencil and problem domain will fix all values except for the \(t_t, t_i (i=1,2,\cdots)\), we are only free to choose tile sizes; in this model, tile sizes should be chosen to minimise \(|B|\).
+Since a stencil and problem domain will fix all values except for the \(t_t, t_i (i=1,2,\cdots)\), we are only free to choose tile sizes; in this model, tile sizes should be chosen to minimise \(|\bb|\).
 This could be done through linear programming, or trivially, as an extension of the Devito auto-tuner.
 Later, we assess the effectiveness of our model in predicting runtime decrease.
 
@@ -751,7 +751,7 @@ Hence the performance of the stencil converges, and other techniques increasing 
 \section{Evaluation of the arithmetic intensity estimator}
 \label{sec:ai-eval}
 
-\subsubsection{Conditions for most accurate estimates}
+\subsection{Conditions for most accurate estimates}
 The rather counter-intuitive quirk of the arithmetic intensity estimator, that of larger time tile sizes sometimes resulting in lower arithmetic intensity, is due to a failure to account for the effects of moderate increases in time tile size.
 The bounding effect is the greatest with large increases in time tile size, and this explains the decrease of the bound with larger time tile sizes.
 
@@ -759,7 +759,7 @@ One may observe that the problems surveyed were all in 3 spatial dimensions.
 If this were to increase, keeping spatial dimension extents equal, we would likely observe a far tighter bound on arithmetic intensity using our method.
 This is caused by an increase in the ratio of tile-face boundary volume to cache size; our estimator is most effective when this is maximised.
 
-\subsubsection{Modelling performance improvement with the estimator}
+\subsection{Modelling performance improvement with the estimator}
 Using the roofline model, one would expect the greatest performance improvement with the largest increase in estimated arithmetic intensity.
 However, we observed that our estimated arithmetic intensity peaked before the greatest runtime decreases were had, even if the increases were gradual by that point.
 
@@ -768,7 +768,7 @@ We previously observed that our estimator fails to account for some memory traff
 The estimator, however, provides a good insight into when an increase in time tile size will \emph{not} provide a decrease in runtime, which as the values for arithmetic intensity converge for an arbitrary stencil.
 This is nonetheless helpful in modelling performance improvement.
 
-\subsubsection{Comparison to the naive estimator}
+\subsection{Comparison to the naive estimator}
 Nevertheless, the estimator used clearly predicts the convergence of performance in GFlops as the time tile size increases.
 This is in contrast to the naive estimator, which scales proportionally to the arithmetic intensity, leading to extremely large figures for arithmetic intensity.
 Such a biased estimator could lead one to conclude that no more performance gain could be had from an increase in memory bandwidth, as the point would be in the computationally limited regime (arithmetic intensity \(> 15.15\) for our test machine).
@@ -776,7 +776,7 @@ It is evident, then, that our estimator is far more useful in this regard.
 
 Note, however, that the naive estimator works adequately in the case of spatial tiling, as the cumulative tile-face boundaries tend to be smaller than or only slightly more than the cache size.
 
-\subsubsection{Constructing a better estimator}
+\subsection{Constructing a better estimator}
 It should be possible to construct an estimator which accounts for gradual increases of the tile face boundaries, particularly as the boundary size just begins to exceed the cache size.
 Such an estimator would remove the `edge' encountered as some \(F_i > \Omega\) by a small amount, reducing the overestimate for smaller time tile sizes.
 
@@ -833,10 +833,10 @@ This is documented in Section~\ref{sec:impl-minor}.
 
 
 \subsection{Time-tiling with larger time dependences}
-All of the stencils surveyed only depended on data from the previous time iteration (\(r_t=1\)).
+All of the stencils surveyed only depended on data from the previous time iteration (\(\delta_t=1\)).
 In some real-world applications, a larger time dependence is used through multi-step linear methods, such as the Adams-Bashforth method.
 
-It is worth understanding the effect of time-tiling on such applications, as an intuitive assessment of arithmetic intensity suggests that the performance gains when \(r_t > 1\) will be even larger than the current scenario.
+It is worth understanding the effect of time-tiling on such applications, as an intuitive assessment of arithmetic intensity suggests that the performance gains when \(\delta_t > 1\) will be even larger than the current scenario.
 To see this, realise that under spatial tiling, each time iteration would require twice as much data to be loaded from memory, but under time-tiling, this is analogous to taking a time tile size of 2, with much smaller memory transfer required.
 
 Clearly, this is a hypothesis rather than a rigorous analysis of such a stencil, but it certainly demands further scrutiny.

@@ -56,10 +56,22 @@ However, Devito is also used to solve problems that do not naturally generate pe
 An example would be source and receiver loops, which may be used with the acoustic wave equation to model the propagation of waves to study unknown media.
 We briefly discussed this additional transformation in Section~\ref{sec:impl-imperfect}.
 
-\wip{lst:imperfect-loop}
+\begin{figure}[!ht]
+\begin{lstlisting}
+for (int t = t_s; t < t_e; t++) {
+  for (int x = x_s; x < x_e; x++)
+    for (int y = y_s; y < y_e; y++)
+      A[t][x][y] = A[t-1][x-1][y+1] + A[t-1][x+1][y-1];
+  for (int j = j_s; j < j_e; j++)
+    A[t][j][j+1] *= 1.5;
+}
+\end{lstlisting}
+\caption{An imperfectly-nested loop. The body of the \texttt{t} loop contains two loops; in a perfect loop nest, only the body of the innermost loop can contain multiple statements, none of which can be loops.}
+\label{lst:loop-imperfect}
+\end{figure}
 
-Figure TODO gives an example of generated source and receiver loops in Devito.
-Our tiling implementation is not able to time-tile this loop, although it may spatially tile the loop nest.
+Figure~\ref{lst:loop-imperfect} gives an example of generated source and receiver loops in Devito.
+Our tiling implementation is not able to time-tile this loop, although it may spatially tile the inner loop nest.
 
 \subsubsection{Strategy for tiling imperfectly-nested loops}
 In order to tile an imperfectly-nested loop, it must be transformed into a perfect loop nest.

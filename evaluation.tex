@@ -473,15 +473,40 @@ T & \footnotesize runtime (s) & 2.939 & 2.957 & 3.762 & 5.718 & 2.710 & 2.616 & 
 \begin{tikzpicture}
 \begin{axis}[
 width=0.7\textwidth,
-legend style={at={(0.05,0.95)},anchor=north west},
+legend style={at={(0.05,0.84)},anchor=north west},
 xlabel={Space order},
+xtick distance=1,
+symbolic x coords={2,4,8,16},
+axis y line*=left,
+ylabel near ticks, yticklabel pos=right,
 ylabel={Runtime(s)},
-ytick distance=2,
+ymin=0,
+ybar,
 ]
 \addplot table [x=sp,y=run,col sep=comma] {data/laplace-nt600.csv};
 \addplot table [x=sp,y=run,col sep=comma] {data/laplace-sp600.csv};
 \addplot table [x=sp,y=run,col sep=comma] {data/laplace-tm600.csv};
 \legend{Non-tiled,Space-tiling,Time-tiling}
+\end{axis}
+\begin{axis}[
+width=0.7\textwidth,
+legend style={at={(0.05,0.95)},anchor=north west},
+axis y line*=right,
+ylabel near ticks, yticklabel pos=right,
+axis x line=none,
+symbolic x coords={2,4,8,16},
+ymin=0, ymax=20,
+ylabel={Arith. intensity},
+ybar,
+]
+\addplot[smooth,mark=*,blue]
+coordinates{
+	(2,4.69)
+	(4,6.31)
+	(8,9.29)
+	(16,14.0)
+};
+\legend{Arith. intensity (spatial tiling)}
 \end{axis}
 \end{tikzpicture}
 \caption{Non-tiled, spatially tiled and time-tiled runtimes, with a grid size of \(600^3\) and 16 time iterations using stencils from the Laplace operator. The runtimes under tiling converge as the space-order increases.}
@@ -614,15 +639,41 @@ T & \footnotesize runtime (s) & 2.492 & 2.688 & 2.941 & 3.660 & 4.468 \\
 \begin{tikzpicture}
 \begin{axis}[
 width=0.7\textwidth,
-legend style={at={(0.05,0.95)},anchor=north west},
+legend style={at={(0.05,0.84)},anchor=north west},
 xlabel={Space order},
+xtick distance=1,
+symbolic x coords={4,6,8,12,16},
+axis y line*=left,
+ylabel near ticks, yticklabel pos=right,
 ylabel={Runtime(s)},
-ytick distance=2,
+ymin=0,
+ybar,
 ]
 \addplot table [x=sp,y=run,col sep=comma] {data/awe-nt512.csv};
 \addplot table [x=sp,y=run,col sep=comma] {data/awe-sp512.csv};
 \addplot table [x=sp,y=run,col sep=comma] {data/awe-tm512.csv};
 \legend{Non-tiled,Space-tiling,Time-tiling}
+\end{axis}
+\begin{axis}[
+width=0.7\textwidth,
+legend style={at={(0.05,0.95)},anchor=north west},
+axis y line*=right,
+ylabel near ticks, yticklabel pos=right,
+axis x line=none,
+symbolic x coords={4,6,8,12,16},
+ymin=0, ymax=10,
+ylabel={Arith. intensity},
+ybar,
+]
+\addplot[smooth,mark=*,blue]
+coordinates{
+	(4,2.1)
+	(6,2.5)
+	(8,2.89)
+	(12,3.36)
+	(16,4.42)
+};
+\legend{Arith. intensity (spatial tiling)}
 \end{axis}
 \end{tikzpicture}
 \caption{Non-tiled, spatially tiled and time-tiled runtimes with stencils from the acoustic wave equation operator.}

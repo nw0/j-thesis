@@ -49,16 +49,18 @@ The principal objective of this project was to implement tiling over the time di
 In summary, our contributions are:
 
 \begin{itemize}
-	\item An implementation of time-tiling in Devito, including a simplification of the generated loop structure, with accompanying test cases and auto-tuner enhancements.
+	\item A fully-functional implementation of time-tiling for perfect loop nests in Devito, including a simplification of the generated code structure, with accompanying test cases and auto-tuner enhancements.
 	An analysis of its legality and the necessary conditions to guarantee this.
 
 	\item An evaluation of the correctness and performance of the time-tiling transformation and any actions end-users may need to take to realise performance gains.
 
-	\item Demonstration of a runtime decrease of up to 45\%, and otherwise more than 20\%, compared to Devito's existing optimisations under real-world applications, in particular the stencils from the family of acoustic wave equation operators, widely used in Devito's target domain, seismic imaging.
+	\item Demonstration of a runtime decrease of up to 45\%, and in general more than 20\%, compared to Devito's existing optimisations under real-world applications, in particular the stencils from the family of acoustic wave equation operators, widely used in Devito's target domain, seismic imaging.
 
-	\item A novel estimator for \emph{arithmetic intensity under time-tiling} that extends the existing estimator for arithmetic intensity under spatial tiling in Devito.
+	\item A novel estimator for \emph{arithmetic intensity under time-tiling} that extends the existing estimator for arithmetic intensity under spatial tiling in Devito, and a proof of its consistency with the widely-cited roofline model.
 	An evaluation of the utility of this estimator compared to a generalised version of the existing estimator, and an analysis of the shortcomings of both.
-	A model to predict when performance improvement is minimal or negative.
+	A model to predict when performance improvement is minimal or negative, and a demonstration that stencils of the acoustic wave equation family can benefit further from greater cache reuse.
+
+	\item An analysis on how parameters introduced by time-tiling, the time tile size and skewing factor, affect the runtime of stencil computations, and the circumstances under which the runtime decrease in maximal.
 
 	\item A discussion on further implementation work, analysing their importance and consistency with the transformation we have implemented.
 \end{itemize}

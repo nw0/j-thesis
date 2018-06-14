@@ -5,8 +5,8 @@
 
 We reviewed Devito's motivation and overall architecture in Section~\ref{sec:devito}.
 In order to inform our implementation of time-tiling, this chapter examines the details of the existing Devito compilation process pertinent to our implementation of time-tiling
-We examine the transformations that will be relevant to the time-tiling procedure, and those that occur immediately before and after tiling and skewing.
-In particular, we review the existing implementation of spatial-tiling (Section~\ref{sec:spatial-tiling}).
+We examine the transformations that are relevant to the time-tiling procedure, specifically those that occur immediately before and after tiling and skewing.
+In particular, we review the existing implementation of spatial tiling (Section~\ref{sec:spatial-tiling}).
 
 In general, we have assumed that Devito only performs valid transformations, which we verify against its extensive test suite.
 Therefore, we are only concerned with the transformations that occur between skewing and tiling.
@@ -73,10 +73,10 @@ In the DSE, this is also performed at a higher level.
 There is a balance to be made here: time-invariant expressions are first separated and assigned to temporaries, avoiding needless CSE, thus decreasing code-generation time.
 
 \subsection{Indexing}
-Indexing in Devito is the transformation of a stencil equation with distance co-ordinates to an expression of an indexed array data access.
+Indexing in Devito is the transformation of a stencil equation with distance co-ordinates to an expression of an indexed array accesses.
 It is a transformation between internal representations of the stencil.
 
-Despite being considered a loop transformation, we have chosen to perform skewing before any indexing occurs, for reasons which will be clear in Section~\ref{sec:impl-cse}.
+Despite being considered a loop transformation, we have chosen to perform skewing before indexing occurs, for reasons which will be clear in Section~\ref{sec:impl-cse}.
 However, it is equally valid and perhaps more intuitive to skew after indexing.
 
 
@@ -88,8 +88,8 @@ Before it is invoked, the loops are built from the previously-manipulated expres
 
 \subsection{Loop fission}
 Loop fission splits a loop to improve data locality.
-If the body of a loop nest contains code that can be split into otherwise independent loops, it may be a candidate for loop fission (Figure~\ref{lst:fission-valid}), especially the body can be computed in parallel~\cite{page2009}.
-By evaluating the loops one after another, the amount of cache available to each computation increases, resulting in a speedup.
+If the body of a loop nest contains code that can be split into otherwise independent loops, it may be a candidate for loop fission (Figure~\ref{lst:fission-valid}), especially if the body can be computed in parallel~\cite{page2009}.
+By evaluating the loops one after another, the amount of cache available to each computation increases, potentially resulting in a speedup.
 
 \begin{figure}[!ht]
 \begin{lstlisting}
@@ -102,7 +102,7 @@ for (int x = x_s; x < x_e; x++){
 	\label{lst:fission-valid}
 \end{figure}
 
-We can easily see that this does not affect space-tiling in Devito, as it has no impact on array indices, since the resultant loops appear in the same nest as the original loop, with the variables duplicated.
+We can easily see that this does not affect spatial tiling in Devito, as it has no impact on array indices, since the resultant loops appear in the same nest as the original loop, with the variables duplicated.
 Likewise, this holds equally for time-tiling.
 
 \subsection{OpenMP pragmas and parallelisation}
@@ -126,8 +126,8 @@ Therefore, skewing is not required.
 \subsection{Parameterisation}
 A challenge when tiling general loops as required in Devito parameterisation of loop bounds, and the correct propagation of these bounds.
 As seen in the examples of Section~\ref{sec:bg-loop-tiling}, the tile size for each dimension is a variable such as \texttt{x\_blk\_size}.
-This is a \emph{parameterised} tile, means that tile sizes can be changed at runtime, which enables features such as auto-tuning, which is discussed later.
-Therefore, there is no need to re-optimise and re-compile a stencil from a change in domain size; resulting in considerable time savings.
+This is a \emph{parameterised} tile, meaning that tile sizes can be changed at runtime, which enables features such as auto-tuning, which is discussed later.
+Therefore, there is no need to re-optimise and re-compile a stencil from a change in tile size; resulting in considerable time savings.
 
 \subsection{Auto-tuner}
 While not strictly part of the compilation process, the Devito auto-tuner is relevant as it uses the above-mentioned tile size parameters to experimentally determine an optimal combination of tile sizes for a particular stencil and domain.

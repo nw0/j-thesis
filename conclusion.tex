@@ -11,7 +11,7 @@ The different perspectives of the fields provided immense insight into the compl
 These insights culminated in a transformation yielding significant performance gains in Devito's target domain: seismic imaging.
 Though time-tiling is a well-established optimisation, this implementation is a necessary and important step for Devito.
 
-During our evaluation in Chapter~\ref{ch:evaluation}, we used Devito abstraction to effortlessly generate entire families of stencils by varying the space order of a differential equation; producing these stencils from the equations is decidedly non-trivial, and would have otherwise been extremely time-consuming.
+During our evaluation in Chapter~\ref{ch:evaluation}, we used Devito's abstractions to effortlessly generate entire families of stencils by varying the space order of a differential equation; producing these stencils from the equations is decidedly non-trivial, and would have otherwise been extremely time-consuming.
 As a consequence, this project includes the broadest survey of stencils under time-tiling to date.
 
 While the concept of time-tiling is superficially straightforward, its implementation was decidedly not so: unlike interfacing with a `back-end' polyhedral compiler, such as CLooG or Pochoir (Section~\ref{sec:pochoir}) with all its attendant integration problems, implementation within Devito meant understanding the numerous stages of internal representation used to transform a differential equation into code.
@@ -25,7 +25,6 @@ mustering the scepticism required to confirm its validity required much deeper r
 \section{Contributions}
 A summary of the contributions of this project.
 
-\wip{Results change, proofread this late}
 \begin{itemize}
 	\item The headline contribution of the project; documentation and implementation of the time-tiling transformation for perfect loop nests in Devito, with accompanying test cases and auto-tuner enhancements.
 	This is a necessary and significant step toward implementing time-tiling for Devito in its full generality, including tiling of imperfect loop nests.
@@ -39,7 +38,7 @@ A summary of the contributions of this project.
 	In so doing, we validated previous work which demonstrated a runtime reduction of up to 27.5\%~\cite{dylan}.
 
 	\item We proposed an estimator for \emph{arithmetic intensity under time-tiling} which extends Devito's existing estimator, including a proof that it is consistent with the widely-cited roofline model.
-	We determined the performance of the estimators under various conditions, and used our estimator to demonstrate that the evaluated stencils were still bound by memory bandwidth.
+	We determined the performance of the estimators under varying conditions, and used our estimator to demonstrate that the evaluated stencils were still bound by memory bandwidth.
 
 	\item Further, we developed and critiqued a model estimating performance improvement based on our arithmetic intensity estimator, which is able to predict the circumstances under which minimal or no performance improvement is seen.
 
@@ -119,7 +118,7 @@ Additionally, validation and analysis of our techniques and models could lead to
 
 \subsection{Improvement of the arithmetic intensity estimator bounds, and uses thereof}
 In connection with the previous section, memory analyses would be helpful to assess our assumptions regarding cache usage when constructing our arithmetic intensity estimator.
-This would enable a more realistic model, although some sacrifices may be necessary with regards to overestimation.
+This would enable a more realistic model, although some sacrifices may be necessary with regard to overestimation.
 
 As mentioned in Section~\ref{sec:further-eval}, an accurate arithmetic intensity estimator could be used to improve the optimisation process, such as by providing an auto-tuner heuristic which is easily extensible to other architectures.
 This would enable detailed performance analysis without needing to resort to memory analyses, which are again not portable between architectures.

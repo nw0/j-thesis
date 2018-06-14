@@ -9,13 +9,13 @@
 \chapter{Background and related work}
 \label{ch:background}
 
-We first provide an overview of loop nest optimisations, techniques, and analyses that we have applied, with specific reference to the polyhedral model.
+We first provide an overview of loop nest optimisations, techniques, and analyses that we have applied, with specific reference to time-tiling.
 This forms the basis and context for the entire report, and specifically informs our overview of Devito (Section~\ref{sec:devito}) and the survey of related work, which composes the remainder of this chapter (Section~\ref{sec:survey}).
 
 This project extends a well-established idea from compiler theory, \emph{tiling}, to another dimension (time) in Devito.
 When tiling, particular attention need be paid to data dependences, locality, and parallelism of the resultant code.
 Despite the confluence of factors, tiling is a remarkably simple concept.
-Nevertheless, it is challenging to implement correctly in sufficient generality for Devito; in particular, we implement \emph{parameterised} time-tiling, which allows tile sizes to be changed at runtime.
+Nevertheless, it is challenging to implement correctly in sufficient generality for Devito, being largely restricted to research compilers apart from OPS; in particular, we implement \emph{parameterised} time-tiling, which allows tile sizes to be changed at runtime.
 
 % We have a tradeoff between computation and memory usage
 % Big IDEA: can use more memory, less computation ("this really should be true")
@@ -261,8 +261,8 @@ Its main use case is building solvers for differential equations from high-level
 
 
 \subsection{Motivation}
-Efficient computation demands that we are able to use every optimisation at our disposal.
-As architecture for computation changes, introducing new instructions, GPUs and distributed systems, specialist research compilers using just a handful of related optimisations do not suffice for high-performance applications.
+Efficient computation demands that we use every optimisation at our disposal.
+As computer architecture changes, introducing new instructions, GPUs and distributed systems, specialist research compilers implementing subsets of related optimisations do not suffice for high-performance applications.
 
 An equal part of optimisation is reducing the turnaround time in modelling.
 Providing an interface that domain specialists are familiar with reduces friction, and removes the need to construct stencils by hand.
@@ -273,7 +273,7 @@ This combination of ease of use through the Python and \emph{SymPy} interface an
 
 \subsection{Domain-specificity}
 Polyhedral compilers such as PLUTO~\cite{pluto}, with its backend CLooG~\cite{cloog-isl} are able to apply tiling over generic loop nests.
-Further, the iteration spaces which they handle are unions of convex polyhedra, again far more general than the use cases Devito is likely to encounter.
+Further, the iteration spaces which they handle are unions of convex polyhedra, again more general than the use cases Devito is likely to encounter.
 This generality is not necessary when merely applying finite-difference methods to solve differential equations, not least when targeting a specific domain which uses such methods.
 
 We can instead make use of this specificity to make informed choices in our optimisations, or streamline an auto-tuning routine.
@@ -286,7 +286,7 @@ The separation of symbolic expressions and the underlying C code to which they a
 By progressive manipulation, optimisation and modification is possible at many layers.
 A further benefit as a more general software engineering practice is the possibility of small unit tests for individual components.
 
-This also allows the integration of other tools, which may fit a user's needs better, and enables easy benchmarking of Devito's performance against said tools.
+This also allows the integration of other tools, which may fit a user's needs or architectures better, and enables easy benchmarking of Devito's performance against said tools.
 For instance, YASK (Section~\ref{sec:yask}) is being integrated as a compilation backend.
 
 An important feature for seismic imaging is sparse-point interpolation.
@@ -353,7 +353,7 @@ Pochoir uses a cache-oblivious algorithm based on parallel cuts.
 These \emph{hyperspace} and \emph{time cuts} decompose the iteration spaces (``zoids'') into smaller spaces recursively;
 they are chosen to improve parallelism while maintaining cache efficiency~\cite{frigo-cacheoblivious-alg}.
 
-Thanks to cut dependence analysis, the resultant trapezoids can span iterations of a time loop. Note that the domain which Pochoir operates on are unions of convex polyhedra, which are more general than the hypercube-like iteration spaces described so far.
+Thanks to cut dependence analysis, the resultant trapezoids can span iterations of a time loop. Note that the domain which Pochoir operates on are unions of convex polyhedra, which are more general than the hyperrectangular iteration spaces described so far.
 
 \subsubsection{Applicability}
 The Cilk Plus framework, which Pochoir uses, is intended to produce optimal scheduling for parallel tasks, and cache-oblivious algorithms may be optimal up to a constant factor, which would be interesting when targeting multiple platforms.

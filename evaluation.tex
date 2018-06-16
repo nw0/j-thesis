@@ -464,7 +464,7 @@ T & \footnotesize runtime (s) & 2.939 & 2.957 & 3.762 & 5.718 & 2.710 & 2.616 & 
 (t,1) & \footnotesize runtime (s) & 2.939 & - & - & - & 2.710 & - & - & - \\
 \bottomrule
 \end{tabular}
-\caption{Runtimes (minimum of 10 trials) from using the Laplace operator. N, S, T represent minimum runtimes without tiling, with spatial tiling, and with time-tiling respectively. (t,\(k\)) indicates results for time-tiling with a skewing factor of \(k\); T indicates the minimum of these. `-' denotes invalid skewing factor. Decrease is from spatial tiling to time-tiling.}
+\caption{Runtimes from using the Laplace operator, space orders 2, 4, 8, 16. N, S, T represent minimum runtimes without tiling, with spatial tiling, and with time-tiling respectively. (t,\(k\)) indicates results for time-tiling with a skewing factor of \(k\); T indicates the minimum of these. `-' denotes invalid skewing factor. Decrease is from spatial tiling to time-tiling.}
 \label{tab:laplace-results}
 \end{table}
 
@@ -473,24 +473,27 @@ T & \footnotesize runtime (s) & 2.939 & 2.957 & 3.762 & 5.718 & 2.710 & 2.616 & 
 \begin{tikzpicture}
 \begin{axis}[
 width=0.7\textwidth,
-legend style={at={(0.05,0.84)},anchor=north west},
+legend style={at={(1.46,0.77)},anchor=north east},
 xlabel={Space order},
 xtick distance=1,
 symbolic x coords={2,4,8,16},
+nodes near coords,
 axis y line*=left,
 ylabel near ticks, yticklabel pos=right,
-ylabel={Runtime(s)},
+ylabel={Speedup vs non-tiled (\(1\times\))},
 ymin=0,
 ybar,
+every node near coord/.append style={font=\fontsize{6.5}{6.5}},
 ]
 \addplot table [x=sp,y=run,col sep=comma] {data/laplace-nt600.csv};
 \addplot table [x=sp,y=run,col sep=comma] {data/laplace-sp600.csv};
 \addplot table [x=sp,y=run,col sep=comma] {data/laplace-tm600.csv};
 \legend{Non-tiled,Space-tiling,Time-tiling}
 \end{axis}
+
 \begin{axis}[
 width=0.7\textwidth,
-legend style={at={(0.05,0.95)},anchor=north west},
+legend style={at={(1.46,0.95)},anchor=north east,cells={align=left}},
 axis y line*=right,
 ylabel near ticks, yticklabel pos=right,
 axis x line=none,
@@ -506,10 +509,10 @@ coordinates{
 	(8,9.29)
 	(16,14.0)
 };
-\legend{Arith. intensity (spatial tiling)}
+\legend{Arith. intensity\\(spatial tiling)}
 \end{axis}
 \end{tikzpicture}
-\caption{Non-tiled, spatially tiled and time-tiled runtimes, with a grid size of \(600^3\) and 16 time iterations using stencils from the Laplace operator. The runtimes under tiling converge as the space-order increases.}
+\caption{Spatially and time-tiled runtimes for the Laplace operator compared with non-tiled, with a grid size of \(16 \times 600^3\) as above. The runtimes under tiling converge as arithmetic intensity increases.}
 \label{fig:laplace-graph}
 \end{figure}
 
@@ -630,7 +633,7 @@ T & \footnotesize runtime (s) & 2.492 & 2.688 & 2.941 & 3.660 & 4.468 \\
 (t,2) & \footnotesize runtime (s) & 2.492 & - & - & - & - \\
 \bottomrule
 \end{tabular}
-\caption{Runtimes (minimum of 10 trials) from using the acoustic wave equation operator. N, S, T represent minimum runtimes without tiling, with spatial tiling, and with time-tiling respectively. (t,\(k\)) indicates results for time-tiling with a skewing factor of \(k\); T indicates the minimum of these. `-' and `*' denote invalid skewing factor and not tested respectively. Decrease is from spatial tiling to time-tiling.}
+\caption{Runtimes from using the acoustic wave equation operator, space orders 4, 6, 8, 12, 16. N, S, T represent minimum runtimes without tiling, with spatial tiling, and with time-tiling respectively. (t,\(k\)) indicates results for time-tiling with a skewing factor of \(k\); T indicates the minimum of these. `-' and `*' denote invalid skewing factor and not tested respectively. Decrease is from spatial tiling to time-tiling.}
 \label{tab:awe-results}
 \end{table}
 
@@ -639,31 +642,34 @@ T & \footnotesize runtime (s) & 2.492 & 2.688 & 2.941 & 3.660 & 4.468 \\
 \begin{tikzpicture}
 \begin{axis}[
 width=0.7\textwidth,
-legend style={at={(0.05,0.84)},anchor=north west},
+legend style={at={(1.46,0.77)},anchor=north east},
 xlabel={Space order},
 xtick distance=1,
 symbolic x coords={4,6,8,12,16},
+nodes near coords,
 axis y line*=left,
 ylabel near ticks, yticklabel pos=right,
-ylabel={Runtime(s)},
+ylabel={Speedup vs non-tiled (\(1\times\))},
 ymin=0,
 ybar,
+every node near coord/.append style={font=\fontsize{6.5}{6.5}},
 ]
 \addplot table [x=sp,y=run,col sep=comma] {data/awe-nt512.csv};
 \addplot table [x=sp,y=run,col sep=comma] {data/awe-sp512.csv};
 \addplot table [x=sp,y=run,col sep=comma] {data/awe-tm512.csv};
 \legend{Non-tiled,Space-tiling,Time-tiling}
 \end{axis}
+
 \begin{axis}[
 width=0.7\textwidth,
-legend style={at={(0.05,0.95)},anchor=north west},
+legend style={at={(1.46,0.95)},anchor=north east,cells={align=left}},
 axis y line*=right,
 ylabel near ticks, yticklabel pos=right,
 axis x line=none,
-symbolic x coords={4,6,8,12,16},
-ymin=0, ymax=10,
 ylabel={Arith. intensity},
 ybar,
+symbolic x coords={4,6,8,12,16},
+ymin=0, ymax=8,
 ]
 \addplot[smooth,mark=*,blue]
 coordinates{
@@ -673,10 +679,10 @@ coordinates{
 	(12,3.36)
 	(16,4.42)
 };
-\legend{Arith. intensity (spatial tiling)}
+\legend{Arith. intensity\\(spatial tiling)}
 \end{axis}
 \end{tikzpicture}
-\caption{Non-tiled, spatially tiled and time-tiled runtimes with stencils from the acoustic wave equation operator.}
+\caption{Spatially and time-tiled runtimes for the acoustic wave equation operator compared with non-tiled, with a grid size of \(512^3\) as above. Time-tiling runs in 45\% less time than spatial tiling, decreasing to 20\% as arithmetic intensity increases.}
 \label{fig:awe-runtime}
 \end{figure}
 

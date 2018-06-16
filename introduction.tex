@@ -16,7 +16,7 @@ These aid maintenance and even reproducibility; generating and optimising code b
 Decoupling optimisation from specific models means that domain specialists can take advantage of optimisations seamlessly without intervention, allowing them to focus their attention and expertise on their own domain.
 They can easily take advantages of the latest advances in computer architecture and new instructions such as vectorisation, which give rise to new optimisations in finite-difference methods.
 
-\section{Devito}
+\subsection*{Devito, for solving differential equations}
 % [Remark: fluid dynamics people never change PDEs, already handcoded & fast]
 % Context: other stencil DSLs do time tiling starting from stencils
 
@@ -28,17 +28,19 @@ Devito~\cite{devito}, a tool for efficient application of finite-difference meth
 There are several compilers, a number of which we review in Chapter~\ref{ch:background}, which perform optimisation on stencil kernels, but none which also transform differential equations into stencils.
 Being able to automate this transformation is extremely helpful if one is experimenting with models, or continually modelling new problems, as one can change the equations used and rapidly generate and execute the relevant computation.
 
-Some of these stencil compilers are able to apply the \emph{time-tiling} optimisation, which has not been implemented in Devito yet.
-It has been previously demonstrated that time-tiling has the potential to reduce the run time of `some Devito stencil loops by up to 27.5\%'~\cite{dylan} when performing time-tiling against the existing spatial tiling which the tool is able to perform.
+\subsection*{Context and existing work in time-tiling}
+Some stencil compilers are able to apply the \emph{time-tiling} optimisation, which this work implements in Devito.
+It was previously demonstrated that time-tiling could reduce the run time of `some Devito stencil loops by up to 27.5\%'~\cite{dylan}, comparing time-tiling against the existing spatial tiling which the tool is able to perform.
 In this case another tool, CLooG~\cite{cloog-isl}, was used to add time-tiling to Devito-generated code.
 
 While the literature surrounding the polyhedral model, from which time-tiling derives, dates from the last century, it was viewed as complicated and time-consuming to use in optimising compilers as recently as 2004 when Bastoul proposed extensions~\cite{cloog-isl} to the original Quiller\'e et al.~algorithm to eliminate redundant (generated) code~\cite{quillere}.
 Time-tiling was been studied in the form this work considers since Griebl in 2004~\cite{griebl-tt}, using \emph{space-time mapping}, analogous to the skewed tiling which we discuss in this work, but expressed as affine conditions specifying hyperplane partitions of the problem domain.
 
 Time-tiling has since been studied extensively, and long implemented in polyhedral compilers such as CLooG, providing a strong theoretical foundation.
-However, the actual application of the technique beyond theoretical study has, until this work, been limited to the OPS (Oxford Parallel library for Structured mesh solvers) project~\cite{ops-main}, who presented their implementation of time-tiling in 2017~\cite{ops-tiling}.
-Even so, OPS is a source-to-source compiler, operating from the stencil kernel level down to code generation; Devito includes all these plus layers of abstraction up to the differential equations themselves.
+However, until this work, the actual application of the technique beyond theoretical study has been limited to the OPS (Oxford Parallel library for Structured mesh solvers) project~\cite{ops-main}, who presented their implementation of time-tiling in 2017~\cite{ops-tiling}.
+Even so, OPS is a source-to-source compiler, operating from the stencil kernel level down to code generation; Devito includes all these plus layers of abstraction up to the differential equations themselves, making this a unique implementation and study of time-tiling.
 
+\subsection*{Objective}
 Therefore, we extend tiling to the time dimension natively in Devito to realise this performance gain and evaluate its efficacy.
 This gives the performance gains of time-tiling to Devito without the need to configure another tool to perform further optimisations.
 
@@ -66,6 +68,7 @@ In summary, our contributions are:
 \end{itemize}
 
 
+\pagebreak
 \section{Report structure}
 This report is divided into 6 chapters, describing the above contributions and the context from which they arise.
 

@@ -351,7 +351,7 @@ Thus the reported figure is the minimum of 10 auto-tuned trials.
 
 The roofline model describes how arithmetic (or \emph{operational}) intensity kernel affects its performance on a given system.
 In particular, it gives upper bounds for performance based on memory bandwidth and CPU performance, and describes the bottlenecks that a program would encounter based on its arithmetic intensity~\cite{roofline}.
-The model states that as arithmetic intensity increases, performance increases at a rate determined by the memory bandwidth, until it reaches the performance limit (in Flops, floating-point operations per second) of the processor.
+The model states that as arithmetic intensity increases, performance increases at a rate determined by the memory bandwidth, until it reaches the performance limit (in Flop/s, floating-point operations per second) of the processor.
 
 \subsection{Bounds of the test machine}
 The Sandy Bridge architecture supports execution of up to 16 single-precision floating point operations per cycle, giving a theoretical maximum of 294.4 GFlop/s.\footnote{Calculated as 16 floating-point operations/cycle \(\times 2.3 \times 10^9\) cycles/sec/core \(\times\) 8 cores (on a single-node machine) \(= 294.4\) GFlop/s.}

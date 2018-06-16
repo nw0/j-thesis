@@ -547,7 +547,7 @@ Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 \multicolumn{2}{r|}{\footnotesize arith. intensity} & 4.69 & 4.69 & 4.69 & 9.38 & 18.8 & 33.2 & 48.6 \\
 \bottomrule
 \end{tabular}
-\caption{Performance and arithmetic intensity of stencils with non-tiled, spatially tiled, and time-tiled computations and time tile sizes 1, 2, 4, 8, 16. Tile sizes used to calculate arithmetic intensity available in project archive.}
+\caption{Performance and arithmetic intensity of stencils with non-tiled (N), spatially tiled (S), and time-tiled (T) computations and time tile sizes 1, 2, 4, 8, 16. Tile sizes used to calculate arithmetic intensity available in project archive.}
 \label{tab:laplace-roofline}
 \end{table}
 
@@ -564,10 +564,11 @@ log basis x={2},
 ymode=log,
 log basis y={2},
 log ticks with fixed point,
+cycle list name=exotic,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-so16.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-so8.csv};
-\addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-so4.csv};
+\addplot[mark=triangle] table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-so4.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/laplace-roof-so2.csv};
 \legend{Time-tiling so16,Time-tiling so8,Time-tiling so4,Time-tiling so2}
 % roofline
@@ -575,7 +576,7 @@ log ticks with fixed point,
 \addplot [domain=15.15:50] {262.01};
 \end{axis}
 \end{tikzpicture}
-\caption{Graph of performance against arithmetic intensity for the Laplace operator, grid size \(16 \times 600^3\). Points left-to-right represent increasing time tile sizes (as in table above) corresponding to increasing arithmetic intensity. The solid line is the theoretical maximum predicted by the roofline model.}
+\caption{Graph of performance against arithmetic intensity estimates for the Laplace operator, grid size \(512^3\) and 16 time iterations. Points (approximately) bottom-to-top represent increasing time tile sizes as in table above. The solid line is the maximum predicted by the roofline model and benchmarks; roofline truncated to avoid scaling. Observe that arithmetic intensity estimates are far tighter at higher space orders.}
 \label{fig:laplace-roofline}
 \end{figure}
 
@@ -725,7 +726,7 @@ Space-order & &   &   & 1 & 2 & 4 & 8 & 16 \\
 \multicolumn{2}{r|}{\footnotesize arith. intensity} & 2.10 & 2.10 & 2.10 & 4.20 & 8.40 & 9.29 & 8.82 \\
 \bottomrule
 \end{tabular}
-\caption{Performance and arithmetic intensity of stencils with non-tiled, spatially tiled, and time-tiled computations and time tile sizes 1, 2, 4, 8, 16. Data from minimum runtime trials for each parameter.}
+\caption{Performance and arithmetic intensity of stencils with non-tiled (N), spatially tiled (S), and time-tiled (S) computations and time tile sizes 1, 2, 4, 8, 16. Tile sizes used to calculate arithmetic intensity available in project archive.3}
 \label{tab:awe-roofline}
 \end{table}
 
@@ -742,10 +743,11 @@ log basis x={2},
 ymode=log,
 log basis y={8},
 log ticks with fixed point,
+cycle list name=exotic,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so16.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so12.csv};
-\addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so8.csv};
+\addplot[mark=triangle] table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so8.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so6.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {data/awe-roof-so4.csv};
 
@@ -755,7 +757,7 @@ log ticks with fixed point,
 \legend{Time-tiling so16,Time-tiling so12, Time-tiling so8,Time-tiling so6, Time-tiling so4}
 \end{axis}
 \end{tikzpicture}
-\caption{Graph of performance against arithmetic intensity for the acoustic wave equation operator, grid size \(512^3\). Points left-to-right represent increasing time tile sizes (as in table above) corresponding to increasing arithmetic intensity. The solid line is the theoretical maximum predicted by the roofline model; roofline truncated to avoid scaling.}
+\caption{Graph of performance against arithmetic intensity estimates for the acoustic wave equation operator, grid size \(512^3\) and 250 time iterations. Points (approximately) bottom-to-top represent increasing time tile sizes as in table above. The solid line is the maximum predicted by the roofline model and benchmarks; roofline truncated to avoid scaling. We see a convergence of arithmetic intensity and performance as time tile size increases.}
 \label{fig:awe-roofline}
 \end{figure}
 

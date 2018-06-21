@@ -4,6 +4,8 @@
 \usepackage[T1]{fontenc}
 
 \usepackage{tikz}
+\usetikzlibrary{3d}
+\usepackage{xifthen}
 \usepackage{tikzsymbols}
 \usepackage{pgfplots}
 \usepgfplotslibrary{fillbetween}
@@ -41,6 +43,66 @@ Dr. Fabio Luporini}
 
 
 \begin{frame}
+\frametitle{Devito: solving differential equations quickly}
+\begin{columns}
+	\begin{column}{0.48\textwidth}
+		\begin{itemize}
+			\item DSL: forward/backward solution of PDEs
+			\item Finite-difference methods work on structured grids
+			\item Translation of PDEs to stencils to code
+			\item Optimises stencils and code
+			\item Related: OPS, stencil compilers
+		\end{itemize}
+	\end{column}
+	\begin{column}{0.48\textwidth}
+
+		\newcommand{\xangle}{11}
+		\newcommand{\yangle}{133}
+		\newcommand{\zangle}{270}
+
+		\newcommand{\xlength}{1}
+		\newcommand{\ylength}{1}
+		\newcommand{\zlength}{1}
+
+		\pgfmathsetmacro{\xx}{\xlength*cos(\xangle)}
+		\pgfmathsetmacro{\xy}{\xlength*sin(\xangle)}
+		\pgfmathsetmacro{\yx}{\ylength*cos(\yangle)}
+		\pgfmathsetmacro{\yy}{\ylength*sin(\yangle)}
+		\pgfmathsetmacro{\zx}{\zlength*cos(\zangle)}
+		\pgfmathsetmacro{\zy}{\zlength*sin(\zangle)}
+
+		\begin{center}
+		\begin{tikzpicture}
+		[   x={(\xx cm,\xy cm)},
+		y={(\yx cm,\yy cm)},
+		z={(\zx cm,\zy cm)},
+		]
+
+		\foreach \x in {3,2,1,0}
+		{   \foreach \y in {3,2,1,0}
+		{   \foreach \z in {4,3,2,1,0}
+		{   \pgfmathsetmacro{\c}{100-(\x*\y*\z)/(3*3*4)*95}
+		\ifthenelse{\x>0}
+		{\draw[black!\c] (\x,\y,\z) -- (\x-1,\y,\z);}{}
+		\ifthenelse{\y>0}
+		{\draw[black!\c] (\x,\y,\z) -- (\x,\y-1,\z);}{}
+		\ifthenelse{\z>0}
+		{\draw[black!\c] (\x,\y,\z) -- (\x,\y,\z-1);}{}
+		\fill[red!\c] (\x,\y,\z) circle (0.05cm);
+		}
+		}
+		}
+
+		\end{tikzpicture}
+		\end{center}
+	\end{column}
+\end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}
 \frametitle{Target loops to optimise computation}
 
 \begin{itemize}
@@ -56,7 +118,6 @@ Dr. Fabio Luporini}
 \frametitle{Time-tiling is a loop (nest) optimisation}
 
 \begin{itemize}
-	\item Finite difference methods use structured grids (picture)
 	\item Loop nests: stepping through time, over 3 spatial dimensions
 	\item \emph{Parametrisation} for auto-tuned optimisation
 	\item Previous work: up to 27.5\% reduction (cite)
@@ -89,11 +150,61 @@ Dr. Fabio Luporini}
 \section{Time-tiling in 5 minutes}
 
 \begin{frame}
-\frametitle{Non-problem: iteration space \(<\) cache size}
+\frametitle{Stencils}
+
+\begin{center}
+\begin{tikzpicture}[scale=.8]
+\fill[red!50!white] (0.5,2) rectangle (1,1.75);
+\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
+\fill[red!50!white] (1,2.5) rectangle (1.25,2);
+\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
+\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
+\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
+\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
+\draw (2.3,-.5) node {$t=0$};
+
+\fill[red] (6.5,2) rectangle (6.75,1.75);
+\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
+\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
+\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
+\draw (7.8,-.5) node {$t=1$};
+\end{tikzpicture}
+\end{center}
 
 \begin{itemize}
-	\item (pictures)
-	\item If iteration space \(<\) cache, no need to reload rows
+	\item Determine the value of a point
+	\item Need values of neighbours in \emph{previous} time iteration
+	\item \emph{Space-order} gives radius (\(\delta\))
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Non-problem: iteration space \(<\) cache size}
+
+\begin{center}
+	\begin{tikzpicture}[scale=.8]
+	\draw[blue,thick] (-1.5,4) rectangle (11.5,-2);
+	\draw (-.8,-1.7) node {Cache};
+
+	\fill[red!50!white] (0.5,2) rectangle (1,1.75);
+	\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
+	\fill[red!50!white] (1,2.5) rectangle (1.25,2);
+	\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
+	\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
+	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
+	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
+	\draw (2.3,-.5) node {$t=0$};
+
+	\fill[red] (6.5,2) rectangle (6.75,1.75);
+	\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
+	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
+	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
+	\draw (7.8,-.5) node {$t=1$};
+	\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+	\item If iteration space \(<\) cache, no need to reload data
 	\item Everything loaded once \Smiley
 \end{itemize}
 \end{frame}
@@ -103,9 +214,29 @@ Dr. Fabio Luporini}
 \begin{frame}
 \frametitle{Problem: iteration space \(>\) cache size}
 
+\begin{center}
+	\begin{tikzpicture}[scale=.8]
+	\fill[red!50!white] (0.5,2) rectangle (1,1.75);
+	\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
+	\fill[red!50!white] (1,2.5) rectangle (1.25,2);
+	\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
+	\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
+	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
+	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
+	\draw (2.3,-.5) node {$t=0$};
+
+	\fill[red] (6.5,2) rectangle (6.75,1.75);
+	\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
+	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
+	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
+	\draw (7.8,-.5) node {$t=1$};
+
+	\draw[blue,thick] (-.125,2.375) rectangle (2.125,1.375);
+	\draw (-1,1.7) node {Cache};
+	\end{tikzpicture}
+\end{center}
+
 \begin{itemize}
-	\item (use another slide to explain stencils?)
-	\item (Pictures: x-y plane, t=0,1)
 	\item Load neighbours (t=0) into cache, some reuse in t=1 row
 	\item Evicted by the time we reach end of row
 	\item But we need to reload the rows again
@@ -118,12 +249,31 @@ Dr. Fabio Luporini}
 \begin{frame}
 \frametitle{Solution: pretend iteration space \(<\) cache size}
 
+\begin{center}
+	\begin{tikzpicture}[scale=.8]
+	\fill[red!30!white] (0,1.25) rectangle (4.5,1.75);
+	\fill[red!30!white] (0.25,0) rectangle (.75,3);
+	\fill[red!30!white] (1.75,0) rectangle (2.25,3);
+	\fill[red!30!white] (3.25,0) rectangle (3.75,3);
+	\draw[xstep=.125cm,ystep=.125cm,thin] (0,0) grid (4.5,3);
+	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
+	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
+	\draw (2.3,-.5) node {$t=0$};
+
+	\draw[xstep=.125cm,ystep=.125cm,thin] (5.5,0) grid (10,3);
+	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
+	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
+	\draw (7.8,-.5) node {$t=1$};
+	\draw[red,thick,xstep=1.5cm,ystep=1.5cm] (5.3,-.2) grid (10.2,3.2);
+
+	\draw[blue,thick] (-.05,3.05) rectangle (2.15,1.35);
+	\end{tikzpicture}
+\end{center}
+
 \begin{itemize}
 	\item Insight: x,y can be calculated in any order (parallel!)
 	\item Partition into \emph{tiles}
-	\item Internal tile volume only loaded once
-	\item Tile boundary loaded twice (picture)
-	\item Less waiting for memory!
+	\item Only tile boundaries loaded twice
 	\item `Exploiting data locality'
 \end{itemize}
 \end{frame}
@@ -156,17 +306,23 @@ Dr. Fabio Luporini}
 \foreach \x in {0,1,2,3,4,5}
 \fill[darkgray] (\t*2,\x) circle (0.1);
 
-\foreach \t in {0,1,2,3,4,5}
-\foreach \x in {1,2,3,4,5}
-\draw[thick,->,darkgray!60] (\t*2+.2,\x-.1) -- (\t*2+1.8,\x-.9);
-
-\foreach \t in {0,1,2,3,4,5}
-\foreach \x in {0,1,2,3,4}
-\draw[thick,->,darkgray!60] (\t*2+.2,\x+.1) -- (\t*2+1.8,\x+.9);
-
 \foreach \t in {0,1,2,3,4,5,6}
 \foreach \x in {0,3}
 \fill[green,opacity=0.3] (\t*2-.6,\x-.3) rectangle (\t*2+.6,\x+2.3);
+
+\foreach \t in {0,1,2,3,4,5}
+\foreach \x in {1,2,4,5}
+\draw[thick,->,darkgray!60] (\t*2+.2,\x-.1) -- (\t*2+1.8,\x-.9);
+\foreach \t in {0,1,2,3,4,5}
+\foreach \x in {3}
+\draw[thick,->,red] (\t*2+.2,\x-.1) -- (\t*2+1.8,\x-.9);
+
+\foreach \t in {0,1,2,3,4,5}
+\foreach \x in {0,1,3,4}
+\draw[thick,->,darkgray!60] (\t*2+.2,\x+.1) -- (\t*2+1.8,\x+.9);
+\foreach \t in {0,1,2,3,4,5}
+\foreach \x in {2}
+\draw[thick,->,red] (\t*2+.2,\x+.1) -- (\t*2+1.8,\x+.9);
 
 \foreach \t in {0,1,2,3,4,5,6}
 \draw (\t*2,1pt-.5cm) -- (\t*2,-1pt-.5cm) node[anchor=north] {$\t$};
@@ -177,7 +333,6 @@ Dr. Fabio Luporini}
 
 \begin{itemize}
 	\item Dependencies between rows flow two ways
-	\item (Highlight the offending arrows)
 \end{itemize}
 \end{frame}
 
@@ -195,6 +350,10 @@ Dr. Fabio Luporini}
 \foreach \x in {0,1,2,3,4,5}
 \fill[darkgray] (\t*2,\x/2+\t/2) circle (0.1);
 
+\foreach \t in {0,1,2,3,4,5,6}
+\foreach \x in {0,3,6,9}
+\fill[green,opacity=0.3] (\t*2-.6,\x/2-.15) rectangle (\t*2+.6,\x/2+1.15);
+
 \foreach \t in {0,1,2,3,4,5}
 \foreach \x in {1,2,3,4,5}
 \draw[thick,->,darkgray!60] (\t*2+.2,\x/2+\t/2) -- (\t*2+1.8,\x/2+\t/2);
@@ -202,10 +361,6 @@ Dr. Fabio Luporini}
 \foreach \t in {0,1,2,3,4,5}
 \foreach \x in {0,1,2,3,4}
 \draw[thick,->,darkgray!60] (\t*2+.2,\x/2+\t/2+.05) -- (\t*2+1.8,\x/2+\t/2+.9);
-
-\foreach \t in {0,1,2,3,4,5,6}
-\foreach \x in {0,3,6,9}
-\fill[green,opacity=0.3] (\t*2-.6,\x/2-.15) rectangle (\t*2+.6,\x/2+1.15);
 
 \foreach \t in {0,1,2,3,4,5,6}
 \draw (\t*2,1pt-.5cm) -- (\t*2,-1pt-.5cm) node[anchor=north] {$\t$};

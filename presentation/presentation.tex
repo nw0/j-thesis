@@ -40,7 +40,8 @@
 ~\\
 {\normalsize Supervisors:}\\
 Prof. Paul H. J. Kelly\\
-Dr. Fabio Luporini}
+Dr. Fabio Luporini\\
+Sun Tianjiao}
 
 \date{June 25, 2018}
 
@@ -144,6 +145,8 @@ Dr. Fabio Luporini}
 	\item Estimator for \emph{arithmetic intensity}, which helps identify bottlenecks
 	\item Prediction of speedup from estimator
 	\item Decrease runtime by 20--45\%!
+	\newline
+	\item Target delivery: next few months
 \end{itemize}
 \end{frame}
 
@@ -430,8 +433,9 @@ for (int t = t_s; t < t_e; t++) {
 \frametitle{Auto-tuning tile sizes}
 
 \begin{itemize}
-	\item Parametrisation: can change tile sizes at runtime for tuning
-	\item Extended auto-tuner
+	\item Parametrisation: can change tile sizes at runtime
+	\item Auto-tuning: experimental search for best tile sizes
+	\item Extended auto-tuner for time-tiling
 	\item Test only tile sizes, not skew factor
 \end{itemize}
 \end{frame}
@@ -439,13 +443,13 @@ for (int t = t_s; t < t_e; t++) {
 
 
 \begin{frame}
-\frametitle{TODOs}
+\frametitle{Further work in time-tiling}
 
 \begin{itemize}
 	\item Tile imperfectly-nested loops (sources and receivers) -- hard
 	\item Advanced stencil optimisations -- not too hard, but maybe uses associativity of floats \Sadey
-	\item Skew factor detection
 	\item Time dimension buffering
+	\item More minor extensions in report
 \end{itemize}
 \end{frame}
 
@@ -474,7 +478,6 @@ for (int t = t_s; t < t_e; t++) {
 	\item More operations \(\rightarrow\) more computational resources needed
 	\item Fewer operations \(\rightarrow\) more memory bandwidth needed
 	\item Time-tiling: most effective with low arithmetic intensity
-	\item (Discuss estimator?)
 \end{itemize}
 \end{frame}
 
@@ -487,6 +490,8 @@ for (int t = t_s; t < t_e; t++) {
 	\item Time-tiling: improve cache reuse
 	\item More reuse \(\rightarrow\) more operations per byte
 	\item Effectively increases the arithmetic intensity of a stencil
+	\item Our estimator accounts for this while considering cache size
+	\item (discuss estimator further?)
 \end{itemize}
 \end{frame}
 
@@ -513,32 +518,37 @@ for (int t = t_s; t < t_e; t++) {
 
 \begin{itemize}
 	\item Limits that cannot be exceeded
-	\item 294.4 = something
-	\item LINPACK: 262 GFlops (cite...)
-	\item STREAM: 17.3 GB/s
+	\item 294.4 GFlop/s = 16 Flop/cycle \(\times 2.3 \times 10^9\) cycle/sec/core \(\times\) 8 cores
+	\item LINPACK\footnote{J. Dongarra. Performance of various computers using standard linear equations software. Tech. report, Knoxville TN, 1989.}: 262 GFlops
+	\item STREAM\footnote{J. McCalpin. Memory bandwidth and machine balance in current high performance computers. \emph{IEEE Computer Society TCCA Newletter}, Dec 1995.}: 17.3 GB/s
 \end{itemize}
 \end{frame}
 
 
 
 \begin{frame}
-\frametitle{Roofline (cite)}
+\frametitle{Roofline\footnote{S. Williams et al. Roofline: An insightful visual performance model for multicore architectures. \emph{Commun. ACM}, April 2009.}}
 
 \begin{center}
-\begin{tikzpicture}[scale=0.85]
+\begin{tikzpicture}[scale=.8]
 \begin{axis}[
 legend style={at={(0.95,0.05)},anchor=south east},
 xlabel={Arithmetic intensity},
-ylabel={GFlops achieved},
-ytick distance=25,
+ylabel={Performance (GFlop/s)},
+domain=0.4:96,
+xmode=log,
+log basis x={2},
+ymode=log,
+log basis y={2},
+log ticks with fixed point,
 ]
 % roofline
-\addplot [domain=4:15.15,name path=A] {17.3*x};
-\addplot [domain=15.15:25] {262.01};
+\addplot [domain=0.46:15.15,name path=A] {17.3*x};
+\addplot [domain=15.15:80] {262.01};
 % boundary
-\path[name path=X] (4, 0) -- (200, 0);
-\addplot[gray, pattern=north west lines] fill between[of=A and X, soft clip={domain=4:15.15}];
-\addplot +[mark=none,dashed] coordinates {(15.15, 69.2) (15.15, 259.5)};
+%\path[name path=X] (axis cs:15.5,8) -- (axis cs:15.5,262.01);
+\addplot +[mark=none,dashed,thick,name path=X] coordinates {(15.15, 8) (15.15, 262.01)};
+\addplot[gray, pattern=north west lines] fill between [of=A and X];
 \end{axis}
 \end{tikzpicture}
 \end{center}
@@ -582,23 +592,51 @@ ytick distance=25,
 \frametitle{Laplace: runtime against space order}
 
 \begin{center}
-\begin{tikzpicture}
+\begin{tikzpicture}[scale=.7]
 \begin{axis}[
-width=0.7\textwidth,
-legend style={at={(0.05,0.95)},anchor=north west},
+width=\textwidth,
+legend style={at={(1.46,0.77)},anchor=north east},
 xlabel={Space order},
-ylabel={Runtime(s)},
-ytick distance=2,
+xtick distance=1,
+symbolic x coords={2,4,8,16},
+nodes near coords,
+axis y line*=left,
+ylabel near ticks, yticklabel pos=right,
+ylabel={Speedup vs non-tiled (\(1\times\))},
+ymin=0,
+ybar,
+every node near coord/.append style={font=\fontsize{6.5}{6.5}},
 ]
 \addplot table [x=sp,y=run,col sep=comma] {../data/laplace-nt600.csv};
 \addplot table [x=sp,y=run,col sep=comma] {../data/laplace-sp600.csv};
 \addplot table [x=sp,y=run,col sep=comma] {../data/laplace-tm600.csv};
 \legend{Non-tiled,Space-tiling,Time-tiling}
 \end{axis}
+
+\begin{axis}[
+width=\textwidth,
+legend style={at={(1.46,0.95)},anchor=north east,cells={align=left}},
+axis y line*=right,
+ylabel near ticks, yticklabel pos=right,
+axis x line=none,
+symbolic x coords={2,4,8,16},
+ymin=0, ymax=20,
+ylabel={Arith. intensity},
+ybar,
+]
+\addplot[smooth,mark=*,blue]
+coordinates{
+	(2,4.69)
+	(4,6.31)
+	(8,9.29)
+	(16,14.0)
+};
+\legend{Arith. intensity\\(spatial tiling)}
+\end{axis}
 \end{tikzpicture}
 \end{center}
 \begin{itemize}
-	\item 25\% decrease to 1\% decrease with higher arith. intensity
+	\item 22.3\% to 3.3\% speedup with increasing arith. intensity
 \end{itemize}
 \end{frame}
 
@@ -606,9 +644,35 @@ ytick distance=2,
 
 \begin{frame}
 \frametitle{Laplace: roofline}
+\begin{center}
+\begin{tikzpicture}[scale=.9]
+\begin{axis}[
+width=0.7\textwidth,
+legend style={at={(1.05,0.95)},anchor=north west},
+xlabel={Arithmetic intensity},
+ylabel={Performance (GFlop/s)},
+xmode=log,
+log basis x={2},
+ymode=log,
+log basis y={2},
+log ticks with fixed point,
+cycle list name=exotic,
+]
+\addplot table [x=oi,y=gflops,col sep=comma] {../data/laplace-roof-so16.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {../data/laplace-roof-so8.csv};
+\addplot[mark=triangle] table [x=oi,y=gflops,col sep=comma] {../data/laplace-roof-so4.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {../data/laplace-roof-so2.csv};
+\legend{Time-tiling so16,Time-tiling so8,Time-tiling so4,Time-tiling so2}
+% roofline
+\addplot [domain=2:15.15,name path=A] {17.3*x};
+\addplot [domain=15.15:50] {262.01};
+\end{axis}
+\end{tikzpicture}
+\end{center}
 
 \begin{itemize}
-	\item (Reserved a slide)
+	\item Bottom-to-top: increasing time tile sizes
+	\item Moderate performance improvement compared to arith. intensity estimate
 \end{itemize}
 \end{frame}
 
@@ -632,23 +696,52 @@ ytick distance=2,
 \frametitle{AWE: runtime against space order}
 
 \begin{center}
-\begin{tikzpicture}
+\begin{tikzpicture}[scale=.7]
 \begin{axis}[
-width=0.7\textwidth,
-legend style={at={(0.05,0.95)},anchor=north west},
+width=\textwidth,
+legend style={at={(1.46,0.77)},anchor=north east},
 xlabel={Space order},
-ylabel={Runtime(s)},
-ytick distance=2,
+xtick distance=1,
+symbolic x coords={4,6,8,12,16},
+nodes near coords,
+axis y line*=left,
+ylabel near ticks, yticklabel pos=right,
+ylabel={Speedup vs non-tiled (\(1\times\))},
+ymin=0,
+ybar,
+every node near coord/.append style={font=\fontsize{6.5}{6.5}},
 ]
 \addplot table [x=sp,y=run,col sep=comma] {../data/awe-nt512.csv};
 \addplot table [x=sp,y=run,col sep=comma] {../data/awe-sp512.csv};
 \addplot table [x=sp,y=run,col sep=comma] {../data/awe-tm512.csv};
 \legend{Non-tiled,Space-tiling,Time-tiling}
 \end{axis}
+
+\begin{axis}[
+width=\textwidth,
+legend style={at={(1.46,0.95)},anchor=north east,cells={align=left}},
+axis y line*=right,
+ylabel near ticks, yticklabel pos=right,
+axis x line=none,
+ylabel={Arith. intensity},
+ybar,
+symbolic x coords={4,6,8,12,16},
+ymin=0, ymax=8,
+]
+\addplot[smooth,mark=*,blue]
+coordinates{
+	(4,2.1)
+	(6,2.5)
+	(8,2.89)
+	(12,3.36)
+	(16,4.42)
+};
+\legend{Arith. intensity\\(spatial tiling)}
+\end{axis}
 \end{tikzpicture}
 \end{center}
 \begin{itemize}
-\item 45\% to 20\% decrease!
+\item 45.3\% to 20.3\% speedup!
 \end{itemize}
 \end{frame}
 
@@ -658,31 +751,36 @@ ytick distance=2,
 \frametitle{AWE: roofline}
 
 \begin{center}
-\begin{tikzpicture}
+\begin{tikzpicture}[scale=.9]
 \begin{axis}[
 width=0.7\textwidth,
 legend style={at={(1.05,0.95)},anchor=north west},
 xlabel={Arithmetic intensity},
-ylabel={GFlops achieved},
-ytick distance=10,
+ylabel={Performance (GFlop/s)},
 xmode=log,
 log basis x={2},
+ymode=log,
+log basis y={8},
 log ticks with fixed point,
+cycle list name=exotic,
 ]
 \addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so16.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so12.csv};
-\addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so8.csv};
+\addplot[mark=triangle] table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so8.csv};
 \addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so6.csv};
-\addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so4.csv};
+\addplot[blue,mark=diamond] table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so4.csv};
 
-\addplot [domain=2:4] {17.3*x};
+\addplot [domain=1.5:4] {17.3*x};
+%\addplot [domain=15.15:150] {262.01};
+\addplot [domain=2:5,dashed] {13*x};
 \legend{Time-tiling so16,Time-tiling so12, Time-tiling so8,Time-tiling so6, Time-tiling so4}
 \end{axis}
 \end{tikzpicture}
 \end{center}
 
 \begin{itemize}
-\item Bigger tiles more useful for low space orders
+	\item Estimator much stronger at high space orders
+	\item Larger time tiles most useful at low space orders
 \end{itemize}
 \end{frame}
 
@@ -714,12 +812,15 @@ log ticks with fixed point,
 
 
 \begin{frame}
-\frametitle{Further evaluation work}
+\frametitle{Further evaluation work and limitations}
 
 \begin{itemize}
 	\item Implementation -- only perfect loops
 	\item Test more architectures
 	\item Analyse memory to check cache misses, new bottlenecks
+	\item Applications of the arithmetic intensity estimator
+	\item Changed the spatial tiling algorithm slightly
+	\item Multistep approximations
 \end{itemize}
 \end{frame}
 
@@ -728,26 +829,12 @@ log ticks with fixed point,
 \section{Conclusion}
 
 \begin{frame}
-\frametitle{}
+\frametitle{Conclusion}
 
 \begin{itemize}
-	\item Contributions?
+	\item Contributions
+	\item (move discussion of further work here?)
 	\item What else?
-	\item 
-	\item 
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Things to ask Paul}
-
-\begin{itemize}
-	\item Related work in presentation?
-	\item Talk about the individual transformation? (e.g. code for skewing \Sadey)
-	\item 
-	\item 
 \end{itemize}
 \end{frame}
 

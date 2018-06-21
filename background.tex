@@ -51,7 +51,7 @@ The \emph{arithmetic intensity of a stencil} is the number of floating point ope
 \subsection{Motivation}
 The bulk of computation lies in loops~\cite{aho-cptt}.
 Finite-difference methods are no exception, and in such computations, nested loops (`loop nests') are frequently encountered.
-Loop nest optimisations seek to transform a loop, possibly changing its execution order to use data locality, parallelism, or otherwise avoid unnecessary operations.
+Loop nest optimisations seek to transform a loop, possibly changing its execution order to improve data locality, parallelism, or otherwise avoid unnecessary operations.
 
 \subsection{Insight}
 To exploit data locality, we must use data before it gets evicted from the cache; ideally, data is not loaded into the cache more than once.
@@ -256,7 +256,7 @@ However, it is equally valid to skew each spatial dimension by the dependence di
 \section{Devito}
 \label{sec:devito}
 
-Devito~\cite{devito} is a domain-specific language and code generation framework for finite-difference method computations~\cite{devito-web}.
+Devito~\cite{devito} is a domain-specific language and code generation framework for solving PDEs with finite-difference methods~\cite{devito-web}.
 Its main use case is building solvers for differential equations from high-level mathematical expressions, written using the symbolic library \emph{SymPy}, and is targeted at the domain of seismic imaging.
 
 
@@ -299,8 +299,8 @@ The Devito compilation process (Chapter~\ref{ch:devito}) can be divided into sev
 \begin{enumerate}
 	\item Construction of stencil equations (symbolic kernel)
 	\item Grouping of expressions
-	\item CSE and indexing of stencil (the Devito symbolic engine, Section~\ref{sec:dse})
-	\item Loop optimisation and other transformations (the Devito loop engine, Section~\ref{sec:dle})
+	\item CSE and indexing of stencil (the Devito symbolic engine (DSE), Section~\ref{sec:dse})
+	\item Loop optimisation and other transformations (the Devito loop engine (DLE), Section~\ref{sec:dle})
 	\item Code generation
 \end{enumerate}
 
@@ -329,7 +329,7 @@ Part of its analysis examines the trade-off between additional computation and m
 
 \subsubsection{Applicability}
 The problem domain, image processing, that Halide is concerned with may appear very different to that of differential equations.
-However, the underlying natures of the solutions are very similar: use of stencil kernels, trade-off between redundant computation and memory pressure, etc.
+However, the underlying natures of the computations are very similar: use of stencil kernels, trade-off between redundant computation and memory pressure, etc.
 Analogously to time-tiling, Halide is able to compute tiles across filters.
 
 Likewise, in Devito, \emph{each time iteration} may contain several stencil kernels applied consecutively.
@@ -384,7 +384,7 @@ In contrast to polyhedral research compilers such as PLUTO~\cite{pluto}, YASK ha
 
 \subsubsection{Applicability}
 YASK was originally created to implement vector folding, a technique which simultaneously takes advantage of SIMD instructions and reduces memory bandwidth usage.
-This is especially relevant in Devito, which has the transformation of arithmetically intensive computations into memory intensive computations as a basis.
+This is especially relevant in Devito, which has the transformation of arithmetically intensive computations into memory intensive computations as a principle.
 
 Further, with its emphasis on integrating different optimisations, rather than investigating them separately, YASK is a practical tool for a workflow involving stencils.
 There would be no need to apply a separate stencil compiler, then a polyhedral compiler, without the guarantee that the latter would understand and be able to build open the complexities introduced by the former.

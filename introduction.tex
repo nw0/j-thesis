@@ -16,7 +16,7 @@ These aid maintenance and even reproducibility; generating and optimising code b
 Decoupling optimisation from specific models means that domain specialists can take advantage of optimisations seamlessly without intervention, allowing them to focus their attention and expertise on their own domain.
 They can easily take advantages of the latest advances in computer architecture and new instructions such as vectorisation, which give rise to new optimisations in finite-difference methods.
 
-\subsection*{Devito, for solving differential equations}
+\subsection*{Devito: a tool for solving differential equations}
 % [Remark: fluid dynamics people never change PDEs, already handcoded & fast]
 % Context: other stencil DSLs do time tiling starting from stencils
 
@@ -34,9 +34,9 @@ It was previously demonstrated that time-tiling could reduce the run time of `so
 In this case another tool, CLooG~\cite{cloog-isl}, was used to add time-tiling to Devito-generated code.
 
 While the literature surrounding the polyhedral model, from which time-tiling derives, dates from the last century, it was viewed as complicated and time-consuming to use in optimising compilers as recently as 2004 when Bastoul proposed extensions~\cite{cloog-isl} to the original Quiller\'e et al.~algorithm to eliminate redundant (generated) code~\cite{quillere}.
-Time-tiling was been studied in the form this work considers since Griebl in 2004~\cite{griebl-tt}, using \emph{space-time mapping}, analogous to the skewed tiling which we discuss in this work, but expressed as affine conditions specifying hyperplane partitions of the problem domain.
+Time-tiling has been studied in the form this work considers since Griebl in 2004~\cite{griebl-tt}, using \emph{space-time mapping}, analogous to the skewed tiling which we discuss in this work, but expressed as affine conditions specifying hyperplane partitions of the problem domain.
 
-Time-tiling has since been studied extensively, and long implemented in polyhedral compilers such as CLooG, providing a strong theoretical foundation.
+Time-tiling has since been studied extensively, and long implemented in polyhedral compilers such as PLUTO, providing a strong theoretical foundation.
 However, until this work, the actual application of the technique beyond theoretical study has been limited to the OPS (Oxford Parallel library for Structured mesh solvers) project~\cite{ops-main}, who presented their implementation of time-tiling in 2017~\cite{ops-tiling}.
 Even so, OPS is a source-to-source compiler, operating from the stencil kernel level down to code generation; Devito includes all these plus layers of abstraction up to the differential equations themselves, making this a unique implementation and study of time-tiling.
 
@@ -48,7 +48,7 @@ This gives the performance gains of time-tiling to Devito without the need to co
 \section{Contributions}
 The principal objective of this project was to implement tiling over the time dimension in Devito and evaluate its performance against the existing optimisation, that of tiling restricted to the spatial dimensions.
 
-In summary, our contributions are:
+In summary, the contributions of this thesis are:
 
 \begin{itemize}
 	\item A fully-functional implementation of time-tiling for perfect loop nests in Devito, including a simplification of the generated code structure, with accompanying test cases and auto-tuner enhancements.
@@ -56,13 +56,13 @@ In summary, our contributions are:
 
 	\item An evaluation of the correctness and performance of the time-tiling transformation and any actions end-users may need to take to realise performance gains.
 
-	\item Demonstration of a runtime decrease of up to 45\%, and in general more than 20\%, compared to Devito's existing optimisations on kernels with real-world applications, in particular the stencils from the family of acoustic wave equation operators, widely used in Devito's target domain, seismic imaging.
+	\item Demonstration of a runtime decrease of up to 45\%, and in general more than 20\%, compared to Devito's existing optimisations on kernels from real-world applications, including stencils from the family of acoustic wave equation operators, widely used in Devito's target domain, seismic imaging.
 
 	\item A novel estimator for \emph{arithmetic intensity under time-tiling} that extends the existing estimator for arithmetic intensity under spatial tiling in Devito, and a proof of its consistency with the widely-cited roofline model.
 	An evaluation of the utility of this estimator compared to a generalised version of the existing estimator, and an analysis of the shortcomings of both.
 	A model to predict when performance improvement is minimal or negative, and a demonstration that stencils of the acoustic wave equation family can benefit further from greater cache reuse.
 
-	\item An analysis on how parameters introduced by time-tiling, the time tile size and skewing factor, affect the runtime of stencil computations, and the circumstances under which the runtime decrease in maximal.
+	\item An analysis on how parameters introduced by time-tiling, the time tile size and skewing factor, affect the runtime of stencil computations, and the circumstances under which the runtime decrease is maximal.
 
 	\item A discussion on further implementation work, analysing their importance and consistency with the transformation we have implemented.
 \end{itemize}
@@ -70,7 +70,7 @@ In summary, our contributions are:
 
 \pagebreak
 \section{Report structure}
-This report is divided into 6 chapters, describing the above contributions and the context from which they arise.
+This report is divided into 6 chapters, describing the above contributions and the context from which they arise:
 
 \begin{description}
 	\item[Chapter~\ref{ch:background}]
@@ -94,3 +94,7 @@ This report is divided into 6 chapters, describing the above contributions and t
 	\item[Chapter~\ref{ch:conclusion}]
 	The conclusion of the work, and a discussion of future work to be done alongside the streamlining of this optimisation process.
 \end{description}
+
+
+\paragraph{Time-tiling in Devito}
+The implemented transformation from this work is currently being integrated into the Devito codebase; based on our evaluation, it is expected to bring significant performance improvement to customer applications.

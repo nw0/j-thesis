@@ -75,9 +75,8 @@ It is clear that whenever \(t > n\), data from the 0-th time iteration is no lon
 When space-tiling in Devito, each time iteration only begins once the previous iteration has finished.
 Therefore, we only need storage for \(n+1\) time iterations of data: the current iteration being computed; and the previous \(n\) iterations, its dependencies.
 
-As we have not implemented the calculation for a correct time buffer size in Devito, we did not use time buffering for the Laplace operator stencils, and manually specified a buffer size for the acoustic wave equation operator stencils.
-Nevertheless, it is straightforward to establish bounds on the size of a time buffer.
-It is clear that for time-tiling to perform better than spatial tiling, at least \(n+2\) time iterations must be stored.\footnote{It is a simple exercise that time-tiling needs exactly \(n+t\) time iterations of storage, where \(t\) is the size of a time tile.}
+As we have not implemented the calculation for a correct time buffer size in Devito, we did not use time buffering for the Laplace operator stencils (Section~\ref{sec:perf-laplace}), and manually specified a buffer size for the acoustic wave equation operator stencils (Section~\ref{sec:perf-awe}).
+Nevertheless, we can establish bounds on the size of a time buffer: \(n+t\) time iterations must be stored, where \(t\) is the size of a time tile.\footnote{Following the logic used for spatial tiling, we need \(n\) time iterations of dependencies and \(t\) iterations of the time tile being computed (1 in the case of spatial tiling).}
 
 
 \subsection{Auto-tuner iterations}
@@ -121,9 +120,9 @@ Devito reports arithmetic intensity as `operational intensity', and calculates i
 	In the graphs later in this chapter, an overestimate results in a \emph{right shift} of a data point from its true location.
 
 	\item[Space-tiled code] Again, Devito assumes data need only be loaded into the cache once per time iteration, hence would be used fully before being evicted, calling this scheme `compulsory memory traffic'.
-	For each time iteration, this requires the previous \(r_t\) time iterations of data to be loaded from memory.
+	For each time iteration, this requires the previous \(\delta_t\) time iterations of data to be loaded from memory.
 	This produces the same figure for arithmetic intensity as the measure for non-tiled code above.
-	Since the dependencies of tiles overlap in previous time iterations, with a sufficiently large iteration space, some dependencies will need to be loaded into cache more than once (assuming at least two spatial dimensions with non-zero space order).\footnote{This is fairly simple to see. Ignore all but two spatial dimensions with non-zero space order, and suppose otherwise for a contradiction. Arbitrarily choose a finite cache size of \(\Omega\) floating-point numbers, and call our spatial dimensions \texttt{x}, \texttt{y} with dimension extents \(x, y\) respectively. W.l.o.g.~\(x \le y\) and that the stencil has space order \(d>0\) in both dimensions (take the minimum). Now we need \(xd \le \Omega\), since minimising dependency overlap along the \texttt{x} dimension demands that we calculate the first \texttt{x} `row' before any other \texttt{x}-tiles. But we can choose \(x > \Omega / d\).}
+	Since the dependencies of tiles overlap in previous time iterations, with a sufficiently large iteration space, some dependencies will need to be loaded into cache more than once (assuming at least two spatial dimensions with non-zero space order).\footnote{This is fairly simple to see. Ignore all but two spatial dimensions with non-zero space order, and suppose otherwise for a contradiction. Arbitrarily choose a finite cache size of \(\Omega\) floating-point numbers, and call our spatial dimensions \texttt{x}, \texttt{y} with dimension extents \(x, y\) respectively. W.l.o.g.~\(x \le y\) and that the stencil has space order \(\delta>0\) in both dimensions (take the minimum). Now we need \(x\delta \le \Omega\), since minimising dependency overlap along the \texttt{x} dimension demands that we calculate the first \texttt{x} `row' before any other \texttt{x}-tiles. But we can choose \(x > \Omega / \delta\).}
 	Thus this measure also \emph{overestimates} arithmetic intensity, but to a smaller extent than with non-tiled code.
 	Later, we explore the possibility of a tighter bound.
 \end{description}
@@ -137,8 +136,8 @@ We consider the following statements to follow naturally from Devito's calculati
 
 \begin{itemize}
 	\item Analogously to space-tiling, we assume that data will be used fully before being evicted from cache.
-	\item If \(t\) is the time tile size, we can calculate \(t\) time iterations of data from \(n\) previous time iterations loaded into the cache, as opposed to calculating 1 time iteration from the same data.
-	\item Thus we have performed \(t\) times as many floating-point operations on it.
+	\item If \(t_t\) is the time tile size, we can calculate \(t_t\) time iterations of data from \(n\) previous time iterations loaded into the cache, as opposed to calculating 1 time iteration from the same data.
+	\item Thus we have performed \(t_t\) times as many floating-point operations on it.
 \end{itemize}
 
 A natural estimator for the arithmetic intensity of a stencil computation under time-tiling might be the arithmetic intensity of the same computation under spatial tiling multiplied by the size of the time tile used.
@@ -312,8 +311,7 @@ To ensure a realistic testing environment and utilise all the available resource
 	\item OpenMP\footnote{OpenMP is a standard API used for compilers to implement parallelism~\cite{openmp-spec}.} directives enabled in Devito. Indicates that a loop should be computed in parallel (typically the body of the incremental time loop).
 	\item OpenMP environment variable to utilise all 16 available threads.
 	\item OpenMP environment variable not to migrate threads (``thread pinning''), as well as allocate threads to different cores. Thread migration incurs a significant performance overhead, and parallelism would not help if all threads executed in serial on one core.
-	\item Usage of the Intel C Compiler, \texttt{icc}.
-	\item Devito enables the highest level of compiler optimisation and parallelism in the compiler by default.
+	\item Use of the Intel C Compiler, \texttt{icc17}, enabling parallelism and the highest level of optimisation through Devito's invocation.
 \end{itemize}
 
 \subsection{Use of auto-tuner}
@@ -337,6 +335,7 @@ Additional checks were used to determine that the results were not merely zeroes
 \subsection{Experimentation and reporting of runtimes}
 Wherever runtimes have been collected in this evaluation, the reported figure will be the \emph{minimum} of the runtimes collected in trials.
 This is taken as most representative, as any noise on the testing machine is minimised, since outside factors can only increase the runtime of our computations.
+In additional, the variance of the minimum is much lower than the variance of the mean in our experimentation.
 
 Using the Laplace stencils, the auto-tuner was run for at least three trials.
 The most tile size combination with the overall lowest runtime was selected, and run for a further seven trials, thus we report the minimum of 10 trials.
@@ -442,6 +441,7 @@ Devito makes it straightforward to generate stencils of varying space order, oth
 
 \subsection{Results}
 Two grid sizes, \(32 \times 500^3 \) and \(16 \times 600^3 \), were chosen to comply with our memory limit.
+These represent 32 time iterations over a grid with 500 points in each spatial dimension and 16 time iterations over a grid with 600 points in each spatial dimension respectively.
 Table~\ref{tab:laplace-results} shows the runtimes arising from running time-tiling compared to spatial tiling under the Laplace operator.
 Figure~\ref{fig:laplace-graph} provides the corresponding graph for the \(16 \times 600^3 \) grid; the results and graphs for both grids are similar.
 

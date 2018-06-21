@@ -72,7 +72,7 @@ As skewing is merely a substitution of indices and loop bounds, we do not change
 Since arithmetic on floats is generally non-associative, we especially wish to avoid changing the structure of expressions, to simplify testing of the code.
 
 In particular, we ensure than skewing is performed \emph{before} CSE occurs, to avoid expansion during skewing.
-CSE does not remove the skew, as it is partially applied in the loop header, and partially in the expression (see Figure~\ref{lst:skewing-simple}).
+CSE does not remove the skew, as skewing changes the indices used with reference to the loop variable (see Figure~\ref{lst:skewing-simple}), while CSE manipulates expressions.
 
 \subsection{Implementation}
 This was a straightforward substitution in the Devito symbolic engine, exactly as described above.
@@ -137,7 +137,7 @@ for (int t_blk = t_s; t_blk < t_e; t_blk += t_blk_size)
 	\foreach \x in {0,1,2,3,4,5,6,7,8,9,10,11}
 	\draw (1pt-1cm,\x/2) -- (-1pt-1cm,\x/2) node[anchor=east] {$\x$};
 	\end{tikzpicture}
-	\caption{Straightened tiles on a skewed iteration space. Invalid array accesses indicated by crosses.}
+	\caption{Straightened tiles on a skewed iteration space, making the interchange valid. Invalid array accesses indicated by crosses.}
 	\label{fig:skew-straight}
 \end{figure}
 

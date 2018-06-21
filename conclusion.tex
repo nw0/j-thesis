@@ -12,7 +12,7 @@ These insights culminated in a transformation yielding significant performance g
 Though time-tiling is a well-established optimisation, this implementation is a necessary and important step for Devito.
 
 During our evaluation in Chapter~\ref{ch:evaluation}, we used Devito's abstractions to effortlessly generate entire families of stencils by varying the space order of a differential equation; producing these stencils from the equations is decidedly non-trivial, and would have otherwise been extremely time-consuming.
-As a consequence, this project includes the broadest survey of stencils under time-tiling to date.
+As a consequence, this project includes a broad survey of time-tiling on stencil kernels from real-world applications.
 
 While the concept of time-tiling is superficially straightforward, its implementation was decidedly not so: unlike interfacing with a `back-end' polyhedral compiler, such as CLooG or Pochoir (Section~\ref{sec:pochoir}) with all its attendant integration problems, implementation within Devito meant understanding the numerous stages of internal representation used to transform a differential equation into code.
 Without these layers, Devito would not be able to expose APIs at different levels for more intricate applications; making a transformation that would work with these was a major hurdle.

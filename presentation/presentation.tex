@@ -141,7 +141,7 @@ Sun Tianjiao}
 	\item \emph{Parameterisation} for auto-tuned optimisation
 	\item Previous work: up to 27.5\% reduction\footnote{D.~McCormick. Applying the Polyhedral Model to Tile Loops in Devito. Master's thesis, Imperial College of Science, Technology and Medicine, 2017.}
 	\item We get 36.8\% speedup for the \textbf{same} stencil
-	\item (Think about comparison to theoretical)
+	\item Can achieve \(\ge 75\%\) of benchmarked memory bandwidth
 \end{itemize}
 \end{frame}
 
@@ -431,131 +431,165 @@ Sun Tianjiao}
 
 
 
-\section{Implementing time-tiling in Devito}
-
 %\begin{frame}
-%\frametitle{Implemented time-tiling transformation}
+%\frametitle{Testing framework}
 %
 %\begin{itemize}
-%	\item Bounding using min/max functions
-%	\item Reasoning about tile boundaries is tricky! (example)
-%	\item Only works on perfect loop nests \Sadey
-%	\item Test cases
-%	\item Numerically exact (on floats!) in evaluation
+%	\item CSG Intel Xeon E5-2470; 8 cores, 16 threads, 20MB L3 cache
+%	\item 64GB DRAM
+%	\item OpenMP: parallelism, use all threads, prevent migration
+%	\item Intel C Compiler, all optimisations enabled
+%	\item Devito auto-tuner to ensure best runtime
+%	\item Always verify functional correctness
+%	\item Minimum runtime reported
+%	\item (small print on diagrams)
 %\end{itemize}
 %\end{frame}
 
 
 
+\section{Results}
+
 \begin{frame}
-\frametitle{Auto-tuning tile sizes}
+\frametitle{Evaluation}
 
 \begin{itemize}
-	\item Parameterisation: can change tile sizes at runtime
-	\item Auto-tuning: experimental search for best tile sizes
-	\item Extended auto-tuner for time-tiling
-	\item Test only tile sizes, not skew factor
-	\item (move to later, strike)
+	\item 9 stencils from acoustic wave equation, Laplace operators
+	\item All results numerically exact
+	\item Auto-tuning: search for fastest tile sizes (parameterised)
+	\newline
+	\item Qn: how effective is time-tiling and when?
 \end{itemize}
 \end{frame}
 
 
 
 \begin{frame}
-\frametitle{Further work in time-tiling}
+\frametitle{Speedup decreases with increasing arith. intensity\footnote{\tiny Min. runtime reported: data numerically verified, tile sizes auto-tuned. Tested on Intel Xeon E5-2470; 8 cores, 16 threads, 64GB DRAM. OpenMP for parallelism, no migration on 16 threads; compilation \texttt{icc -qopenmp -O3 ...}}}
+\vspace{-3em}
+\begin{columns}
+\begin{column}{.49\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=.51]
+\begin{axis}[
+width=2\textwidth,
+xlabel={Space order (AWE)},
+xtick distance=1,
+symbolic x coords={4,6,8,12,16},
+nodes near coords,
+axis y line*=left,
+ylabel near ticks, yticklabel pos=right,
+ylabel={Speedup vs non-tiled (\(1\times\))},
+ymin=0, ymax=4,
+ybar,
+every node near coord/.append style={font=\fontsize{6.5}{6.5}},
+]
+\addplot table [x=sp,y=run,col sep=comma] {../data/awe-nt512.csv};
+\addplot table [x=sp,y=run,col sep=comma] {../data/awe-sp512.csv};
+\addplot table [x=sp,y=run,col sep=comma] {../data/awe-tm512.csv};
+\end{axis}
+
+\begin{axis}[
+width=2\textwidth,
+legend style={at={(.02,.98)},anchor=north west},
+axis y line*=right,
+ylabel near ticks, yticklabel pos=right,
+axis x line=none,
+%ylabel={Arith. intensity},
+ybar,
+symbolic x coords={4,6,8,12,16},
+ymin=0, ymax=16,
+]
+\addplot[smooth,mark=*,blue]
+coordinates{
+	(4,2.1)
+	(6,2.5)
+	(8,2.89)
+	(12,3.36)
+	(16,4.42)
+};
+\legend{Arith. intensity (spatial tiling)}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\end{column}
+
+\begin{column}{.49\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=.51]
+\begin{axis}[
+width=2\textwidth,
+legend style={at={(.02,.98)},anchor=north west},
+xlabel={Space order (Laplace)},
+xtick distance=1,
+symbolic x coords={2,4,8,16},
+nodes near coords,
+axis y line*=left,
+ylabel near ticks, yticklabel pos=right,
+%ylabel={Speedup vs non-tiled (\(1\times\))},
+ymin=0, ymax=4,
+ybar,
+every node near coord/.append style={font=\fontsize{6.5}{6.5}},
+]
+\addplot table [x=sp,y=run,col sep=comma] {../data/laplace-nt600.csv};
+\addplot table [x=sp,y=run,col sep=comma] {../data/laplace-sp600.csv};
+\addplot table [x=sp,y=run,col sep=comma] {../data/laplace-tm600.csv};
+\legend{Non-tiled,Space-tiling,Time-tiling}
+\end{axis}
+
+\begin{axis}[
+width=2\textwidth,
+axis y line*=right,
+ylabel near ticks, yticklabel pos=right,
+axis x line=none,
+symbolic x coords={2,4,8,16},
+ymin=0, ymax=16,
+ylabel={Arith. intensity},
+ybar,
+]
+\addplot[smooth,mark=*,blue]
+coordinates{
+	(2,4.69)
+	(4,6.31)
+	(8,9.29)
+	(16,14.0)
+};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
 
 \begin{itemize}
-	\item Tile imperfectly-nested loops (sources and receivers) -- hard
-	\item Advanced stencil optimisations -- not too hard, but maybe uses associativity of floats \Sadey
-	\item Time dimension buffering
-	\item More minor extensions in report
-	\item (move to end)
+	\item Speedup (vs spatial tiling) greatest with high memory pressure
+	\item Near computational bound \(\rightarrow\) marginal improvement
 \end{itemize}
 \end{frame}
 
 
 
-\section{Evaluation methodology}
-
 \begin{frame}
-\frametitle{Objectives of evaluation}
-
-\begin{itemize}
-	\item Measure speedup
-	\item Find conditions for speedup
-	\item Determine which stencils benefit the most
-	\item Error checking
-	\item (distribute points to different objectives)
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Arithmetic intensity: how much does a stencil use data?}
+\frametitle{Arithmetic intensity: time-tiling decreases memory transfer}
 
 \begin{itemize}
 	\item Floating point operations per byte transferred from memory
 	\item More operations \(\rightarrow\) more computational resources needed
 	\item Fewer operations \(\rightarrow\) more memory bandwidth needed
-	\item Time-tiling: most effective with low arithmetic intensity
-	\item (move this to bef roofline)
+	\newline
+	\item Time-tiling increases arithmetic intensity
+	\item Constructed an estimator to measure this
 \end{itemize}
 \end{frame}
 
 
 
 \begin{frame}
-\frametitle{Time-tiling increases arithmetic intensity}
+\frametitle{Roofline model\footnote{\tiny S. Williams et al. Roofline: An insightful visual performance model for multicore architectures. \emph{Commun. ACM}, April 2009.\\LINPACK: J. Dongarra. Performance of various computers using standard linear equations software. Tech. report, Knoxville TN, 1989.\\STREAM: J. McCalpin. Memory bandwidth and machine balance in current high performance computers. \emph{IEEE Computer Society TCCA Newletter}, Dec 1995.} to understand performance}
 
-\begin{itemize}
-	\item Time-tiling: improve cache reuse
-	\item More reuse \(\rightarrow\) more operations per byte
-	\item Effectively increases the arithmetic intensity of a stencil
-	\item Our estimator accounts for this while considering cache size
-	\item (discuss estimator further?)
-	\item (combine with oi slide)
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Testing framework}
-
-\begin{itemize}
-	\item CSG Intel Xeon E5-2470; 8 cores, 16 threads, 20MB L3 cache
-	\item 64GB DRAM
-	\item OpenMP: parallelism, use all threads, prevent migration
-	\item Intel C Compiler, all optimisations enabled
-	\item Devito auto-tuner to ensure best runtime
-	\item Always verify functional correctness
-	\item Minimum runtime reported
-	\item (small print on diagrams)
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Performance bounds}
-
-\begin{itemize}
-	\item Limits that cannot be exceeded
-	\item 294.4 GFlop/s = 16 Flop/cycle \(\times 2.3 \times 10^9\) cycle/sec/core \(\times\) 8 cores
-	\item LINPACK\footnote{J. Dongarra. Performance of various computers using standard linear equations software. Tech. report, Knoxville TN, 1989.}: 262 GFlops
-	\item STREAM\footnote{J. McCalpin. Memory bandwidth and machine balance in current high performance computers. \emph{IEEE Computer Society TCCA Newletter}, Dec 1995.}: 17.3 GB/s
-	\item (condense, put with roofline)
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Roofline\footnote{S. Williams et al. Roofline: An insightful visual performance model for multicore architectures. \emph{Commun. ACM}, April 2009.}}
-
+\begin{columns}
+\begin{column}{0.48\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=.8]
+\begin{tikzpicture}[scale=.6]
 \begin{axis}[
 legend style={at={(0.95,0.05)},anchor=south east},
 xlabel={Arithmetic intensity},
@@ -566,6 +600,8 @@ log basis x={2},
 ymode=log,
 log basis y={2},
 log ticks with fixed point,
+tick label style={font=\footnotesize},
+label style={font=\footnotesize}
 ]
 % roofline
 \addplot [domain=0.46:15.15,name path=A] {17.3*x};
@@ -577,108 +613,67 @@ log ticks with fixed point,
 \end{axis}
 \end{tikzpicture}
 \end{center}
-
-\begin{itemize}
-	\item Memory bounded (shaded), then CPU bounded
-	\item Can't exceed roofline!
-\end{itemize}
-\end{frame}
-
-
-
-%\begin{frame}
-%\frametitle{Verification}
-%
-%\begin{itemize}
-%	\item All results numerically exact \Smiley
-%	\item They aren't all (or even mostly) zeroes
-%	\item They aren't infinity or NaN
-%	\item Error bound: zero
-%\end{itemize}
-%\end{frame}
-
-
-
-\section{Results}
-
-\begin{frame}
-\frametitle{Laplace operator}
-
-\begin{itemize}
-	\item 4 stencils from the Laplace operator
-	\item Generated by Devito, varying space orders
-	\item Experimented on 2 grids, but only presenting 1 as results are similar
-\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+	\begin{itemize}
+		\item Memory bounded (shaded), then CPU bounded
+		\item LINPACK: 262 GFlops
+		\item STREAM: 17.3 GB/s
+		\item Can't exceed roofline: overestimate arithmetic intensity
+	\end{itemize}
+\end{column}
+\end{columns}
 \end{frame}
 
 
 
 \begin{frame}
-\frametitle{Laplace: runtime against space order}
-
+\frametitle{Roofline: still memory bounded;\footnote{\tiny Min. runtime reported: data numerically verified, tile sizes auto-tuned. Tested on Intel Xeon E5-2470; 8 cores, 16 threads, 64GB DRAM. OpenMP for parallelism, no migration on 16 threads; compilation \texttt{icc -qopenmp -O3 ...}} finding ideal time tile sizes}
+\vspace{-2em}
+\begin{columns}
+\begin{column}{.49\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=.7]
+\begin{tikzpicture}[scale=.51]
 \begin{axis}[
-width=\textwidth,
-legend style={at={(1.46,0.77)},anchor=north east},
-xlabel={Space order},
-xtick distance=1,
-symbolic x coords={2,4,8,16},
-nodes near coords,
-axis y line*=left,
-ylabel near ticks, yticklabel pos=right,
-ylabel={Speedup vs non-tiled (\(1\times\))},
-ymin=0,
-ybar,
-every node near coord/.append style={font=\fontsize{6.5}{6.5}},
-]
-\addplot table [x=sp,y=run,col sep=comma] {../data/laplace-nt600.csv};
-\addplot table [x=sp,y=run,col sep=comma] {../data/laplace-sp600.csv};
-\addplot table [x=sp,y=run,col sep=comma] {../data/laplace-tm600.csv};
-\legend{Non-tiled,Space-tiling,Time-tiling}
-\end{axis}
-
-\begin{axis}[
-width=\textwidth,
-legend style={at={(1.46,0.95)},anchor=north east,cells={align=left}},
-axis y line*=right,
-ylabel near ticks, yticklabel pos=right,
-axis x line=none,
-symbolic x coords={2,4,8,16},
-ymin=0, ymax=20,
-ylabel={Arith. intensity},
-ybar,
-]
-\addplot[smooth,mark=*,blue]
-coordinates{
-	(2,4.69)
-	(4,6.31)
-	(8,9.29)
-	(16,14.0)
-};
-\legend{Arith. intensity\\(spatial tiling)}
-\end{axis}
-\end{tikzpicture}
-\end{center}
-\begin{itemize}
-	\item 22.3\% to 3.3\% speedup with increasing arith. intensity
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Laplace: roofline}
-\begin{center}
-\begin{tikzpicture}[scale=.9]
-\begin{axis}[
-width=0.7\textwidth,
-legend style={at={(1.05,0.95)},anchor=north west},
-xlabel={Arithmetic intensity},
+width=2\textwidth,
+legend style={at={(.95,.05)},anchor=south east},
+xlabel={Arithmetic intensity (AWE)},
 ylabel={Performance (GFlop/s)},
 xmode=log,
 log basis x={2},
 ymode=log,
+ymin=24, ymax=68,
+log basis y={2},
+log ticks with fixed point,
+cycle list name=exotic,
+]
+\addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so16.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so12.csv};
+\addplot[mark=triangle] table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so8.csv};
+\addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so6.csv};
+\addplot[blue,mark=diamond] table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so4.csv};
+
+\addplot [domain=1.5:5] {17.3*x};
+%\addplot [domain=15.15:150] {262.01};
+\addplot [domain=2:5,dashed] {13*x};
+\legend{Time-tiling so16,Time-tiling so12, Time-tiling so8,Time-tiling so6, Time-tiling so4}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\end{column}
+
+\begin{column}{.49\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=.51]
+\begin{axis}[
+width=2\textwidth,
+legend style={at={(.95,.92)},anchor=north east},
+xlabel={Arithmetic intensity (Laplace)},
+ylabel={Performance (GFlop/s)},
+xmode=log,
+log basis x={2},
+ymode=log,
+ymin=30, ymax=280,
 log basis y={2},
 log ticks with fixed point,
 cycle list name=exotic,
@@ -694,118 +689,14 @@ cycle list name=exotic,
 \end{axis}
 \end{tikzpicture}
 \end{center}
+\end{column}
+\end{columns}
 
 \begin{itemize}
-	\item Bottom-to-top: increasing time tile sizes
-	\item Moderate performance improvement compared to arith. intensity estimate
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Acoustic wave equation operator}
-
-\begin{itemize}
-	\item 5 stencils from AWE operator
-	\item Generated by Devito, varying space orders
-	\item Experimented on a \(512^3\) + time grid
-	\item `More realistic': AWE is very important in Devito's target domain, seismic imaging
-	\item Lower arithmetic intensity
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{AWE: runtime against space order}
-
-\begin{center}
-\begin{tikzpicture}[scale=.7]
-\begin{axis}[
-width=\textwidth,
-legend style={at={(1.46,0.77)},anchor=north east},
-xlabel={Space order},
-xtick distance=1,
-symbolic x coords={4,6,8,12,16},
-nodes near coords,
-axis y line*=left,
-ylabel near ticks, yticklabel pos=right,
-ylabel={Speedup vs non-tiled (\(1\times\))},
-ymin=0,
-ybar,
-every node near coord/.append style={font=\fontsize{6.5}{6.5}},
-]
-\addplot table [x=sp,y=run,col sep=comma] {../data/awe-nt512.csv};
-\addplot table [x=sp,y=run,col sep=comma] {../data/awe-sp512.csv};
-\addplot table [x=sp,y=run,col sep=comma] {../data/awe-tm512.csv};
-\legend{Non-tiled,Space-tiling,Time-tiling}
-\end{axis}
-
-\begin{axis}[
-width=\textwidth,
-legend style={at={(1.46,0.95)},anchor=north east,cells={align=left}},
-axis y line*=right,
-ylabel near ticks, yticklabel pos=right,
-axis x line=none,
-ylabel={Arith. intensity},
-ybar,
-symbolic x coords={4,6,8,12,16},
-ymin=0, ymax=8,
-]
-\addplot[smooth,mark=*,blue]
-coordinates{
-	(4,2.1)
-	(6,2.5)
-	(8,2.89)
-	(12,3.36)
-	(16,4.42)
-};
-\legend{Arith. intensity\\(spatial tiling)}
-\end{axis}
-\end{tikzpicture}
-\end{center}
-\begin{itemize}
-\item 45.3\% to 20.3\% speedup!
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{AWE: roofline}
-
-\begin{center}
-\begin{tikzpicture}[scale=.9]
-\begin{axis}[
-width=0.7\textwidth,
-legend style={at={(1.05,0.95)},anchor=north west},
-xlabel={Arithmetic intensity},
-ylabel={Performance (GFlop/s)},
-xmode=log,
-log basis x={2},
-ymode=log,
-log basis y={8},
-log ticks with fixed point,
-cycle list name=exotic,
-]
-\addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so16.csv};
-\addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so12.csv};
-\addplot[mark=triangle] table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so8.csv};
-\addplot table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so6.csv};
-\addplot[blue,mark=diamond] table [x=oi,y=gflops,col sep=comma] {../data/awe-roof-so4.csv};
-
-\addplot [domain=1.5:4] {17.3*x};
-%\addplot [domain=15.15:150] {262.01};
-\addplot [domain=2:5,dashed] {13*x};
-\legend{Time-tiling so16,Time-tiling so12, Time-tiling so8,Time-tiling so6, Time-tiling so4}
-\end{axis}
-\end{tikzpicture}
-\end{center}
-
-\begin{itemize}
-	\item Estimator much stronger at high space orders
-	\item Larger time tiles most useful at low space orders
+%	\item Bottom-to-top: increasing time tile sizes
+	\item Estimator much stronger with large time tiles (smaller overestimate)
+	\item Larger time tiles \(\rightarrow\) usually faster
+	\item Convergence: reached maximum cache reuse from time-tiling
 \end{itemize}
 \end{frame}
 

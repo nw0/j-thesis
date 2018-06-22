@@ -5,6 +5,7 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
 
 \usepackage{tikz}
 \usetikzlibrary{3d}
@@ -137,11 +138,12 @@ Sun Tianjiao}
 \frametitle{Time-tiling is a loop (nest) optimisation}
 
 \begin{itemize}
-	\item Loop nests: stepping through time, over 3 spatial dimensions
+	\item Motivation: need to optimise memory bandwidth usage
 	\item \emph{Parameterisation} for auto-tuned optimisation
+	\newline
 	\item Previous work: up to 27.5\% reduction\footnote{D.~McCormick. Applying the Polyhedral Model to Tile Loops in Devito. Master's thesis, Imperial College of Science, Technology and Medicine, 2017.}
 	\item We get 36.8\% speedup for the \textbf{same} stencil
-	\item Can achieve \(\ge 75\%\) of benchmarked memory bandwidth
+	\item Reached \(\ge 75\%\) of benchmarked memory bandwidth
 \end{itemize}
 \end{frame}
 
@@ -174,36 +176,45 @@ Sun Tianjiao}
 
 \section{Time-tiling in 5 minutes}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Stencils}
 
+\begin{columns}
+\begin{column}{.48\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=.8]
-\fill[red!50!white] (0.5,2) rectangle (1,1.75);
-\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
-\fill[red!50!white] (1,2.5) rectangle (1.25,2);
-\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
+\begin{tikzpicture}[scale=1]
+\foreach \x in {0,1,2,3}
+\fill[red!20!white] (0.5,2.75-.5*\x) rectangle (.75,2.5-.5*\x);
+\foreach \x in {0,1,2}
+\fill[red!40!white] (0.75,2.5-.5*\x) rectangle (1,2.25-.5*\x);
+\fill[red!65!white] (1,2.25) rectangle (1.25,2);
+\fill[red!65!white] (1,1.5) rectangle (1.25,1.75);
+\fill[red] (1.25,2) rectangle (1.5,1.75);
 \draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
-\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
-\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
-\draw (2.3,-.5) node {$t=0$};
+\draw[thick,->] (0,0) -- (4.7,0) node[right]{$t$};
+\draw[thick,->] (0,0) -- (0,3.2) node[above]{$x$};
 
-\fill[red] (6.5,2) rectangle (6.75,1.75);
-\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
-\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
-\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
-\draw (7.8,-.5) node {$t=1$};
-
-\draw[<->] (0.5,3.15) -- (1,3.15) node[above left]{$\delta_x$};
-\draw[<->] (-.15,2.5) -- (-.15,2) node[above left]{$\delta_y$};
+\draw[<->] (-.15,2.75) -- (-.15,2.5) node[left]{$\delta_x$};
 \end{tikzpicture}
 \end{center}
+\end{column}
 
+\begin{column}{.48\textwidth}
 \begin{itemize}
 	\item Determine the value of a point
 	\item Need values of neighbours in \emph{previous} time iteration
 	\item \emph{Space-order} gives radius (\(\delta\))
 \end{itemize}
+\end{column}
+\end{columns}
+
+\begin{center}
+\begin{lstlisting}
+for (int t = t_s; t < t_e; t++)
+  for (int x = x_s; x < x_e; x++)
+    A[t][x] = A[t-1][x-1] + A[t-1][x+1];
+\end{lstlisting}
+\end{center}
 \end{frame}
 
 %\begin{frame}
@@ -309,30 +320,16 @@ Sun Tianjiao}
 
 
 \begin{frame}
-\frametitle{When tiling (doesn't) work}
+\frametitle{Interchange for cache reuse (1D)}
 
-\begin{itemize}
-	\item If memory bounded, less data transfer \(\rightarrow\) faster
-	\item If compute bounded, optimising cache doesn't help much...
-	\item Can make compute bounded stencils more memory bounded\footnote{F. Luporini et al. An Algorithm for the Optimisation of Finite Element Integration Loops. \emph{ACM Trans. on Math. Software}, 44(1):1--26, Mar 2017.}
-	\newline
-	\item We needed to be able to permute x and y
-	\item But can only take 1 time step at a time
-	\item Instead, interchange time and space loops and proceed sequentially
-	\item (Distribute this)
-	\item (redo diagrams for 1d)
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Can't interchange these loops}
-
+\vspace{-1em}
 \begin{center}
 \begin{tikzpicture}[scale=0.7]
 \draw[thick,->] (-1,-.5) -- (13,-.5) node[right]{$t$};
-\draw[thick,->] (-1,-.5) -- (-1,5.5) node[above]{$x$};
+\draw[thick,->] (-1,-.5) -- (-1,6) node[above]{$x$};
+
+\foreach \d in {0,1,2}
+\fill[black] (6,\d*.2+5.6) circle (0.05);
 
 \foreach \t in {0,1,2,3,4,5,6}
 \foreach \x in {0,1,2,3,4,5}
@@ -364,7 +361,9 @@ Sun Tianjiao}
 \end{center}
 
 \begin{itemize}
-	\item Dependencies between rows flow two ways
+	\item Insight: poor cache reuse calculating column-by-column
+	\item Try: compute row-by-row, as data is reused in next tile
+	\item But can't: dependencies between rows flow two ways
 \end{itemize}
 \end{frame}
 
@@ -373,6 +372,7 @@ Sun Tianjiao}
 \begin{frame}
 \frametitle{Idea: skewed tiling for interchange}
 
+\vspace{-1em}
 \begin{center}
 \begin{tikzpicture}[scale=0.7]
 \draw[thick,->] (-1,-.5) -- (13,-.5) node[right]{$t$};
@@ -402,7 +402,10 @@ Sun Tianjiao}
 \end{center}
 
 \begin{itemize}
-	\item Less transfer: if a tile fits in cache, can calculate subsequent tiles in that row from cache \Smiley
+	\item Skewing allows interchange: data is carried through time iterations
+%	\item More reuse: if a tile fits in cache, can calculate subsequent tiles in that row from cache \Smiley
+	\item Time-tiling: \textbf{reducing memory transfer through cache reuse}
+	\item Generalisation to 2D, 3D: `tiling' in higher dimensions
 \end{itemize}
 \end{frame}
 
@@ -573,8 +576,6 @@ coordinates{
 
 \begin{itemize}
 	\item Floating point operations per byte transferred from memory
-	\item More operations \(\rightarrow\) more computational resources needed
-	\item Fewer operations \(\rightarrow\) more memory bandwidth needed
 	\newline
 	\item Time-tiling increases arithmetic intensity
 	\item Constructed an estimator to measure this
@@ -628,7 +629,7 @@ label style={font=\footnotesize}
 
 
 \begin{frame}
-\frametitle{Roofline: still memory bounded;\footnote{\tiny Min. runtime reported: data numerically verified, tile sizes auto-tuned. Tested on Intel Xeon E5-2470; 8 cores, 16 threads, 64GB DRAM. OpenMP for parallelism, no migration on 16 threads; compilation \texttt{icc -qopenmp -O3 ...}} finding ideal time tile sizes}
+\frametitle{Roofline: choosing time tile sizes\footnote{\tiny Min. runtime reported: data numerically verified, tile sizes auto-tuned. Tested on Intel Xeon E5-2470; 8 cores, 16 threads, 64GB DRAM. OpenMP for parallelism, no migration on 16 threads; compilation \texttt{icc -qopenmp -O3 ...}}}
 \vspace{-2em}
 \begin{columns}
 \begin{column}{.49\textwidth}
@@ -696,47 +697,7 @@ cycle list name=exotic,
 %	\item Bottom-to-top: increasing time tile sizes
 	\item Estimator much stronger with large time tiles (smaller overestimate)
 	\item Larger time tiles \(\rightarrow\) usually faster
-	\item Convergence: reached maximum cache reuse from time-tiling
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Effect of time tile size}
-
-\begin{itemize}
-	\item Low space order: big time tiles
-	\item High space order: not much benefit after tile sizes 4, 8
-	\item Non-trivial tile boundary overlap and finite cache \(\rightarrow\) arithmetic intensity overestimated
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Effect of skewing factor}
-
-\begin{itemize}
-	\item No change to arith. intensity
-	\item (I didn't include the tables: should I?)
-	\item Smallest valid skewing factor is fastest: even 3, 6
-	\item Possibly because we need to load the neighbours anyway, so misalignment not an issue
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Further evaluation work and limitations}
-
-\begin{itemize}
-	\item Implementation -- only perfect loops
-	\item Test more architectures
-	\item Analyse memory to check cache misses, new bottlenecks
-	\item Applications of the arithmetic intensity estimator
-	\item Changed the spatial tiling algorithm slightly
-	\item Multistep approximations
+	\item Convergence: predicts when cache reuse from time-tiling maximised
 \end{itemize}
 \end{frame}
 
@@ -745,12 +706,66 @@ cycle list name=exotic,
 \section{Conclusion}
 
 \begin{frame}
-\frametitle{Conclusion}
+\frametitle{Summary of contributions}
 
 \begin{itemize}
-	\item Contributions
-	\item (move discussion of further work here?)
-	\item What else?
+	\item Implemented time-tiling in Devito, incl. test suite, auto-tuner
+	\item Evaluation of time-tiling effectiveness
+	\item Estimator for \emph{arithmetic intensity} \(\rightarrow\) identify bottlenecks, predict speedup
+	\item Identified ideal skewing parameter
+	\item Decrease runtime by 20--45\% on AWE stencil, crucial to Devito's seismic imaging application
+	\newline
+	\item Note: time-tiling works best on memory bounded stencils, AND:
+	\item Can make compute bounded stencils more memory bounded\footnote{F. Luporini et al. An Algorithm for the Optimisation of Finite Element Integration Loops. \emph{ACM Trans. on Math. Software}, 44(1):1--26, Mar 2017.}
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Further work: imperfect loop nests}
+
+\begin{lstlisting}
+// Imperfect loop nest
+
+for (int t = t_s; t < t_e; t++) {
+  for (int x = x_s; x < x_e; x++)
+    for (int y = y_s; y < y_e; y++)
+      A[t][x][y] = A[t-1][x-1][y+1] + A[t-1][x+1][y-1];
+  for (int j = j_s; j < j_e; j++)
+    A[t][j][j+1] *= 1.5;
+}
+\end{lstlisting}
+
+\begin{itemize}
+	\item Time-tiling only works on perfect loop nests
+	\item Can transform imperfect loop nests into perfect ones: Ahmed et al.
+	\item Needed for source and receiver loops, used in Devito
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Further work: implementation}
+
+\begin{itemize}
+	\item Advanced stencil optimisations---uses associativity of floats \Sadey
+	\item Time dimension buffering
+	\item More minor extensions in report
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Further work: evaluation}
+
+\begin{itemize}
+	\item Test more architectures, stencils
+	\item Analyse memory to check cache misses, new bottlenecks
+	\item Applications of the arithmetic intensity estimator
+	\item Multistep approximations
 \end{itemize}
 \end{frame}
 

@@ -1,5 +1,8 @@
 \documentclass{beamer}
 
+\usetheme{CambridgeUS}
+\usecolortheme{dolphin}
+
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 
@@ -18,16 +21,11 @@
 \setbeamertemplate{footline}{\hfill\usebeamertemplate***{navigation symbols}}
 
 
-
-\AtBeginSection[]{
-	\begin{frame}
-	\vfill
-	\centering
-	\begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
-		\usebeamerfont{title}\insertsectionhead\par%
-	\end{beamercolorbox}
-	\vfill
-\end{frame}
+\addtobeamertemplate{navigation symbols}{}{%
+\usebeamerfont{footline}%
+\usebeamercolor[fg]{footline}%
+\hspace{1em}%
+\insertframenumber/\inserttotalframenumber
 }
 
 
@@ -46,6 +44,19 @@ Sun Tianjiao}
 \date{June 25, 2018}
 
 \frame{\titlepage}
+
+
+
+\section{Context}
+
+
+\begin{frame}
+\frametitle{Why solve differential equations?}
+
+\begin{itemize}
+	\item Some pictures
+\end{itemize}
+\end{frame}
 
 
 
@@ -109,16 +120,16 @@ Sun Tianjiao}
 
 
 
-\begin{frame}
-\frametitle{Target loops to optimise computation}
-
-\begin{itemize}
-	\item Loops: stepping through time iterations, problem domains
-	\item Large problem sets: weeks spent in loops
-	\item Optimise loops for speedup
-	\item We apply time-tiling, a \emph{loop nest optimisation}
-\end{itemize}
-\end{frame}
+%\begin{frame}
+%\frametitle{Target loops to optimise computation}
+%
+%\begin{itemize}
+%	\item Loops: stepping through time iterations, problem domains
+%	\item Large problem sets: weeks spent in loops
+%	\item Optimise loops for speedup
+%	\item We apply time-tiling, a \emph{loop nest optimisation}
+%\end{itemize}
+%\end{frame}
 
 
 
@@ -127,9 +138,10 @@ Sun Tianjiao}
 
 \begin{itemize}
 	\item Loop nests: stepping through time, over 3 spatial dimensions
-	\item \emph{Parametrisation} for auto-tuned optimisation
+	\item \emph{Parameterisation} for auto-tuned optimisation
 	\item Previous work: up to 27.5\% reduction\footnote{D.~McCormick. Applying the Polyhedral Model to Tile Loops in Devito. Master's thesis, Imperial College of Science, Technology and Medicine, 2017.}
 	\item We get 36.8\% speedup for the \textbf{same} stencil
+	\item (Think about comparison to theoretical)
 \end{itemize}
 \end{frame}
 
@@ -147,6 +159,7 @@ Sun Tianjiao}
 	\item Decrease runtime by 20--45\%!
 	\newline
 	\item Target delivery: next few months
+	\item (How to present this simply?)
 \end{itemize}
 \end{frame}
 
@@ -180,6 +193,9 @@ Sun Tianjiao}
 \draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
 \draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
 \draw (7.8,-.5) node {$t=1$};
+
+\draw[<->] (0.5,3.15) -- (1,3.15) node[above left]{$\delta_x$};
+\draw[<->] (-.15,2.5) -- (-.15,2) node[above left]{$\delta_y$};
 \end{tikzpicture}
 \end{center}
 
@@ -190,105 +206,105 @@ Sun Tianjiao}
 \end{itemize}
 \end{frame}
 
-\begin{frame}
-\frametitle{Non-problem: iteration space \(<\) cache size}
-
-\begin{center}
-	\begin{tikzpicture}[scale=.8]
-	\draw[blue,thick] (-1.5,4) rectangle (11.5,-2);
-	\draw (-.8,-1.7) node {Cache};
-
-	\fill[red!50!white] (0.5,2) rectangle (1,1.75);
-	\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
-	\fill[red!50!white] (1,2.5) rectangle (1.25,2);
-	\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
-	\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
-	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
-	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
-	\draw (2.3,-.5) node {$t=0$};
-
-	\fill[red] (6.5,2) rectangle (6.75,1.75);
-	\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
-	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
-	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
-	\draw (7.8,-.5) node {$t=1$};
-	\end{tikzpicture}
-\end{center}
-
-\begin{itemize}
-	\item If iteration space \(<\) cache, no need to reload data
-	\item Everything loaded once \Smiley
-\end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Problem: iteration space \(>\) cache size}
-
-\begin{center}
-	\begin{tikzpicture}[scale=.8]
-	\fill[red!50!white] (0.5,2) rectangle (1,1.75);
-	\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
-	\fill[red!50!white] (1,2.5) rectangle (1.25,2);
-	\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
-	\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
-	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
-	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
-	\draw (2.3,-.5) node {$t=0$};
-
-	\fill[red] (6.5,2) rectangle (6.75,1.75);
-	\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
-	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
-	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
-	\draw (7.8,-.5) node {$t=1$};
-
-	\draw[blue,thick] (-.125,2.375) rectangle (2.125,1.375);
-	\draw (-1,1.7) node {Cache};
-	\end{tikzpicture}
-\end{center}
-
-\begin{itemize}
-	\item Load neighbours (t=0) into cache, some reuse in t=1 row
-	\item Evicted by the time we reach end of row
-	\item Poor cache usage: need to load rows again
-	\item Everything loaded 3 times \Sadey
-\end{itemize}
-\end{frame}
+%\begin{frame}
+%\frametitle{Non-problem: iteration space \(<\) cache size}
+%
+%\begin{center}
+%	\begin{tikzpicture}[scale=.8]
+%	\draw[blue,thick] (-1.5,4) rectangle (11.5,-2);
+%	\draw (-.8,-1.7) node {Cache};
+%
+%	\fill[red!50!white] (0.5,2) rectangle (1,1.75);
+%	\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
+%	\fill[red!50!white] (1,2.5) rectangle (1.25,2);
+%	\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
+%	\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
+%	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
+%	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
+%	\draw (2.3,-.5) node {$t=0$};
+%
+%	\fill[red] (6.5,2) rectangle (6.75,1.75);
+%	\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
+%	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
+%	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
+%	\draw (7.8,-.5) node {$t=1$};
+%	\end{tikzpicture}
+%\end{center}
+%
+%\begin{itemize}
+%	\item If iteration space \(<\) cache, no need to reload data
+%	\item Everything loaded once \Smiley
+%\end{itemize}
+%\end{frame}
 
 
 
-\begin{frame}
-\frametitle{Solution: pretend iteration space \(<\) cache size}
+%\begin{frame}
+%\frametitle{Problem: iteration space \(>\) cache size}
+%
+%\begin{center}
+%	\begin{tikzpicture}[scale=.8]
+%	\fill[red!50!white] (0.5,2) rectangle (1,1.75);
+%	\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
+%	\fill[red!50!white] (1,2.5) rectangle (1.25,2);
+%	\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
+%	\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
+%	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
+%	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
+%	\draw (2.3,-.5) node {$t=0$};
+%
+%	\fill[red] (6.5,2) rectangle (6.75,1.75);
+%	\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
+%	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
+%	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
+%	\draw (7.8,-.5) node {$t=1$};
+%
+%	\draw[blue,thick] (-.125,2.375) rectangle (2.125,1.375);
+%	\draw (-1,1.7) node {Cache};
+%	\end{tikzpicture}
+%\end{center}
+%
+%\begin{itemize}
+%	\item Load neighbours (t=0) into cache, some reuse in t=1 row
+%	\item Evicted by the time we reach end of row
+%	\item Poor cache usage: need to load rows again
+%	\item Everything loaded 3 times \Sadey
+%\end{itemize}
+%\end{frame}
 
-\begin{center}
-	\begin{tikzpicture}[scale=.8]
-	\fill[red!30!white] (0,1.25) rectangle (4.5,1.75);
-	\fill[red!30!white] (0.25,0) rectangle (.75,3);
-	\fill[red!30!white] (1.75,0) rectangle (2.25,3);
-	\fill[red!30!white] (3.25,0) rectangle (3.75,3);
-	\draw[xstep=.125cm,ystep=.125cm,thin] (0,0) grid (4.5,3);
-	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
-	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
-	\draw (2.3,-.5) node {$t=0$};
 
-	\draw[xstep=.125cm,ystep=.125cm,thin] (5.5,0) grid (10,3);
-	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
-	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
-	\draw (7.8,-.5) node {$t=1$};
-	\draw[red,thick,xstep=1.5cm,ystep=1.5cm] (5.3,-.2) grid (10.2,3.2);
 
-	\draw[blue,thick] (-.05,3.05) rectangle (2.15,1.35);
-	\end{tikzpicture}
-\end{center}
-
-\begin{itemize}
-	\item Insight: x,y can be calculated in any order (parallel!)
-	\item Partition into \emph{tiles}
-	\item Only tile boundaries loaded twice
-	\item `Exploiting data locality'
-\end{itemize}
-\end{frame}
+%\begin{frame}
+%\frametitle{Solution: pretend iteration space \(<\) cache size}
+%
+%\begin{center}
+%	\begin{tikzpicture}[scale=.8]
+%	\fill[red!30!white] (0,1.25) rectangle (4.5,1.75);
+%	\fill[red!30!white] (0.25,0) rectangle (.75,3);
+%	\fill[red!30!white] (1.75,0) rectangle (2.25,3);
+%	\fill[red!30!white] (3.25,0) rectangle (3.75,3);
+%	\draw[xstep=.125cm,ystep=.125cm,thin] (0,0) grid (4.5,3);
+%	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
+%	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
+%	\draw (2.3,-.5) node {$t=0$};
+%
+%	\draw[xstep=.125cm,ystep=.125cm,thin] (5.5,0) grid (10,3);
+%	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
+%	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
+%	\draw (7.8,-.5) node {$t=1$};
+%	\draw[red,thick,xstep=1.5cm,ystep=1.5cm] (5.3,-.2) grid (10.2,3.2);
+%
+%	\draw[blue,thick] (-.05,3.05) rectangle (2.15,1.35);
+%	\end{tikzpicture}
+%\end{center}
+%
+%\begin{itemize}
+%	\item Insight: x,y can be calculated in any order (parallel!)
+%	\item Partition into \emph{tiles}
+%	\item Only tile boundaries loaded twice
+%	\item `Exploiting data locality'
+%\end{itemize}
+%\end{frame}
 
 
 
@@ -303,6 +319,8 @@ Sun Tianjiao}
 	\item We needed to be able to permute x and y
 	\item But can only take 1 time step at a time
 	\item Instead, interchange time and space loops and proceed sequentially
+	\item (Distribute this)
+	\item (redo diagrams for 1d)
 \end{itemize}
 \end{frame}
 
@@ -390,42 +408,42 @@ Sun Tianjiao}
 
 
 
-\begin{frame}[fragile]
-\frametitle{Time-tiling: some important details}
-
-\begin{itemize}
-	\item Minimum skew: the distance of the spatial dependence
-	\item Out of bounds accesses
-	\item Only works for perfect loop nests
-\end{itemize}
-\begin{lstlisting}
-// Imperfect loop nest
-
-for (int t = t_s; t < t_e; t++) {
-  for (int x = x_s; x < x_e; x++)
-    for (int y = y_s; y < y_e; y++)
-      A[t][x][y] = A[t-1][x-1][y+1] + A[t-1][x+1][y-1];
-  for (int j = j_s; j < j_e; j++)
-    A[t][j][j+1] *= 1.5;
-}
-\end{lstlisting}
-\end{frame}
+%\begin{frame}[fragile]
+%\frametitle{Time-tiling: some important details}
+%
+%\begin{itemize}
+%	\item Minimum skew: the distance of the spatial dependence
+%	\item Out of bounds accesses
+%	\item Only works for perfect loop nests
+%\end{itemize}
+%\begin{lstlisting}
+%// Imperfect loop nest
+%
+%for (int t = t_s; t < t_e; t++) {
+%  for (int x = x_s; x < x_e; x++)
+%    for (int y = y_s; y < y_e; y++)
+%      A[t][x][y] = A[t-1][x-1][y+1] + A[t-1][x+1][y-1];
+%  for (int j = j_s; j < j_e; j++)
+%    A[t][j][j+1] *= 1.5;
+%}
+%\end{lstlisting}
+%\end{frame}
 
 
 
 \section{Implementing time-tiling in Devito}
 
-\begin{frame}
-\frametitle{Implemented time-tiling transformation}
-
-\begin{itemize}
-	\item Bounding using min/max functions
-	\item Reasoning about tile boundaries is tricky! (example)
-	\item Only works on perfect loop nests \Sadey
-	\item Test cases
-	\item Numerically exact (on floats!) in evaluation
-\end{itemize}
-\end{frame}
+%\begin{frame}
+%\frametitle{Implemented time-tiling transformation}
+%
+%\begin{itemize}
+%	\item Bounding using min/max functions
+%	\item Reasoning about tile boundaries is tricky! (example)
+%	\item Only works on perfect loop nests \Sadey
+%	\item Test cases
+%	\item Numerically exact (on floats!) in evaluation
+%\end{itemize}
+%\end{frame}
 
 
 
@@ -433,10 +451,11 @@ for (int t = t_s; t < t_e; t++) {
 \frametitle{Auto-tuning tile sizes}
 
 \begin{itemize}
-	\item Parametrisation: can change tile sizes at runtime
+	\item Parameterisation: can change tile sizes at runtime
 	\item Auto-tuning: experimental search for best tile sizes
 	\item Extended auto-tuner for time-tiling
 	\item Test only tile sizes, not skew factor
+	\item (move to later, strike)
 \end{itemize}
 \end{frame}
 
@@ -450,6 +469,7 @@ for (int t = t_s; t < t_e; t++) {
 	\item Advanced stencil optimisations -- not too hard, but maybe uses associativity of floats \Sadey
 	\item Time dimension buffering
 	\item More minor extensions in report
+	\item (move to end)
 \end{itemize}
 \end{frame}
 
@@ -465,6 +485,7 @@ for (int t = t_s; t < t_e; t++) {
 	\item Find conditions for speedup
 	\item Determine which stencils benefit the most
 	\item Error checking
+	\item (distribute points to different objectives)
 \end{itemize}
 \end{frame}
 
@@ -478,6 +499,7 @@ for (int t = t_s; t < t_e; t++) {
 	\item More operations \(\rightarrow\) more computational resources needed
 	\item Fewer operations \(\rightarrow\) more memory bandwidth needed
 	\item Time-tiling: most effective with low arithmetic intensity
+	\item (move this to bef roofline)
 \end{itemize}
 \end{frame}
 
@@ -492,6 +514,7 @@ for (int t = t_s; t < t_e; t++) {
 	\item Effectively increases the arithmetic intensity of a stencil
 	\item Our estimator accounts for this while considering cache size
 	\item (discuss estimator further?)
+	\item (combine with oi slide)
 \end{itemize}
 \end{frame}
 
@@ -508,6 +531,7 @@ for (int t = t_s; t < t_e; t++) {
 	\item Devito auto-tuner to ensure best runtime
 	\item Always verify functional correctness
 	\item Minimum runtime reported
+	\item (small print on diagrams)
 \end{itemize}
 \end{frame}
 
@@ -521,6 +545,7 @@ for (int t = t_s; t < t_e; t++) {
 	\item 294.4 GFlop/s = 16 Flop/cycle \(\times 2.3 \times 10^9\) cycle/sec/core \(\times\) 8 cores
 	\item LINPACK\footnote{J. Dongarra. Performance of various computers using standard linear equations software. Tech. report, Knoxville TN, 1989.}: 262 GFlops
 	\item STREAM\footnote{J. McCalpin. Memory bandwidth and machine balance in current high performance computers. \emph{IEEE Computer Society TCCA Newletter}, Dec 1995.}: 17.3 GB/s
+	\item (condense, put with roofline)
 \end{itemize}
 \end{frame}
 
@@ -561,16 +586,16 @@ log ticks with fixed point,
 
 
 
-\begin{frame}
-\frametitle{Verification}
-
-\begin{itemize}
-	\item All results numerically exact \Smiley
-	\item They aren't all (or even mostly) zeroes
-	\item They aren't infinity or NaN
-	\item Error bound: zero
-\end{itemize}
-\end{frame}
+%\begin{frame}
+%\frametitle{Verification}
+%
+%\begin{itemize}
+%	\item All results numerically exact \Smiley
+%	\item They aren't all (or even mostly) zeroes
+%	\item They aren't infinity or NaN
+%	\item Error bound: zero
+%\end{itemize}
+%\end{frame}
 
 
 

@@ -243,106 +243,6 @@ for (int t = t_s; t < t_e; t++)
 \end{center}
 \end{frame}
 
-%\begin{frame}
-%\frametitle{Non-problem: iteration space \(<\) cache size}
-%
-%\begin{center}
-%	\begin{tikzpicture}[scale=.8]
-%	\draw[blue,thick] (-1.5,4) rectangle (11.5,-2);
-%	\draw (-.8,-1.7) node {Cache};
-%
-%	\fill[red!50!white] (0.5,2) rectangle (1,1.75);
-%	\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
-%	\fill[red!50!white] (1,2.5) rectangle (1.25,2);
-%	\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
-%	\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
-%	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
-%	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
-%	\draw (2.3,-.5) node {$t=0$};
-%
-%	\fill[red] (6.5,2) rectangle (6.75,1.75);
-%	\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
-%	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
-%	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
-%	\draw (7.8,-.5) node {$t=1$};
-%	\end{tikzpicture}
-%\end{center}
-%
-%\begin{itemize}
-%	\item If iteration space \(<\) cache, no need to reload data
-%	\item Everything loaded once \Smiley
-%\end{itemize}
-%\end{frame}
-
-
-
-%\begin{frame}
-%\frametitle{Problem: iteration space \(>\) cache size}
-%
-%\begin{center}
-%	\begin{tikzpicture}[scale=.8]
-%	\fill[red!50!white] (0.5,2) rectangle (1,1.75);
-%	\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
-%	\fill[red!50!white] (1,2.5) rectangle (1.25,2);
-%	\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
-%	\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
-%	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
-%	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
-%	\draw (2.3,-.5) node {$t=0$};
-%
-%	\fill[red] (6.5,2) rectangle (6.75,1.75);
-%	\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
-%	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
-%	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
-%	\draw (7.8,-.5) node {$t=1$};
-%
-%	\draw[blue,thick] (-.125,2.375) rectangle (2.125,1.375);
-%	\draw (-1,1.7) node {Cache};
-%	\end{tikzpicture}
-%\end{center}
-%
-%\begin{itemize}
-%	\item Load neighbours (t=0) into cache, some reuse in t=1 row
-%	\item Evicted by the time we reach end of row
-%	\item Poor cache usage: need to load rows again
-%	\item Everything loaded 3 times \Sadey
-%\end{itemize}
-%\end{frame}
-
-
-
-%\begin{frame}
-%\frametitle{Solution: pretend iteration space \(<\) cache size}
-%
-%\begin{center}
-%	\begin{tikzpicture}[scale=.8]
-%	\fill[red!30!white] (0,1.25) rectangle (4.5,1.75);
-%	\fill[red!30!white] (0.25,0) rectangle (.75,3);
-%	\fill[red!30!white] (1.75,0) rectangle (2.25,3);
-%	\fill[red!30!white] (3.25,0) rectangle (3.75,3);
-%	\draw[xstep=.125cm,ystep=.125cm,thin] (0,0) grid (4.5,3);
-%	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
-%	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
-%	\draw (2.3,-.5) node {$t=0$};
-%
-%	\draw[xstep=.125cm,ystep=.125cm,thin] (5.5,0) grid (10,3);
-%	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
-%	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
-%	\draw (7.8,-.5) node {$t=1$};
-%	\draw[red,thick,xstep=1.5cm,ystep=1.5cm] (5.3,-.2) grid (10.2,3.2);
-%
-%	\draw[blue,thick] (-.05,3.05) rectangle (2.15,1.35);
-%	\end{tikzpicture}
-%\end{center}
-%
-%\begin{itemize}
-%	\item Insight: x,y can be calculated in any order (parallel!)
-%	\item Partition into \emph{tiles}
-%	\item Only tile boundaries loaded twice
-%	\item `Exploiting data locality'
-%\end{itemize}
-%\end{frame}
-
 
 
 \begin{frame}
@@ -434,46 +334,6 @@ for (int t = t_s; t < t_e; t++)
 	\item Generalisation to 2D, 3D: `tiling' in higher dimensions
 \end{itemize}
 \end{frame}
-
-
-
-%\begin{frame}[fragile]
-%\frametitle{Time-tiling: some important details}
-%
-%\begin{itemize}
-%	\item Minimum skew: the distance of the spatial dependence
-%	\item Out of bounds accesses
-%	\item Only works for perfect loop nests
-%\end{itemize}
-%\begin{lstlisting}
-%// Imperfect loop nest
-%
-%for (int t = t_s; t < t_e; t++) {
-%  for (int x = x_s; x < x_e; x++)
-%    for (int y = y_s; y < y_e; y++)
-%      A[t][x][y] = A[t-1][x-1][y+1] + A[t-1][x+1][y-1];
-%  for (int j = j_s; j < j_e; j++)
-%    A[t][j][j+1] *= 1.5;
-%}
-%\end{lstlisting}
-%\end{frame}
-
-
-
-%\begin{frame}
-%\frametitle{Testing framework}
-%
-%\begin{itemize}
-%	\item CSG Intel Xeon E5-2470; 8 cores, 16 threads, 20MB L3 cache
-%	\item 64GB DRAM
-%	\item OpenMP: parallelism, use all threads, prevent migration
-%	\item Intel C Compiler, all optimisations enabled
-%	\item Devito auto-tuner to ensure best runtime
-%	\item Always verify functional correctness
-%	\item Minimum runtime reported
-%	\item (small print on diagrams)
-%\end{itemize}
-%\end{frame}
 
 
 
@@ -738,9 +598,9 @@ cycle list name=exotic,
 
 \begin{itemize}
 	\item Implemented time-tiling in Devito, incl. test suite, auto-tuner
-	\item Evaluation of time-tiling effectiveness
 	\item Estimator for \emph{arithmetic intensity} \(\rightarrow\) identify bottlenecks, predict speedup
-	\item Identified ideal skewing parameter
+	\item Evaluation of time-tiling effectiveness
+	\item Identified best tile sizes, skewing parameters
 	\item Decrease runtime by 20--45\% on AWE stencil, crucial to Devito's seismic imaging application
 	\newline
 	\item Note: time-tiling works best on memory bounded stencils, AND:
@@ -792,6 +652,126 @@ for (int t = t_s; t < t_e; t++) {
 		\item Multistep approximations
 	\end{itemize}
 	\item Integration into Devito mainline: in progress!
+\end{itemize}
+\end{frame}
+
+
+
+\section{Appendix}
+\subsection{Evaluation details}
+\begin{frame}
+\frametitle{Testing framework}
+
+\begin{itemize}
+	\item CSG Intel Xeon E5-2470; 8 cores, 16 threads, 20MB L3 cache
+	\item 64GB DRAM
+	\item OpenMP: parallelism, use all threads, prevent migration
+	\item Intel C Compiler, all optimisations enabled
+	\item Devito auto-tuner to ensure best runtime
+	\item Always verify functional correctness
+	\item Minimum runtime reported
+\end{itemize}
+\end{frame}
+
+
+\subsection{2D tiling}
+\begin{frame}
+\frametitle{Non-problem: iteration space \(<\) cache size}
+
+\begin{center}
+	\begin{tikzpicture}[scale=.8]
+	\draw[blue,thick] (-1.5,4) rectangle (11.5,-2);
+	\draw (-.8,-1.7) node {Cache};
+
+	\fill[red!50!white] (0.5,2) rectangle (1,1.75);
+	\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
+	\fill[red!50!white] (1,2.5) rectangle (1.25,2);
+	\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
+	\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
+	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
+	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
+	\draw (2.3,-.5) node {$t=0$};
+
+	\fill[red] (6.5,2) rectangle (6.75,1.75);
+	\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
+	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
+	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
+	\draw (7.8,-.5) node {$t=1$};
+	\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+	\item If iteration space \(<\) cache, no need to reload data
+	\item Everything loaded once \Smiley
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Problem: iteration space \(>\) cache size}
+
+\begin{center}
+	\begin{tikzpicture}[scale=.8]
+	\fill[red!50!white] (0.5,2) rectangle (1,1.75);
+	\fill[red!50!white] (1.25,2) rectangle (1.75,1.75);
+	\fill[red!50!white] (1,2.5) rectangle (1.25,2);
+	\fill[red!50!white] (1,1.25) rectangle (1.25,1.75);
+	\draw[xstep=.25cm,ystep=.25cm] (0,0) grid (4.5,3);
+	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
+	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
+	\draw (2.3,-.5) node {$t=0$};
+
+	\fill[red] (6.5,2) rectangle (6.75,1.75);
+	\draw[xstep=.25cm,ystep=.25cm] (5.5,0) grid (10,3);
+	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
+	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
+	\draw (7.8,-.5) node {$t=1$};
+
+	\draw[blue,thick] (-.125,2.375) rectangle (2.125,1.375);
+	\draw (-1,1.7) node {Cache};
+	\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+	\item Load neighbours (t=0) into cache, some reuse in t=1 row
+	\item Evicted by the time we reach end of row
+	\item Poor cache usage: need to load rows again
+	\item Everything loaded 3 times \Sadey
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Solution: pretend iteration space \(<\) cache size}
+
+\begin{center}
+	\begin{tikzpicture}[scale=.8]
+	\fill[red!30!white] (0,1.25) rectangle (4.5,1.75);
+	\fill[red!30!white] (0.25,0) rectangle (.75,3);
+	\fill[red!30!white] (1.75,0) rectangle (2.25,3);
+	\fill[red!30!white] (3.25,0) rectangle (3.75,3);
+	\draw[xstep=.125cm,ystep=.125cm,thin] (0,0) grid (4.5,3);
+	\draw[thick,->] (0,3) -- (4.7,3) node[right]{$x$};
+	\draw[thick,->] (0,3) -- (0,-.2) node[below]{$y$};
+	\draw (2.3,-.5) node {$t=0$};
+
+	\draw[xstep=.125cm,ystep=.125cm,thin] (5.5,0) grid (10,3);
+	\draw[thick,->] (5.5,3) -- (10.2,3) node[right]{$x$};
+	\draw[thick,->] (5.5,3) -- (5.5,-.2) node[below]{$y$};
+	\draw (7.8,-.5) node {$t=1$};
+	\draw[red,thick,xstep=1.5cm,ystep=1.5cm] (5.3,-.2) grid (10.2,3.2);
+
+	\draw[blue,thick] (-.05,3.05) rectangle (2.15,1.35);
+	\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+	\item Insight: x,y can be calculated in any order (parallel!)
+	\item Partition into \emph{tiles}
+	\item Only tile boundaries loaded twice
+	\item `Exploiting data locality'
 \end{itemize}
 \end{frame}
 
